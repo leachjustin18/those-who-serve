@@ -7,10 +7,12 @@ const uiConfig = {
   signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
 };
 
-const SignInScreen = () => (
-  <div>
-    <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
-  </div>
-);
+const SignInScreen = () => {
+  return (
+    <div>
+      <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
+    </div>
+  );
+};
 
 export default SignInScreen;
