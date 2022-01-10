@@ -8,9 +8,7 @@ const uiConfig = {
 };
 
 const SignInScreen = () => (
-  <div>
-    <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
-  </div>
+  <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
 );
 
 export default SignInScreen;
