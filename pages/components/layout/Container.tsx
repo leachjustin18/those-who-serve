@@ -32,7 +32,7 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
   };
 
   const handleCloseNavMenu = () => {
-    setAnchorElUser(null);
+    setAnchorElNav(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -149,7 +149,7 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
               >
                 <MenuItem onClick={handleCloseNavMenu}>
                   <Typography textAlign="center" onClick={logUserOut}>
-                    Log Out
+                    Logout
                   </Typography>
                 </MenuItem>
               </Menu>
