@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ReactElement, useState, MouseEvent } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {
@@ -17,6 +18,7 @@ import {
   Menu as MenuIcon,
   AccountCircle as AccountCircleIcon,
 } from '@mui/icons-material';
+import styled from '@emotion/styled';
 import firebase from '../../firebase/clientApp';
 
 const Container = ({ children }: { children: ReactElement }): ReactElement => {
@@ -46,14 +48,27 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
     firebaseAuth.signOut();
   };
 
+  // const pages = [
+  //   'Servants',
+  //   'Adult Jobs',
+  //   'Kid Jobs',
+  //   'Upcoming Schedule',
+  //   'Create Schedule',
+  // ];
+
   const pages = [
-    'Servants',
-    'Adult Jobs',
-    'Kid Jobs',
-    'Upcoming Schedule',
-    'Create Schedule',
+    {
+      name: 'Servants',
+      href: '/servants',
+    },
   ];
+
   const siteTitle = 'Those Who Serve';
+
+  const PagesLink = styled.a({
+    color: 'inherit',
+    textDecoration: 'none',
+  });
 
   return (
     <>
@@ -99,8 +114,12 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
                 }}
               >
                 {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
+                  <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                    <Typography textAlign="center">
+                      <Link href={page.href} passHref>
+                        <PagesLink>{page.name}</PagesLink>
+                      </Link>
+                    </Typography>
                   </MenuItem>
                 ))}
               </Menu>
@@ -116,11 +135,13 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {pages.map((page) => (
                 <Button
-                  key={page}
+                  key={page.name}
                   onClick={handleCloseNavMenu}
                   sx={{ my: 2, color: 'white', display: 'block' }}
                 >
-                  {page}
+                  <Link href={page.href} passHref>
+                    <PagesLink>{page.name}</PagesLink>
+                  </Link>
                 </Button>
               ))}
             </Box>

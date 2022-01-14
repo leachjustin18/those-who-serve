@@ -6,7 +6,7 @@ import firebase from './firebase/clientApp';
 import LoggedInGuard from './components/authorization/LoggedInGuard';
 import Container from './components/layout/Container';
 
-const Home = () => {
+const Servants = () => {
   const [servants, servantsLoading] = useCollection(
     firebase.firestore().collection('servants'),
     {}
@@ -19,14 +19,14 @@ const Home = () => {
   return (
     <>
       <Head>
-        <title>Those who serve</title>
+        <title>Those who serve - Servants</title>
       </Head>
 
       <LoggedInGuard>
         <Container>
           <main>
-            <Typography variant="h2">Hello world!</Typography>
-            <Link href="/servants">Servants</Link>
+            <Typography variant="h2">Servants</Typography>
+            <Link href="/">Home</Link>
           </main>
         </Container>
       </LoggedInGuard>
@@ -34,4 +34,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Servants;
