@@ -1,6 +1,5 @@
 import { ReactElement, useState, MouseEvent } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter } from 'next/router';
 import {
   AppBar,
   Container as MuiContainer,
@@ -14,12 +13,14 @@ import {
   Tooltip,
   Avatar,
 } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import {
+  Menu as MenuIcon,
+  AccountCircle as AccountCircleIcon,
+} from '@mui/icons-material';
 import firebase from '../../firebase/clientApp';
 
 const Container = ({ children }: { children: ReactElement }): ReactElement => {
   const firebaseAuth = firebase.auth();
-  const router = useRouter();
   const [user] = useAuthState(firebaseAuth);
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -40,8 +41,9 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
   };
 
   const logUserOut = () => {
+    setAnchorElNav(null);
+    setAnchorElUser(null);
     firebaseAuth.signOut();
-    router.push('/auth');
   };
 
   const pages = [
@@ -124,13 +126,25 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
             </Box>
 
             <Box sx={{ flexGrow: 0 }}>
-              {user ? (
-                <Tooltip title="Open settings">
+              <Tooltip title="Open settings">
+                {user?.displayName && user?.photoURL ? (
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                     <Avatar alt={user.displayName} src={user.photoURL} />
                   </IconButton>
-                </Tooltip>
-              ) : null}
+                ) : (
+                  <IconButton
+                    size="large"
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleOpenUserMenu}
+                    color="inherit"
+                  >
+                    <AccountCircleIcon />
+                  </IconButton>
+                )}
+              </Tooltip>
+
               <Menu
                 sx={{ mt: '45px' }}
                 id="menu-appbar"
