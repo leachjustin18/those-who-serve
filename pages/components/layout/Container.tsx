@@ -48,15 +48,11 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
     firebaseAuth.signOut();
   };
 
-  // const pages = [
-  //   'Servants',
-  //   'Adult Jobs',
-  //   'Kid Jobs',
-  //   'Upcoming Schedule',
-  //   'Create Schedule',
-  // ];
-
   const pages = [
+    {
+      name: 'Home',
+      href: '/',
+    },
     {
       name: 'Servants',
       href: '/servants',
@@ -194,7 +190,9 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
       </AppBar>
 
       <MuiContainer maxWidth="xl">
-        <Box pt={2}>{children}</Box>
+        <Box pt={2}>
+          <main>{children}</main>
+        </Box>
       </MuiContainer>
     </>
   );
