@@ -5,3 +5,10 @@ export interface ITabPanelProps {
   index: number;
   value: number;
 }
+
+export interface IFormInput {
+  firstName: string;
+  lastName: string;
+  jobs: string[];
+  unavailableDates: { year: number; month: string; id: string }[];
+}
