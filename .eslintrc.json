@@ -30,6 +30,12 @@
     "react/jsx-props-no-spreading": [2, { "custom": "ignore" }],
     "import/no-unresolved": 0,
     "no-use-before-define": 0,
-    "@typescript-eslint/no-use-before-define": [2]
+    "@typescript-eslint/no-use-before-define": [2],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": ["@mui/*/*/*", "!@mui/material/test-utils/*"]
+      }
+    ]
   }
 }
