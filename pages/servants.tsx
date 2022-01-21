@@ -1,11 +1,27 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { Typography, Box, Tabs, Tab } from '@mui/material';
-import { useCollectionDataOnce } from 'react-firebase-hooks/firestore';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import {
+  Typography,
+  Box,
+  Tabs,
+  Tab,
+  Button,
+  DialogContent,
+  Dialog,
+  DialogActions,
+  DialogContentText,
+  DialogTitle,
+  useMediaQuery,
+  Snackbar,
+  Alert,
+} from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { DataGrid, GridToolbar, GridCellParams } from '@mui/x-data-grid';
 import {
   Visibility as VisibilityIcon,
   AddCircle as AddCircleIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import firebase from './firebase/clientApp';
 import LoggedInGuard from './components/authorization/LoggedInGuard';
@@ -15,12 +31,25 @@ import TabPanel from './components/tab/TabPanel';
 import AddServant from './components/servants/AddServant';
 
 const Servants = () => {
-  const [servants, servantsLoading] = useCollectionDataOnce(
-    firebase.firestore().collection('servants'),
+  const fireBaseCollectionServants = firebase
+    .firestore()
+    .collection('servants');
+
+  const [servants, servantsLoading] = useCollectionData(
+    fireBaseCollectionServants,
     { idField: 'id' }
   );
-
   const [value, setValue] = useState(0);
+  const [servant, setServant] = useState<{
+    firstName: string;
+    lastName: string;
+    id: string;
+  } | null>();
+  const [isConfirmDeletionOpen, setIsConfirmDeletionOpen] = useState(false);
+  const [isSnackBarOpen, setIsSnackBarOpen] = useState(false);
+
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   let servantData = [];
 
@@ -33,6 +62,34 @@ const Servants = () => {
     }));
   }
 
+  const onCellSelect = (params: GridCellParams) => {
+    setServant(params.row);
+  };
+
+  const handleOpenConfirmationDialog = () => {
+    setIsConfirmDeletionOpen(true);
+  };
+
+  const handleCloseConfirmationDialog = () => {
+    setIsConfirmDeletionOpen(false);
+  };
+
+  const handleDeleteServant = async () => {
+    try {
+      await fireBaseCollectionServants.doc(servant.id).delete();
+      setIsSnackBarOpen(true);
+    } catch (error) {
+      console.log('error', error);
+    }
+
+    handleCloseConfirmationDialog();
+    setServant(null);
+  };
+
+  const handleCloseSnackBar = () => {
+    setIsSnackBarOpen(false);
+  };
+
   return (
     <>
       <Head>
@@ -42,6 +99,65 @@ const Servants = () => {
       <LoggedInGuard>
         <Container>
           <>
+            <Dialog
+              open={isConfirmDeletionOpen}
+              onClose={handleCloseConfirmationDialog}
+              fullScreen={fullScreen}
+            >
+              {servant ? (
+                <>
+                  <DialogTitle id="alert-dialog-title">
+                    Would you like to delete servant {servant.firstName}{' '}
+                    {servant.lastName}?
+                  </DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>
+                      Deleting servant{' '}
+                      <strong>
+                        {servant.firstName} {servant.lastName}
+                      </strong>{' '}
+                      will no longer allow us to add them to Those Who Serve
+                      calendar.
+                      <Box pt={2}>
+                        <strong>This action cannot be undone.</strong>
+                      </Box>
+                    </DialogContentText>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button
+                      onClick={handleCloseConfirmationDialog}
+                      variant="outlined"
+                    >
+                      No
+                    </Button>
+                    <Button
+                      onClick={handleDeleteServant}
+                      autoFocus
+                      color="error"
+                      variant="outlined"
+                    >
+                      Yes
+                    </Button>
+                  </DialogActions>
+                </>
+              ) : null}
+            </Dialog>
+
+            <Snackbar
+              open={isSnackBarOpen}
+              autoHideDuration={6000}
+              onClose={handleCloseSnackBar}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert
+                onClose={handleCloseSnackBar}
+                severity="info"
+                sx={{ width: '100%' }}
+              >
+                Servant successfully deleted
+              </Alert>
+            </Snackbar>
+
             <Typography variant="h2">Servants</Typography>
             <Box
               sx={{
@@ -62,21 +178,46 @@ const Servants = () => {
               </Tabs>
 
               <TabPanel value={value} index={0}>
-                {servantData.length ? (
-                  <Box sx={{ height: '400px' }}>
-                    <DataGrid
-                      rows={servantData}
-                      columns={servantColumns}
-                      pageSize={5}
-                      rowsPerPageOptions={[5]}
-                      checkboxSelection
-                      disableSelectionOnClick
-                      components={{
-                        Toolbar: GridToolbar,
-                      }}
-                    />
-                  </Box>
-                ) : null}
+                <>
+                  {servantData.length ? (
+                    <Box sx={{ height: '400px' }}>
+                      <DataGrid
+                        onCellClick={(params: GridCellParams) => {
+                          onCellSelect(params);
+                        }}
+                        rows={servantData}
+                        columns={servantColumns}
+                        pageSize={5}
+                        rowsPerPageOptions={[5]}
+                        components={{
+                          Toolbar: GridToolbar,
+                        }}
+                      />
+                    </Box>
+                  ) : null}
+
+                  {servant ? (
+                    <>
+                      <Box mt={2} mb={1}>
+                        <Typography variant="subtitle1">
+                          Servant{' '}
+                          <strong>
+                            {servant.firstName} {servant.lastName}
+                          </strong>{' '}
+                          Selected
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={handleOpenConfirmationDialog}
+                      >
+                        Delete Servant
+                      </Button>
+                    </>
+                  ) : null}
+                </>
               </TabPanel>
               <TabPanel value={value} index={1}>
                 <AddServant />
