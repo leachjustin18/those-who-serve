@@ -26,8 +26,6 @@ import {
   useFieldArray,
 } from 'react-hook-form';
 import {
-  CheckBox as CheckBoxIcon,
-  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
   PersonAdd as PersonAddIcon,
   AddCircle as AddCircleIcon,
   CalendarToday as CalendarTodayOutlinedIcon,
@@ -36,11 +34,13 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/lab';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { useState } from 'react';
 import { getYear, format } from 'date-fns';
 import firebase from '../../firebase/clientApp';
 import { IFormInput } from '../../constants/types';
+import { servantSchema } from '../../constants';
+import Icon from '../checkbox/Icon';
+import CheckedIcon from '../checkbox/CheckedIcon';
 
 const unavailableDatesLayout = {
   bgcolor: 'background.paper',
@@ -53,11 +53,6 @@ const AddServant = () => {
   const [isBackDropOpen, setIsBackDropOpen] = useState(false);
   const [isSnackBarOpen, setIsSnackBarOpen] = useState(false);
 
-  const schema = yup.object({
-    firstName: yup.string().required('First Name is a required field'),
-    lastName: yup.string().required('Last Name is a required field'),
-  });
-
   const jobs = ['Lords Supper', 'Usher', 'Sunday Devotion', 'Lead Signing'];
 
   const { control, handleSubmit, watch, reset } = useForm<IFormInput>({
@@ -67,7 +62,7 @@ const AddServant = () => {
       jobs: [],
       unavailableDates: [],
     },
-    resolver: yupResolver(schema),
+    resolver: yupResolver(servantSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
   });
@@ -132,9 +127,6 @@ const AddServant = () => {
   const handleCloseSnackBar = () => {
     setIsSnackBarOpen(false);
   };
-
-  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-  const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
   return (
     <Box pl={2}>
@@ -225,8 +217,8 @@ const AddServant = () => {
                     // eslint-disable-next-line react/jsx-props-no-spreading
                     <li {...props}>
                       <Checkbox
-                        icon={icon}
-                        checkedIcon={checkedIcon}
+                        icon={Icon}
+                        checkedIcon={CheckedIcon}
                         style={{ marginRight: 8 }}
                         checked={selected}
                       />

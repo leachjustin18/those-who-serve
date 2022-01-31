@@ -22,13 +22,16 @@ import {
   Visibility as VisibilityIcon,
   AddCircle as AddCircleIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import firebase from './firebase/clientApp';
 import LoggedInGuard from './components/authorization/LoggedInGuard';
 import Container from './components/layout/Container';
-import servantColumns from './constants';
+import { servantColumns } from './constants';
+import { IServant } from './constants/types';
 import TabPanel from './components/tab/TabPanel';
 import AddServant from './components/servants/AddServant';
+import EditServant from './components/servants/EditServant';
 
 const Servants = () => {
   const fireBaseCollectionServants = firebase
@@ -40,13 +43,10 @@ const Servants = () => {
     { idField: 'id' }
   );
   const [value, setValue] = useState(0);
-  const [servant, setServant] = useState<{
-    firstName: string;
-    lastName: string;
-    id: string;
-  } | null>();
+  const [servant, setServant] = useState<IServant | null>();
   const [isConfirmDeletionOpen, setIsConfirmDeletionOpen] = useState(false);
   const [isSnackBarOpen, setIsSnackBarOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -59,6 +59,7 @@ const Servants = () => {
       firstName: doc.firstName,
       lastName: doc.lastName,
       jobs: doc.jobList.join(', '),
+      notAvailable: doc.notAvailable,
     }));
   }
 
@@ -72,6 +73,14 @@ const Servants = () => {
 
   const handleCloseConfirmationDialog = () => {
     setIsConfirmDeletionOpen(false);
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+  };
+
+  const handleOpenEditDialog = () => {
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteServant = async () => {
@@ -99,6 +108,7 @@ const Servants = () => {
       <LoggedInGuard>
         <Container>
           <>
+            {/* Delete servant dialog */}
             <Dialog
               open={isConfirmDeletionOpen}
               onClose={handleCloseConfirmationDialog}
@@ -118,7 +128,7 @@ const Servants = () => {
                       </strong>{' '}
                       will no longer allow us to add them to Those Who Serve
                       calendar.
-                      <Box pt={2}>
+                      <Box pt={2} component="span" sx={{ display: 'block' }}>
                         <strong>This action cannot be undone.</strong>
                       </Box>
                     </DialogContentText>
@@ -142,6 +152,18 @@ const Servants = () => {
                 </>
               ) : null}
             </Dialog>
+            {/* / Delete servant dialog */}
+
+            {/* Edit servant dialog */}
+            {servant && isEditDialogOpen ? (
+              <EditServant
+                servant={servant}
+                fullScreen={fullScreen}
+                onClose={handleCloseEditDialog}
+                open={isEditDialogOpen}
+              />
+            ) : null}
+            {/* / Edit servant dialog */}
 
             <Snackbar
               open={isSnackBarOpen}
@@ -162,16 +184,19 @@ const Servants = () => {
             <Box
               sx={{
                 bgcolor: 'background.paper',
-                display: 'flex',
+                display: fullScreen ? 'block' : 'flex',
                 height: 224,
               }}
             >
               <Tabs
                 value={value}
                 onChange={(_, newValue: number) => setValue(newValue)}
-                orientation="vertical"
-                variant="scrollable"
-                sx={{ borderRight: 1, borderColor: 'divider' }}
+                orientation={fullScreen ? 'horizontal' : 'vertical'}
+                variant={fullScreen ? 'fullWidth' : null}
+                sx={{
+                  borderRight: fullScreen ? 0 : 1,
+                  borderColor: fullScreen ? null : 'divider',
+                }}
               >
                 <Tab icon={<VisibilityIcon />} label="VIEW" />
                 <Tab icon={<AddCircleIcon />} label="ADD" />
@@ -209,11 +234,19 @@ const Servants = () => {
                       </Box>
                       <Button
                         variant="contained"
+                        color="info"
+                        startIcon={<EditIcon />}
+                        onClick={handleOpenEditDialog}
+                      >
+                        Edit
+                      </Button>{' '}
+                      <Button
+                        variant="contained"
                         color="error"
                         startIcon={<DeleteIcon />}
                         onClick={handleOpenConfirmationDialog}
                       >
-                        Delete Servant
+                        Delete
                       </Button>
                     </>
                   ) : null}

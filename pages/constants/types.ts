@@ -12,3 +12,11 @@ export interface IFormInput {
   jobs: string[];
   unavailableDates: { year: number; month: string; id: string }[];
 }
+
+export interface IServant {
+  firstName?: string;
+  lastName?: string;
+  id?: string;
+  jobs?: string;
+  notAvailable?: { year: number; month: string; id: string }[];
+}
