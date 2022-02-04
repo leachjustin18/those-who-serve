@@ -36,9 +36,10 @@ import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useState } from 'react';
 import { getYear, format } from 'date-fns';
-import firebase from '../../firebase/clientApp';
+import { collection, addDoc } from 'firebase/firestore';
+import db from '../../pages/firebase/firestore';
 import { IFormInput } from '../../constants/types';
-import { servantSchema } from '../../constants';
+import { servantSchema, servantsCollection } from '../../constants';
 import Icon from '../checkbox/Icon';
 import CheckedIcon from '../checkbox/CheckedIcon';
 
@@ -48,7 +49,7 @@ const unavailableDatesLayout = {
   flexDirection: 'row-reverse',
 };
 
-const AddServant = () => {
+const AddServant = ({ afterSave }: { afterSave: () => void }) => {
   const [unavailableDate, setUnavailableDate] = useState<Date | null>(null);
   const [isBackDropOpen, setIsBackDropOpen] = useState(false);
   const [isSnackBarOpen, setIsSnackBarOpen] = useState(false);
@@ -87,7 +88,7 @@ const AddServant = () => {
     let notAvailable = [];
     setIsBackDropOpen(true);
 
-    if (unavailableDates.length) {
+    if (unavailableDates.filter((n) => n).length) {
       notAvailable = unavailableDates.map((date) => ({
         month: date.month,
         year: date.year,
@@ -95,7 +96,7 @@ const AddServant = () => {
     }
 
     try {
-      await firebase.firestore().collection('servants').add({
+      await addDoc(collection(db, servantsCollection), {
         firstName,
         lastName,
         jobList,
@@ -108,6 +109,7 @@ const AddServant = () => {
       setIsBackDropOpen(false);
       setUnavailableDate(null);
       setIsSnackBarOpen(true);
+      afterSave();
     } catch (error) {
       console.error('error', error);
     }

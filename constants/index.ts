@@ -26,4 +26,6 @@ const servantSchema = yup.object({
   lastName: yup.string().required('Last Name is a required field'),
 });
 
-export { servantColumns, servantSchema };
+const servantsCollection = 'servants';
+
+export { servantColumns, servantSchema, servantsCollection };

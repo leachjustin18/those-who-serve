@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ReactElement, useState, MouseEvent } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import {
   AppBar,
   Container as MuiContainer,
@@ -19,11 +18,12 @@ import {
   AccountCircle as AccountCircleIcon,
 } from '@mui/icons-material';
 import styled from '@emotion/styled';
-import firebase from '../../firebase/clientApp';
+import { signOut, getAuth } from 'firebase/auth';
+import useUser from '../../hooks/useUser';
 
 const Container = ({ children }: { children: ReactElement }): ReactElement => {
-  const firebaseAuth = firebase.auth();
-  const [user] = useAuthState(firebaseAuth);
+  const auth = getAuth();
+  const { user } = useUser();
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -45,7 +45,7 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
   const logUserOut = () => {
     setAnchorElNav(null);
     setAnchorElUser(null);
-    firebaseAuth.signOut();
+    signOut(auth);
   };
 
   const pages = [
@@ -144,7 +144,7 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
 
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
-                {user?.displayName && user?.photoURL ? (
+                {user ? (
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                     <Avatar alt={user.displayName} src={user.photoURL} />
                   </IconButton>

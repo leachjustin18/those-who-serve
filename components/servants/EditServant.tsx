@@ -35,22 +35,25 @@ import { DatePicker, LocalizationProvider } from '@mui/lab';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import { useState } from 'react';
 import { getYear, format } from 'date-fns';
+import { doc, updateDoc } from 'firebase/firestore';
 import { IFormInput, IServant } from '../../constants/types';
-import { servantSchema } from '../../constants';
+import { servantSchema, servantsCollection } from '../../constants';
 import Icon from '../checkbox/Icon';
 import CheckedIcon from '../checkbox/CheckedIcon';
-import firebase from '../../firebase/clientApp';
+import db from '../../pages/firebase/firestore';
 
 const EditServant = ({
   servant,
   fullScreen,
   open,
   onClose,
+  onUpdate,
 }: {
   servant: IServant;
   fullScreen: boolean;
   open: boolean;
   onClose: () => void;
+  onUpdate: () => void;
 }) => {
   const [unavailableDate, setUnavailableDate] = useState<Date | null>(null);
   const jobsStatic = [
@@ -106,7 +109,7 @@ const EditServant = ({
   }) => {
     let notAvailable = [];
 
-    if (unavailableDates.length) {
+    if (unavailableDates.filter((n) => n).length) {
       notAvailable = unavailableDates.map((date) => ({
         month: date.month,
         year: date.year,
@@ -114,14 +117,16 @@ const EditServant = ({
     }
 
     try {
-      await firebase.firestore().collection('servants').doc(servant.id).update({
+      const servantRef = doc(db, servantsCollection, servant.id);
+
+      await updateDoc(servantRef, {
         firstName,
         lastName,
         jobList,
         notAvailable,
       });
 
-      onClose();
+      onUpdate();
     } catch (error) {
       console.error('error', error);
     }

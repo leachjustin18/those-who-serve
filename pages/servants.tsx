@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import {
   Typography,
@@ -16,7 +16,6 @@ import {
   Alert,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { DataGrid, GridToolbar, GridCellParams } from '@mui/x-data-grid';
 import {
   Visibility as VisibilityIcon,
@@ -24,44 +23,50 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
-import firebase from './firebase/clientApp';
-import LoggedInGuard from './components/authorization/LoggedInGuard';
-import Container from './components/layout/Container';
-import { servantColumns } from './constants';
-import { IServant } from './constants/types';
-import TabPanel from './components/tab/TabPanel';
-import AddServant from './components/servants/AddServant';
-import EditServant from './components/servants/EditServant';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import LoggedInGuard from '../components/authorization/LoggedInGuard';
+import Container from '../components/layout/Container';
+import { servantColumns, servantsCollection } from '../constants';
+import { IServant } from '../constants/types';
+import TabPanel from '../components/tab/TabPanel';
+import AddServant from '../components/servants/AddServant';
+import EditServant from '../components/servants/EditServant';
+import db from './firebase/firestore';
 
 const Servants = () => {
-  const fireBaseCollectionServants = firebase
-    .firestore()
-    .collection('servants');
-
-  const [servants, servantsLoading] = useCollectionData(
-    fireBaseCollectionServants,
-    { idField: 'id' }
-  );
   const [value, setValue] = useState(0);
   const [servant, setServant] = useState<IServant | null>();
   const [isConfirmDeletionOpen, setIsConfirmDeletionOpen] = useState(false);
   const [isSnackBarOpen, setIsSnackBarOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [servantData, setServantData] = useState([]);
+  const [fetchServantData, setFetchServantData] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const gotServantData = await getDocs(collection(db, servantsCollection));
+
+      const servants = [];
+
+      gotServantData.forEach((servantDoc) => {
+        const data = servantDoc.data();
+
+        servants.push({
+          id: servantDoc.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          jobs: data.jobList.join(', '),
+          notAvailable: data.notAvailable,
+        });
+      });
+
+      setServantData(servants);
+      setFetchServantData(false);
+    })();
+  }, [fetchServantData]);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
-
-  let servantData = [];
-
-  if (!servantsLoading && servants) {
-    servantData = servants.map((doc) => ({
-      id: doc.id,
-      firstName: doc.firstName,
-      lastName: doc.lastName,
-      jobs: doc.jobList.join(', '),
-      notAvailable: doc.notAvailable,
-    }));
-  }
 
   const onCellSelect = (params: GridCellParams) => {
     setServant(params.row);
@@ -79,14 +84,24 @@ const Servants = () => {
     setIsEditDialogOpen(false);
   };
 
+  const handleUpdateEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setFetchServantData(true);
+  };
+
+  const handleAfterSave = () => {
+    setFetchServantData(true);
+  };
+
   const handleOpenEditDialog = () => {
     setIsEditDialogOpen(true);
   };
 
   const handleDeleteServant = async () => {
     try {
-      await fireBaseCollectionServants.doc(servant.id).delete();
+      await deleteDoc(doc(db, servantsCollection, servant.id));
       setIsSnackBarOpen(true);
+      setFetchServantData(true);
     } catch (error) {
       console.log('error', error);
     }
@@ -160,6 +175,7 @@ const Servants = () => {
                 servant={servant}
                 fullScreen={fullScreen}
                 onClose={handleCloseEditDialog}
+                onUpdate={handleUpdateEditDialog}
                 open={isEditDialogOpen}
               />
             ) : null}
@@ -253,7 +269,7 @@ const Servants = () => {
                 </>
               </TabPanel>
               <TabPanel value={value} index={1}>
-                <AddServant />
+                <AddServant afterSave={handleAfterSave} />
               </TabPanel>
             </Box>
           </>
