@@ -41,6 +41,7 @@ const Servants = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [servantData, setServantData] = useState([]);
   const [fetchServantData, setFetchServantData] = useState(false);
+  const [servantUpdateText, setServantUpdateText] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -86,7 +87,10 @@ const Servants = () => {
 
   const handleUpdateEditDialog = () => {
     setIsEditDialogOpen(false);
+    setServantUpdateText('updated');
+    setIsSnackBarOpen(true);
     setFetchServantData(true);
+    setServant(null);
   };
 
   const handleAfterSave = () => {
@@ -100,6 +104,7 @@ const Servants = () => {
   const handleDeleteServant = async () => {
     try {
       await deleteDoc(doc(db, servantsCollection, servant.id));
+      setServantUpdateText('deleted');
       setIsSnackBarOpen(true);
       setFetchServantData(true);
     } catch (error) {
@@ -192,7 +197,7 @@ const Servants = () => {
                 severity="info"
                 sx={{ width: '100%' }}
               >
-                Servant successfully deleted
+                Servant successfully {servantUpdateText}
               </Alert>
             </Snackbar>
 
@@ -241,10 +246,11 @@ const Servants = () => {
                     <>
                       <Box mt={2} mb={1}>
                         <Typography variant="subtitle1">
-                          Servant{' '}
+                          Servant
                           <strong>
-                            {servant.firstName} {servant.lastName}
-                          </strong>{' '}
+                            {' '}
+                            {servant.firstName} {servant.lastName}{' '}
+                          </strong>
                           Selected
                         </Typography>
                       </Box>
@@ -265,7 +271,13 @@ const Servants = () => {
                         Delete
                       </Button>
                     </>
-                  ) : null}
+                  ) : (
+                    <Box pt={2}>
+                      <Typography variant="body2">
+                        Select Servant for options
+                      </Typography>
+                    </Box>
+                  )}
                 </>
               </TabPanel>
               <TabPanel value={value} index={1}>
