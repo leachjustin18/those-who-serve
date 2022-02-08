@@ -52,12 +52,20 @@ const Servants = () => {
       gotServantData.forEach((servantDoc) => {
         const data = servantDoc.data();
 
+        const unavailableDates = data.notAvailable.filter((n) => n).length
+          ? data.notAvailable.reduce(
+              (acc, date) =>
+                `${acc}${acc ? ', ' : ''}${date.month} ${date.year}`,
+              ''
+            )
+          : '';
+
         servants.push({
           id: servantDoc.id,
           firstName: data.firstName,
           lastName: data.lastName,
           jobs: data.jobList.join(', '),
-          notAvailable: data.notAvailable,
+          notAvailable: unavailableDates,
         });
       });
 

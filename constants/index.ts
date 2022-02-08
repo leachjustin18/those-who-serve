@@ -17,6 +17,11 @@ const servantColumns: GridColDef[] = [
     headerName: 'Jobs',
     flex: 1,
   },
+  {
+    field: 'notAvailable',
+    headerName: 'Unavailable Dates',
+    flex: 1,
+  },
 ];
 
 const servantSchema = yup.object({
