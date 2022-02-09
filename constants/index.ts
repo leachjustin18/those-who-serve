@@ -5,22 +5,22 @@ const servantColumns: GridColDef[] = [
   {
     field: 'firstName',
     headerName: 'First Name',
-    flex: 1,
+    minWidth: 40,
   },
   {
     field: 'lastName',
     headerName: 'Last Name',
-    flex: 1,
+    minWidth: 150,
   },
   {
     field: 'jobs',
     headerName: 'Jobs',
-    flex: 1,
+    minWidth: 350,
   },
   {
     field: 'notAvailable',
     headerName: 'Unavailable Dates',
-    flex: 1,
+    minWidth: 400,
   },
 ];
 
