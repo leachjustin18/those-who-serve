@@ -1,14 +1,25 @@
-import React from 'react';
-import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
-import firebase from './firebase/clientApp';
+import { useEffect, useMemo } from 'react';
+import { getAuth, GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { useRouter } from 'next/router';
+import useUser from '../hooks/useUser';
 
-const uiConfig = {
-  signInSuccessUrl: '/',
-  signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
+const Auth = () => {
+  const provider = useMemo(() => new GoogleAuthProvider(), []);
+  const auth = getAuth();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (user) {
+        router.push('/');
+      } else {
+        signInWithRedirect(auth, provider);
+      }
+    }
+  }, [isUserLoading, user, provider, router, auth]);
+
+  return '';
 };
 
-const SignInScreen = () => (
-  <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
-);
-
-export default SignInScreen;
+export default Auth;

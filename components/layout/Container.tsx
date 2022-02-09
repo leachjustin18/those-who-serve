@@ -1,5 +1,5 @@
+import Link from 'next/link';
 import { ReactElement, useState, MouseEvent } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import {
   AppBar,
   Container as MuiContainer,
@@ -17,11 +17,13 @@ import {
   Menu as MenuIcon,
   AccountCircle as AccountCircleIcon,
 } from '@mui/icons-material';
-import firebase from '../../firebase/clientApp';
+import styled from '@emotion/styled';
+import { signOut, getAuth } from 'firebase/auth';
+import useUser from '../../hooks/useUser';
 
 const Container = ({ children }: { children: ReactElement }): ReactElement => {
-  const firebaseAuth = firebase.auth();
-  const [user] = useAuthState(firebaseAuth);
+  const auth = getAuth();
+  const { user } = useUser();
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -43,17 +45,26 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
   const logUserOut = () => {
     setAnchorElNav(null);
     setAnchorElUser(null);
-    firebaseAuth.signOut();
+    signOut(auth);
   };
 
   const pages = [
-    'Servants',
-    'Adult Jobs',
-    'Kid Jobs',
-    'Upcoming Schedule',
-    'Create Schedule',
+    {
+      name: 'Home',
+      href: '/',
+    },
+    {
+      name: 'Servants',
+      href: '/servants',
+    },
   ];
+
   const siteTitle = 'Those Who Serve';
+
+  const PagesLink = styled.a({
+    color: 'inherit',
+    textDecoration: 'none',
+  });
 
   return (
     <>
@@ -99,8 +110,12 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
                 }}
               >
                 {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
+                  <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                    <Typography textAlign="center">
+                      <Link href={page.href} passHref>
+                        <PagesLink>{page.name}</PagesLink>
+                      </Link>
+                    </Typography>
                   </MenuItem>
                 ))}
               </Menu>
@@ -116,18 +131,20 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {pages.map((page) => (
                 <Button
-                  key={page}
+                  key={page.name}
                   onClick={handleCloseNavMenu}
                   sx={{ my: 2, color: 'white', display: 'block' }}
                 >
-                  {page}
+                  <Link href={page.href} passHref>
+                    <PagesLink>{page.name}</PagesLink>
+                  </Link>
                 </Button>
               ))}
             </Box>
 
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
-                {user?.displayName && user?.photoURL ? (
+                {user ? (
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                     <Avatar alt={user.displayName} src={user.photoURL} />
                   </IconButton>
@@ -173,7 +190,9 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
       </AppBar>
 
       <MuiContainer maxWidth="xl">
-        <Box pt={2}>{children}</Box>
+        <Box pt={2}>
+          <main>{children}</main>
+        </Box>
       </MuiContainer>
     </>
   );
