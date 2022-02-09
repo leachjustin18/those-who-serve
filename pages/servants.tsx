@@ -31,7 +31,7 @@ import { IServant, TUnavailableDate } from '../constants/types';
 import TabPanel from '../components/tab/TabPanel';
 import AddServant from '../components/servants/AddServant';
 import EditServant from '../components/servants/EditServant';
-import db from './firebase/firestore';
+import db from '../components/firebase/firestore';
 
 const Servants = () => {
   const [value, setValue] = useState(0);

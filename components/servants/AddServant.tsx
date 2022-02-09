@@ -37,7 +37,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useState } from 'react';
 import { getYear, format } from 'date-fns';
 import { collection, addDoc } from 'firebase/firestore';
-import db from '../../pages/firebase/firestore';
+import db from '../firebase/firestore';
 import { IFormInput } from '../../constants/types';
 import { servantSchema, servantsCollection } from '../../constants';
 import Icon from '../checkbox/Icon';

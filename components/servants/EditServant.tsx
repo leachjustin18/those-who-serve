@@ -40,7 +40,7 @@ import { IFormInput, IServant } from '../../constants/types';
 import { servantSchema, servantsCollection } from '../../constants';
 import Icon from '../checkbox/Icon';
 import CheckedIcon from '../checkbox/CheckedIcon';
-import db from '../../pages/firebase/firestore';
+import db from '../firebase/firestore';
 
 const EditServant = ({
   servant,
