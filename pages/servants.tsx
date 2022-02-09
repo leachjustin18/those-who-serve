@@ -27,7 +27,7 @@ import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import LoggedInGuard from '../components/authorization/LoggedInGuard';
 import Container from '../components/layout/Container';
 import { servantColumns, servantsCollection } from '../constants';
-import { IServant } from '../constants/types';
+import { IServant, TUnavailableDate } from '../constants/types';
 import TabPanel from '../components/tab/TabPanel';
 import AddServant from '../components/servants/AddServant';
 import EditServant from '../components/servants/EditServant';
@@ -52,9 +52,11 @@ const Servants = () => {
       gotServantData.forEach((servantDoc) => {
         const data = servantDoc.data();
 
-        const unavailableDates = data.notAvailable.filter((n) => n).length
+        const unavailableDates = data.notAvailable.filter(
+          (n: TUnavailableDate) => n
+        ).length
           ? data.notAvailable.reduce(
-              (acc, date) =>
+              (acc: string, date: TUnavailableDate) =>
                 `${acc}${acc ? ', ' : ''}${date.month} ${date.year}`,
               ''
             )
@@ -66,6 +68,7 @@ const Servants = () => {
           lastName: data.lastName,
           jobs: data.jobList.join(', '),
           notAvailable: unavailableDates,
+          unavailableDates: data.notAvailable,
         });
       });
 

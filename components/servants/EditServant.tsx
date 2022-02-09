@@ -70,8 +70,8 @@ const EditServant = ({
       firstName: servant.firstName,
       lastName: servant.lastName,
       jobs,
-      unavailableDates: servant?.notAvailable?.length
-        ? servant?.notAvailable
+      unavailableDates: servant?.unavailableDates?.length
+        ? servant?.unavailableDates
         : [],
     },
     resolver: yupResolver(servantSchema),
