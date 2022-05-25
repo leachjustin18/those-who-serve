@@ -21,7 +21,11 @@ import styled from '@emotion/styled';
 import { signOut, getAuth } from 'firebase/auth';
 import useUser from '../../hooks/useUser';
 
-const Container = ({ children }: { children: ReactElement }): ReactElement => {
+const Container = ({
+  children,
+}: {
+  children: ReactElement | ReactElement[];
+}): ReactElement => {
   const auth = getAuth();
   const { user } = useUser();
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -56,6 +60,10 @@ const Container = ({ children }: { children: ReactElement }): ReactElement => {
     {
       name: 'Servants',
       href: '/servants',
+    },
+    {
+      name: 'Create Calendar',
+      href: '/createCalendar',
     },
   ];
 

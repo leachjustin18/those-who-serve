@@ -97,6 +97,7 @@ const Servants = () => {
   };
 
   const handleUpdateEditDialog = () => {
+    // TODO: Clean this up to be one state instead of needing to call re-render multiple times
     setIsEditDialogOpen(false);
     setServantUpdateText('updated');
     setIsSnackBarOpen(true);
