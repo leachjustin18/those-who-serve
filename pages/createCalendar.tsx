@@ -9,9 +9,10 @@ import {
   Stepper,
   Box,
 } from '@mui/material';
-import { startOfMonth, setDay, addWeeks, getDay } from 'date-fns';
+import { startOfMonth, getWeeksInMonth } from 'date-fns';
 import LoggedInGuard from '../components/authorization/LoggedInGuard';
 import Container from '../components/layout/Container';
+import getServantDays from '../services/getServantDays';
 
 const HandleContinueAndBack = ({
   handleNext,
@@ -33,6 +34,9 @@ const HandleContinueAndBack = ({
 const CreateCalendar = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [servantDates, setServantDates] =
+    useState<{ sunday: string[]; wednesday: string[] }>();
+
   const months = [
     'January',
     'February',
@@ -48,23 +52,6 @@ const CreateCalendar = () => {
     'December',
   ];
 
-  //   TODO: Make helper that returns all Sunday and Wedesndays
-  //  TODO: see about using https://date-fns.org/v2.28.0/docs/getWeeksInMonth
-
-  const third = 3;
-  const saturday = 0;
-
-  const startOfMonth2 = startOfMonth(new Date());
-  const firstSaturday = setDay(startOfMonth2, saturday, {
-    weekStartsOn: getDay(startOfMonth2),
-  });
-  console.log('firstSaturday', firstSaturday);
-  const thirdSaturday = addWeeks(firstSaturday, third - 1);
-  const forthSaturday = addWeeks(firstSaturday, 5 - 1);
-
-  console.log('thirdSaturday', thirdSaturday);
-  console.log('forthSaturday', forthSaturday);
-
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
@@ -78,8 +65,20 @@ const CreateCalendar = () => {
   };
 
   const handleSelectingMonth = (month: string) => {
+    const year = new Date().getFullYear();
+    const firstDayOfTheMonth = startOfMonth(new Date(`${month} 1 ${year}`));
+
+    const numberOfWeeks = getWeeksInMonth(firstDayOfTheMonth, {
+      weekStartsOn: 0,
+    });
+
+    const datesForServants = getServantDays(firstDayOfTheMonth, numberOfWeeks);
+
+    setServantDates(datesForServants);
     setSelectedMonth(month);
   };
+
+  console.log('servantDates', servantDates);
 
   return (
     <>
