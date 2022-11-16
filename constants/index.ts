@@ -31,4 +31,19 @@ const servantSchema = yup.object({
 
 const servantsCollection = 'servants';
 
-export { servantColumns, servantSchema, servantsCollection };
+const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export { servantColumns, servantSchema, servantsCollection, months };

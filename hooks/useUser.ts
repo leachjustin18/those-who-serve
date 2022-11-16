@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import '../pages/firebase/initializeApp';
+import '../components/firebase/initializeApp';
 
 const useUser = () => {
   const [user, setUser] = useState<User>(null);
@@ -8,7 +8,7 @@ const useUser = () => {
   const auth = getAuth();
 
   useEffect(() => {
-    const unsubscriber = onAuthStateChanged(auth, (googleUser) => {
+    const unsubscribes = onAuthStateChanged(auth, (googleUser) => {
       try {
         if (googleUser) {
           setUser(googleUser);
@@ -22,7 +22,7 @@ const useUser = () => {
       }
     });
 
-    return () => unsubscriber();
+    return () => unsubscribes();
   }, [auth]);
 
   return { user, isUserLoading };

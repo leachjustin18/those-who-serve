@@ -31,7 +31,7 @@ import { IServant, TUnavailableDate } from '../constants/types';
 import TabPanel from '../components/tab/TabPanel';
 import AddServant from '../components/servants/AddServant';
 import EditServant from '../components/servants/EditServant';
-import db from './firebase/firestore';
+import db from '../components/firebase/firestore';
 
 const Servants = () => {
   const [value, setValue] = useState(0);
@@ -66,7 +66,7 @@ const Servants = () => {
           id: servantDoc.id,
           firstName: data.firstName,
           lastName: data.lastName,
-          jobs: data.jobList.join(', '),
+          jobs: data.jobList,
           notAvailable: unavailableDates,
           unavailableDates: data.notAvailable,
         });
@@ -97,6 +97,7 @@ const Servants = () => {
   };
 
   const handleUpdateEditDialog = () => {
+    // TODO: Clean this up to be one state instead of needing to call re-render multiple times
     setIsEditDialogOpen(false);
     setServantUpdateText('updated');
     setIsSnackBarOpen(true);
