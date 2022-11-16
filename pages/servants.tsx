@@ -66,7 +66,7 @@ const Servants = () => {
           id: servantDoc.id,
           firstName: data.firstName,
           lastName: data.lastName,
-          jobs: data.jobList.join(', '),
+          jobs: data.jobList,
           notAvailable: unavailableDates,
           unavailableDates: data.notAvailable,
         });

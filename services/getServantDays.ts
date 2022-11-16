@@ -5,9 +5,11 @@ import {
   isSunday,
   isWednesday,
   format,
+  getMonth,
 } from 'date-fns';
 
 const getServantDays = (firstDayOfTheMonth: Date, numberOfWeeks: number) => {
+  const selectedMonth = getMonth(new Date(firstDayOfTheMonth));
   const firstSunday = setDay(firstDayOfTheMonth, 0, {
     weekStartsOn: getDay(firstDayOfTheMonth),
   });
@@ -28,20 +30,28 @@ const getServantDays = (firstDayOfTheMonth: Date, numberOfWeeks: number) => {
   const wednesdayDatesOfMonth: string[] = [];
 
   for (let i = 1; i < totalWeeksInMonthForSunday; i += 1) {
-    sundayDatesOfMonth.push(
-      format(new Date(addWeeks(firstSunday, i - 1)), 'PPPP')
-    );
+    const nextSunday = new Date(addWeeks(firstSunday, i - 1));
+    const formattedSunday =
+      selectedMonth === getMonth(nextSunday)
+        ? format(nextSunday, 'PPPP')
+        : null;
+
+    sundayDatesOfMonth.push(formattedSunday);
   }
 
   for (let i = 1; i < totalWeeksInMonthForWednesday; i += 1) {
-    wednesdayDatesOfMonth.push(
-      format(new Date(addWeeks(firstWednesday, i - 1)), 'PPPP')
-    );
+    const nextWednesday = new Date(addWeeks(firstWednesday, i - 1));
+    const formattedWednesday =
+      selectedMonth === getMonth(nextWednesday)
+        ? format(nextWednesday, 'PPPP')
+        : null;
+
+    wednesdayDatesOfMonth.push(formattedWednesday);
   }
 
   return {
-    sunday: sundayDatesOfMonth,
-    wednesday: wednesdayDatesOfMonth,
+    sunday: sundayDatesOfMonth.filter((sunday) => sunday !== null),
+    wednesday: wednesdayDatesOfMonth.filter((wednesday) => wednesday !== null),
   };
 };
 

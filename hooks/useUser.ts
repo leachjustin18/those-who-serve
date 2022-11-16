@@ -8,7 +8,7 @@ const useUser = () => {
   const auth = getAuth();
 
   useEffect(() => {
-    const unsubscriber = onAuthStateChanged(auth, (googleUser) => {
+    const unsubscribes = onAuthStateChanged(auth, (googleUser) => {
       try {
         if (googleUser) {
           setUser(googleUser);
@@ -22,7 +22,7 @@ const useUser = () => {
       }
     });
 
-    return () => unsubscriber();
+    return () => unsubscribes();
   }, [auth]);
 
   return { user, isUserLoading };
