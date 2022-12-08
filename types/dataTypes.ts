@@ -1,1 +1,1 @@
-export type TJobs = { friendlyName: string; name: string };
+export type TJobs = { id: string; friendlyName: string; name: string };
