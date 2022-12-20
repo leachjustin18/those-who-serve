@@ -1,14 +1,10 @@
-import type { ReactElement } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import { Box, LinearProgress } from '@mui/material';
 
 import { useUser } from '../../context/userContext';
 
-const LoggedInGuard = ({
-  children,
-}: {
-  children: ReactElement | string;
-}): ReactElement => {
+const LoggedInGuard = ({ children }: { children: ReactNode }): JSX.Element => {
   const { user, isLoadingUser } = useUser();
   const router = useRouter();
 

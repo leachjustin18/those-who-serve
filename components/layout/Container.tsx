@@ -26,13 +26,13 @@ import {
 import { signOut, getAuth } from 'firebase/auth';
 import { createFirebaseApp } from '../../firebase/clientApp';
 import { useUser } from '../../context/userContext';
-import type { SyntheticEvent } from 'react';
+import type { SyntheticEvent, ReactNode } from 'react';
 
 const Container = ({
   title,
   children,
 }: {
-  children: JSX.Element | string;
+  children: ReactNode;
   title?: string;
 }): JSX.Element => {
   const router = useRouter();
