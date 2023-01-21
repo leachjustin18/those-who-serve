@@ -33,6 +33,13 @@ import type { TAddJobFormInputs } from '../types/types';
 const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   const [value, setValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [dataResponse, setDataResponse] = useState<{
+    isOpen: boolean;
+    message?: string;
+    severity?: 'success' | 'error';
+  }>({
+    isOpen: true,
+  });
   const title = 'Jobs';
   const headTitle = headerTitle(title);
   const { state, dispatch } = useData();
@@ -99,9 +106,18 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       });
       const { data } = await addedJob.json();
       dispatch({ type: actions.ADD_JOB, payload: [data] });
+      setDataResponse({
+        isOpen: true,
+        severity: 'success',
+        message: `Job ${data.jobFriendlyName} successfully added`,
+      });
       reset();
     } catch (error) {
-      return error;
+      setDataResponse({
+        isOpen: true,
+        severity: 'error',
+        message: `Error adding a new job - ${error}`,
+      });
     }
   };
 
@@ -117,6 +133,10 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     });
   };
 
+  const handleCloseDataResponse = () => {
+    setDataResponse({ isOpen: false, severity: undefined, message: undefined });
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -129,6 +149,21 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
       <Container title={title}>
         <LoggedInGuard>
+          <Snackbar
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            onClose={handleCloseDataResponse}
+            autoHideDuration={6000}
+            open={dataResponse.isOpen}
+          >
+            <Alert
+              onClose={handleCloseDataResponse}
+              severity={dataResponse.severity}
+              sx={{ width: '100%' }}
+            >
+              {dataResponse.message}
+            </Alert>
+          </Snackbar>
+
           <Tabs
             value={value}
             onChange={(_, newValue: number) => setValue(newValue)}
