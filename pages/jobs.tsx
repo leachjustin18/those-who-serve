@@ -6,13 +6,6 @@ import {
   Box,
   Tabs,
   Tab,
-  Button,
-  DialogContent,
-  Dialog,
-  DialogActions,
-  DialogContentText,
-  DialogTitle,
-  useMediaQuery,
   Snackbar,
   Alert,
   IconButton,
@@ -33,22 +26,26 @@ import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import headerTitle from '../util/headerTitle';
 import TabPanel from '../components/tabs/TabPanel';
 import AddJob from '../components/jobs/add';
+import Loading from '../components/util/loading';
 import { useData, actions } from '../context/dataContext';
 import type { TAddJobFormInputs } from '../types/types';
 
 const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   const [value, setValue] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const title = 'Jobs';
   const headTitle = headerTitle(title);
   const { state, dispatch } = useData();
 
   useEffect(() => {
-    if (state?.jobs && state?.jobs.length === 0) {
+    if (state?.jobs?.length === 0) {
+      setIsLoading(true);
       dispatch({ type: actions.INITIATE_JOBS, payload: data.jobs });
+      setIsLoading(false);
     }
   }, []);
 
-  const jobsData = state?.jobs;
+  const jobsData = state.jobs;
 
   const jobColumn: GridColDef[] = [
     {
@@ -116,6 +113,10 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       rollbackOnError: true,
     });
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <>

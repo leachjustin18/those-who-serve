@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/router';
 import { Box, LinearProgress } from '@mui/material';
-
+import Loading from '../util/loading';
 import { useUser } from '../../context/userContext';
 
 const LoggedInGuard = ({ children }: { children: ReactNode }): JSX.Element => {
@@ -9,11 +9,7 @@ const LoggedInGuard = ({ children }: { children: ReactNode }): JSX.Element => {
   const router = useRouter();
 
   if (isLoadingUser) {
-    return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress />
-      </Box>
-    );
+    return <Loading />;
   }
 
   if (user === null) {
