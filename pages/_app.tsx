@@ -7,6 +7,7 @@ import { CacheProvider, EmotionCache } from '@emotion/react';
 import theme from '../materialUI/theme';
 import createEmotionCache from '../materialUI/createEmotionCache';
 import UserProvider from '../context/userContext';
+import { DataProvider } from '../context/dataContext';
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
@@ -29,7 +30,9 @@ const App = ({
         {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
         <CssBaseline />
         <UserProvider>
-          <Component {...pageProps} />
+          <DataProvider>
+            <Component {...pageProps} />
+          </DataProvider>
         </UserProvider>
       </ThemeProvider>
     </CacheProvider>

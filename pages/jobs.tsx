@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import useSwr from 'swr';
 import {
@@ -24,34 +24,41 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
+import type { UseFormReset } from 'react-hook-form';
 import LoggedInGuard from '../components/authorization/LoggedInGuard';
 import Container from '../components/layout/Container';
 import admin from '../firebase/nodeApp';
-import type { TJobs } from '../types/types';
+import type { TJobs, TAPIAddJob } from '../types/types';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import headerTitle from '../util/headerTitle';
 import TabPanel from '../components/tabs/TabPanel';
 import AddJob from '../components/jobs/add';
-
-const fetcher: any = (url: string) => fetch(url).then((res) => res.json());
+import { useData, actions } from '../context/dataContext';
+import type { TAddJobFormInputs } from '../types/types';
 
 const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   const [value, setValue] = useState(0);
   const title = 'Jobs';
   const headTitle = headerTitle(title);
+  const { state, dispatch } = useData();
 
-  const jobRow = data.jobs;
+  useEffect(() => {
+    if (state?.jobs.length === 0) {
+      dispatch({ type: actions.ADD_JOBS, payload: data.jobs });
+    }
+  }, []);
 
-  // const { data: blah, error } = useSwr<any>('/api/job/add', fetcher);
-
-  // if (error) return <div>Failed to load users</div>;
-  // if (!blah) return <div>Loading...</div>;
-  // console.log(blah);
+  const jobsData = state?.jobs;
 
   const jobColumn: GridColDef[] = [
     {
-      field: 'friendlyName',
+      field: 'jobFriendlyName',
       headerName: 'Job',
+      width: 250,
+    },
+    {
+      field: 'jobNumberOfServants',
+      headerName: 'Number of servants',
       width: 250,
     },
     {
@@ -61,7 +68,6 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
-        console.log('🚀 ~ file: jobs.tsx ~ line 30 ~ Jobs ~ params', params);
         return (
           <IconButton aria-label="edit" color="primary">
             <EditIcon />
@@ -76,7 +82,6 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
-        console.log('🚀 ~ file: jobs.tsx ~ line 30 ~ Jobs ~ params', params);
         return (
           <IconButton aria-label="delete" color="error">
             <DeleteIcon />
@@ -85,6 +90,33 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       },
     },
   ];
+
+  const sendRequest = async (
+    arg: TAPIAddJob,
+    reset: UseFormReset<TAddJobFormInputs>
+  ) => {
+    try {
+      const addedJob = await fetch('/api/job/create', {
+        method: 'POST',
+        body: JSON.stringify(arg),
+      });
+      const { data } = await addedJob.json();
+      dispatch({ type: actions.ADD_JOB, payload: [data] });
+      reset();
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const { mutate } = useSwr('/api/job/create');
+
+  const onJobSubmit = (arg: TAPIAddJob, reset: any) => {
+    mutate(sendRequest(arg, reset), {
+      revalidate: false,
+      rollbackOnError: true,
+    });
+  };
+
   return (
     <>
       <Head>
@@ -105,7 +137,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
           <TabPanel value={value} index={0}>
             <Box sx={{ flex: 1 }}>
               <DataGrid
-                rows={jobRow}
+                rows={jobsData}
                 columns={jobColumn}
                 autoHeight
                 components={{ Toolbar: GridToolbar }}
@@ -113,7 +145,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
             </Box>
           </TabPanel>
           <TabPanel value={value} index={1}>
-            <AddJob />
+            <AddJob onJobSubmit={onJobSubmit} />
           </TabPanel>
         </LoggedInGuard>
       </Container>
@@ -125,8 +157,11 @@ export const getServerSideProps = async () => {
   const db = admin.database();
   const ref = db.ref('thoseWhoServe/jobs');
   let jobs: TJobs[] = [];
-  await ref.once('value', (snapshot) => {
-    jobs = snapshot.val();
+
+  await ref.orderByKey().on('value', (snapshot) => {
+    snapshot.forEach((data) => {
+      jobs.push({ key: data.key, ...data.val() });
+    });
   });
 
   return { props: { data: { jobs } } };
