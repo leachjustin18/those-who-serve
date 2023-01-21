@@ -2,18 +2,20 @@ import { getDatabase } from 'firebase-admin/database';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const handler = (req: NextApiRequest, res: NextApiResponse) => {
-  const { key } = JSON.parse(req.body);
+  //   const { key } = JSON.parse(req.body);
+  const { key } = req.query;
+  console.log('🚀 ~ file: [key].ts:7 ~ handler ~ key', key);
 
-  const db = getDatabase();
-  const jobsRef = db.ref(`thoseWhoServe/jobs/${key}`);
+  //   const db = getDatabase();
+  //   const jobsRef = db.ref(`thoseWhoServe/jobs/${key}`);
 
-  jobsRef.set(null, (error) => {
-    if (error) {
-      console.log('Data could not be removed.' + error);
-    } else {
-      console.log('Data removed successfully.');
-    }
-  });
+  //   jobsRef.set(null, (error) => {
+  //     if (error) {
+  //       console.log('Data could not be removed.' + error);
+  //     } else {
+  //       console.log('Data removed successfully.');
+  //     }
+  //   });
 
   //   newJobsRef.set(data);
 

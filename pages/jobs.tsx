@@ -55,9 +55,8 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
   const onJobDelete = async (key: string) => {
     try {
-      const addedJob = await fetch('/api/job/delete', {
-        method: 'POST',
-        body: JSON.stringify({ key }),
+      const addedJob = await fetch(`/api/job/delete/${key}`, {
+        method: 'DELETE',
       });
       // const { data } = await addedJob.json();
       // dispatch({ type: actions.ADD_JOB, payload: [data] });
@@ -131,8 +130,8 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
         method: 'POST',
         body: JSON.stringify(arg),
       });
-      const { data } = await addedJob.json();
-      dispatch({ type: actions.ADD_JOB, payload: [data] });
+      const { data, key } = await addedJob.json();
+      dispatch({ type: actions.ADD_JOB, payload: [{ ...data, key }] });
       setDataResponse({
         isOpen: true,
         severity: 'success',
