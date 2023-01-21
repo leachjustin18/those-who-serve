@@ -38,7 +38,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     message?: string;
     severity?: 'success' | 'error';
   }>({
-    isOpen: true,
+    isOpen: false,
   });
   const title = 'Jobs';
   const headTitle = headerTitle(title);

@@ -10,7 +10,7 @@ const handler = (req: NextApiRequest, res: NextApiResponse) => {
   newJobsRef.set(data);
 
   newJobsRef?.key
-    ? res.status(200).json({ data, message: 'Job added' })
+    ? res.status(200).json({ data, key: newJobsRef?.key, message: 'Job added' })
     : res.status(500).json({ message: 'Failed to add record' });
 };
 
