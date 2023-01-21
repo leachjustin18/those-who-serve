@@ -107,7 +107,10 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
   const { mutate } = useSwr('/api/job/create');
 
-  const onJobSubmit = (arg: TAPIAddJob, reset: any) => {
+  const onJobSubmit = (
+    arg: TAPIAddJob,
+    reset: UseFormReset<TAddJobFormInputs>
+  ) => {
     mutate(sendRequest(arg, reset), {
       revalidate: false,
       rollbackOnError: true,
