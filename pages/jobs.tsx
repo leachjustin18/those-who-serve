@@ -54,6 +54,29 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
   const jobsData = state.jobs;
 
+  const onJobDelete = async (key: string) => {
+    try {
+      const addedJob = await fetch('/api/job/delete', {
+        method: 'POST',
+        body: JSON.stringify({ key }),
+      });
+      // const { data } = await addedJob.json();
+      // dispatch({ type: actions.ADD_JOB, payload: [data] });
+      // setDataResponse({
+      //   isOpen: true,
+      //   severity: 'success',
+      //   message: `Job ${data.jobFriendlyName} successfully added`,
+      // });
+      // reset();
+    } catch (error) {
+      setDataResponse({
+        isOpen: true,
+        severity: 'error',
+        message: `Error adding a new job - ${error}`,
+      });
+    }
+  };
+
   const jobColumn: GridColDef[] = [
     {
       field: 'jobFriendlyName',
@@ -86,8 +109,13 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
+        const key = params?.row?.key;
         return (
-          <IconButton aria-label="delete" color="error">
+          <IconButton
+            aria-label="delete"
+            color="error"
+            onClick={() => onJobDelete(key)}
+          >
             <DeleteIcon />
           </IconButton>
         );
@@ -95,7 +123,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     },
   ];
 
-  const sendRequest = async (
+  const onJobSubmit = async (
     arg: TAPIAddJob,
     reset: UseFormReset<TAddJobFormInputs>
   ) => {
@@ -119,18 +147,6 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
         message: `Error adding a new job - ${error}`,
       });
     }
-  };
-
-  const { mutate } = useSwr('/api/job/create');
-
-  const onJobSubmit = (
-    arg: TAPIAddJob,
-    reset: UseFormReset<TAddJobFormInputs>
-  ) => {
-    mutate(sendRequest(arg, reset), {
-      revalidate: false,
-      rollbackOnError: true,
-    });
   };
 
   const handleCloseDataResponse = () => {
