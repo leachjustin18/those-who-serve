@@ -19,7 +19,7 @@ export const DataContext = createContext<{
 }>({ state: initialState, dispatch: () => {} });
 
 export enum actions {
-  ADD_JOBS = 'ADD_JOBS',
+  INITIATE_JOBS = 'INITIATE_JOBS',
   ADD_JOB = 'ADD_JOB',
 }
 
@@ -30,7 +30,7 @@ type TAction = {
 
 const reducer = (state: TState, action: TAction) => {
   switch (action.type) {
-    case actions.ADD_JOBS:
+    case actions.INITIATE_JOBS:
       return {
         ...state,
         jobs: [...action.payload],

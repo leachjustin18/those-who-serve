@@ -43,8 +43,8 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   const { state, dispatch } = useData();
 
   useEffect(() => {
-    if (state?.jobs.length === 0) {
-      dispatch({ type: actions.ADD_JOBS, payload: data.jobs });
+    if (state?.jobs && state?.jobs.length === 0) {
+      dispatch({ type: actions.INITIATE_JOBS, payload: data.jobs });
     }
   }, []);
 
