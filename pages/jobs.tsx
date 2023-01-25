@@ -150,7 +150,6 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
-        console.log('🚀 ~ file: jobs.tsx:122 ~ Jobs ~ params', params);
         const { key, jobFriendlyName } = params?.row;
         return (
           <IconButton
@@ -238,6 +237,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
                 columns={jobColumn}
                 autoHeight
                 components={{ Toolbar: GridToolbar }}
+                disableSelectionOnClick
               />
             </Box>
           </TabPanel>
