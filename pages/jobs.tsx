@@ -8,6 +8,12 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import {
@@ -28,6 +34,7 @@ import AddJob from '../components/jobs/add';
 import Loading from '../components/util/loading';
 import { useData, actions } from '../context/dataContext';
 import type { TAddJobFormInputs } from '../types/types';
+import DeleteJob from '../components/jobs/delete';
 
 const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   const [value, setValue] = useState(0);
@@ -39,6 +46,14 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   }>({
     isOpen: false,
   });
+  const [jobDeletion, setJobDeletion] = useState<{
+    isOpen: boolean;
+    id?: number;
+    jobFriendlyName?: string;
+  }>({
+    isOpen: false,
+  });
+
   const title = 'Jobs';
   const headTitle = headerTitle(title);
   const { state, dispatch } = useData();
@@ -53,7 +68,13 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
   const jobsData = state.jobs;
 
-  const onJobDelete = async (key: string) => {
+  const onJobDelete = async ({
+    key,
+    jobFriendlyName,
+  }: {
+    key: string;
+    jobFriendlyName: string;
+  }) => {
     try {
       const addedJob = await fetch(`/api/job/delete/${key}`, {
         method: 'DELETE',
@@ -73,6 +94,28 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
         message: `Error adding a new job - ${error}`,
       });
     }
+  };
+
+  const handleOnDeletion = ({
+    id,
+    jobFriendlyName,
+  }: {
+    id: number;
+    jobFriendlyName: string;
+  }) => {
+    setJobDeletion({
+      isOpen: true,
+      id,
+      jobFriendlyName,
+    });
+  };
+
+  const handleCloseDeletion = () => {
+    setJobDeletion({
+      isOpen: false,
+      id: undefined,
+      jobFriendlyName: undefined,
+    });
   };
 
   const jobColumn: GridColDef[] = [
@@ -107,12 +150,13 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
-        const key = params?.row?.key;
+        console.log('🚀 ~ file: jobs.tsx:122 ~ Jobs ~ params', params);
+        const { key, jobFriendlyName } = params?.row;
         return (
           <IconButton
             aria-label="delete"
             color="error"
-            onClick={() => onJobDelete(key)}
+            onClick={() => handleOnDeletion({ id: key, jobFriendlyName })}
           >
             <DeleteIcon />
           </IconButton>
@@ -200,6 +244,13 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
           <TabPanel value={value} index={1}>
             <AddJob onJobSubmit={onJobSubmit} />
           </TabPanel>
+
+          {jobDeletion.isOpen ? (
+            <DeleteJob
+              jobName={jobDeletion.jobFriendlyName}
+              onClose={handleCloseDeletion}
+            />
+          ) : null}
         </LoggedInGuard>
       </Container>
     </>
