@@ -10,8 +10,10 @@ import {
 const DeleteJob = ({
   jobName,
   onClose,
+  onDelete,
 }: {
   onClose: () => void;
+  onDelete: () => Promise<void>;
   jobName?: string;
 }) => {
   return (
@@ -25,7 +27,9 @@ const DeleteJob = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button color="error">Delete</Button>
+        <Button color="error" onClick={onDelete}>
+          Delete
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import {
-  Typography,
   Box,
   Tabs,
   Tab,
@@ -9,11 +8,6 @@ import {
   Alert,
   IconButton,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import {
@@ -48,7 +42,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
   });
   const [jobDeletion, setJobDeletion] = useState<{
     isOpen: boolean;
-    id?: number;
+    key?: number;
     jobFriendlyName?: string;
   }>({
     isOpen: false,
@@ -68,53 +62,54 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 
   const jobsData = state.jobs;
 
-  const onJobDelete = async ({
-    key,
-    jobFriendlyName,
-  }: {
-    key: string;
-    jobFriendlyName: string;
-  }) => {
+  const handleCloseDeletion = () => {
+    setJobDeletion({
+      isOpen: false,
+      key: undefined,
+      jobFriendlyName: undefined,
+    });
+  };
+
+  const handleJobDeletion = async () => {
+    handleCloseDeletion();
+    setIsLoading(true);
+
     try {
-      const addedJob = await fetch(`/api/job/delete/${key}`, {
+      const { key, jobFriendlyName } = jobDeletion;
+
+      await fetch(`/api/job/delete/${key}`, {
         method: 'DELETE',
       });
-      // const { data } = await addedJob.json();
-      // dispatch({ type: actions.ADD_JOB, payload: [data] });
-      // setDataResponse({
-      //   isOpen: true,
-      //   severity: 'success',
-      //   message: `Job ${data.jobFriendlyName} successfully added`,
-      // });
-      // reset();
+
+      dispatch({ type: actions.REMOVE_JOB, payload: key });
+
+      setDataResponse({
+        isOpen: true,
+        severity: 'success',
+        message: `Job ${jobFriendlyName} successfully deleted`,
+      });
     } catch (error) {
       setDataResponse({
         isOpen: true,
         severity: 'error',
         message: `Error adding a new job - ${error}`,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleOnDeletion = ({
-    id,
+    key,
     jobFriendlyName,
   }: {
-    id: number;
+    key: number;
     jobFriendlyName: string;
   }) => {
     setJobDeletion({
       isOpen: true,
-      id,
+      key,
       jobFriendlyName,
-    });
-  };
-
-  const handleCloseDeletion = () => {
-    setJobDeletion({
-      isOpen: false,
-      id: undefined,
-      jobFriendlyName: undefined,
     });
   };
 
@@ -155,7 +150,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
           <IconButton
             aria-label="delete"
             color="error"
-            onClick={() => handleOnDeletion({ id: key, jobFriendlyName })}
+            onClick={() => handleOnDeletion({ key, jobFriendlyName })}
           >
             <DeleteIcon />
           </IconButton>
@@ -194,10 +189,6 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     setDataResponse({ isOpen: false, severity: undefined, message: undefined });
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
   return (
     <>
       <Head>
@@ -221,34 +212,40 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
             </Alert>
           </Snackbar>
 
-          <Tabs
-            value={value}
-            onChange={(_, newValue: number) => setValue(newValue)}
-            orientation={'horizontal'}
-            variant={'fullWidth'}
-          >
-            <Tab icon={<VisibilityIcon />} label="VIEW" />
-            <Tab icon={<AddCircleIcon />} label="ADD" />
-          </Tabs>
-          <TabPanel value={value} index={0}>
-            <Box sx={{ flex: 1 }}>
-              <DataGrid
-                rows={jobsData}
-                columns={jobColumn}
-                autoHeight
-                components={{ Toolbar: GridToolbar }}
-                disableSelectionOnClick
-              />
-            </Box>
-          </TabPanel>
-          <TabPanel value={value} index={1}>
-            <AddJob onJobSubmit={onJobSubmit} />
-          </TabPanel>
+          {isLoading ? <Loading /> : null}
+          {!isLoading ? (
+            <>
+              <Tabs
+                value={value}
+                onChange={(_, newValue: number) => setValue(newValue)}
+                orientation={'horizontal'}
+                variant={'fullWidth'}
+              >
+                <Tab icon={<VisibilityIcon />} label="VIEW" />
+                <Tab icon={<AddCircleIcon />} label="ADD" />
+              </Tabs>
+              <TabPanel value={value} index={0}>
+                <Box sx={{ flex: 1 }}>
+                  <DataGrid
+                    rows={jobsData}
+                    columns={jobColumn}
+                    autoHeight
+                    components={{ Toolbar: GridToolbar }}
+                    disableSelectionOnClick
+                  />
+                </Box>
+              </TabPanel>
+              <TabPanel value={value} index={1}>
+                <AddJob onJobSubmit={onJobSubmit} />
+              </TabPanel>
+            </>
+          ) : null}
 
           {jobDeletion.isOpen ? (
             <DeleteJob
               jobName={jobDeletion.jobFriendlyName}
               onClose={handleCloseDeletion}
+              onDelete={handleJobDeletion}
             />
           ) : null}
         </LoggedInGuard>

@@ -21,11 +21,12 @@ export const DataContext = createContext<{
 export enum actions {
   INITIATE_JOBS = 'INITIATE_JOBS',
   ADD_JOB = 'ADD_JOB',
+  REMOVE_JOB = 'REMOVE_JOB',
 }
 
 type TAction = {
   type: actions;
-  payload: TJobs[];
+  payload: any;
 };
 
 const reducer = (state: TState, action: TAction) => {
@@ -39,6 +40,14 @@ const reducer = (state: TState, action: TAction) => {
       return {
         ...state,
         jobs: [...state.jobs, ...action.payload],
+      };
+    case actions.REMOVE_JOB:
+      const filteredJobs = state.jobs.filter(
+        (job) => job.key !== action.payload
+      );
+      return {
+        ...state,
+        jobs: filteredJobs,
       };
     default:
       return state;
