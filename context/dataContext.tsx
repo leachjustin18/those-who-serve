@@ -1,10 +1,10 @@
 import { createContext, useMemo, useContext } from 'react';
 import { useImmerReducer } from 'use-immer';
 import type { ReactNode } from 'react';
-import type { TJobs } from '../types/types';
+import type { TJob } from '../types/types';
 
 type TState = {
-  jobs: TJobs[];
+  jobs: TJob[];
   servants: Record<string, any>[];
 };
 

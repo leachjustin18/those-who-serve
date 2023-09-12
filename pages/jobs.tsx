@@ -20,7 +20,7 @@ import type { UseFormReset } from 'react-hook-form';
 import LoggedInGuard from '../components/authorization/LoggedInGuard';
 import Container from '../components/layout/Container';
 import admin from '../firebase/nodeApp';
-import type { TJobs, TAPIAddJob } from '../types/types';
+import type { TJob, TAPIAddJob } from '../types/types';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import headerTitle from '../util/headerTitle';
 import TabPanel from '../components/tabs/TabPanel';
@@ -29,8 +29,9 @@ import Loading from '../components/util/loading';
 import { useData, actions } from '../context/dataContext';
 import type { TAddJobFormInputs } from '../types/types';
 import DeleteJob from '../components/jobs/delete';
+import UpdateJob from '../components/jobs/update';
 
-const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
+const Jobs = ({ data }: { data: { jobs: TJob[] } }) => {
   const [value, setValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [dataResponse, setDataResponse] = useState<{
@@ -44,6 +45,13 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     isOpen: boolean;
     key?: number;
     jobFriendlyName?: string;
+  }>({
+    isOpen: false,
+  });
+
+  const [jobUpdate, setJobUpdate] = useState<{
+    isOpen: boolean;
+    data?: TJob;
   }>({
     isOpen: false,
   });
@@ -113,6 +121,24 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
     });
   };
 
+  const handleCloseUpdate = () => {
+    setJobUpdate({
+      isOpen: false,
+    });
+  };
+
+  const handleOnUpdate = (row: TJob) => {
+    setJobUpdate({
+      isOpen: true,
+      data: row,
+    });
+  };
+
+  const handleJobUpdate = (args: TJob) => {
+    handleCloseUpdate();
+    setIsLoading(true);
+  };
+
   const jobColumn: GridColDef[] = [
     {
       field: 'jobFriendlyName',
@@ -132,12 +158,17 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
         return (
-          <IconButton aria-label="edit" color="primary">
+          <IconButton
+            aria-label="edit"
+            color="primary"
+            onClick={() => handleOnUpdate(params.row)}
+          >
             <EditIcon />
           </IconButton>
         );
       },
     },
+
     {
       field: 'delete',
       headerName: 'Delete',
@@ -248,6 +279,14 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
               onDelete={handleJobDeletion}
             />
           ) : null}
+
+          {jobUpdate.isOpen ? (
+            <UpdateJob
+              onClose={handleCloseUpdate}
+              data={jobUpdate.data}
+              onUpdate={handleJobUpdate}
+            />
+          ) : null}
         </LoggedInGuard>
       </Container>
     </>
@@ -257,7 +296,7 @@ const Jobs = ({ data }: { data: { jobs: TJobs[] } }) => {
 export const getServerSideProps = async () => {
   const db = admin.database();
   const ref = db.ref('thoseWhoServe/jobs');
-  let jobs: TJobs[] = [];
+  let jobs: TJob[] = [];
 
   await ref.orderByKey().on('value', (snapshot) => {
     snapshot.forEach((data) => {

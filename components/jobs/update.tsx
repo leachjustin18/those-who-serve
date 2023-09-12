@@ -1,26 +1,37 @@
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  Button,
+  Box,
+  Grid,
+} from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
-import type { UseFormReset } from 'react-hook-form';
-import { TextField, Button, Box, Grid } from '@mui/material';
-import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { v4 as uuidv4 } from 'uuid';
+import { yupResolver } from '@hookform/resolvers/yup';
 import type { SubmitHandler } from 'react-hook-form';
-import type { TAPIAddJob, TAddJobFormInputs } from '../../types/types';
+import type { TJob } from '../../types/types';
 
-const AddJob = ({
-  onJobSubmit,
+const UpdateJob = ({
+  onClose,
+  data,
+  onUpdate,
 }: {
-  onJobSubmit: (
-    arg: TAPIAddJob,
-    reset: UseFormReset<TAddJobFormInputs>
-  ) => void;
+  onClose: () => void;
+  onUpdate: (args: TJob) => void;
+  data?: TJob;
 }) => {
-  const jobName = 'jobFriendlyName';
+  const jobFriendlyName = 'jobFriendlyName';
   const jobNumberOfServantsName = 'jobNumberOfServants';
 
   const schema = yup
     .object({
-      [jobName]: yup.string().required('Please specify the name of the job'),
+      [jobFriendlyName]: yup
+        .string()
+        .required('Please specify the name of the job'),
       [jobNumberOfServantsName]: yup
         .number()
         .typeError('Please use only numbers')
@@ -29,36 +40,30 @@ const AddJob = ({
     })
     .required();
 
-  const { handleSubmit, control, reset } = useForm<TAddJobFormInputs>({
+  const { handleSubmit, control } = useForm<TJob>({
     resolver: yupResolver(schema),
     mode: 'onBlur',
     defaultValues: {
-      [jobName]: '',
-      [jobNumberOfServantsName]: 1,
+      id: data?.id,
+      [jobFriendlyName]: data?.jobFriendlyName,
+      [jobNumberOfServantsName]: data?.jobNumberOfServants,
+      key: data?.key,
+      name: data?.name,
     },
   });
 
-  const onSubmit: SubmitHandler<TAddJobFormInputs> = (data) => {
-    const jobFriendlyName = data?.jobFriendlyName;
-    const jobNumberOfServants = data?.jobNumberOfServants;
-
-    const jobData = {
-      id: uuidv4(),
-      jobFriendlyName,
-      jobNumberOfServants,
-      name: jobFriendlyName.replace(/[^a-zA-Z]/g, ''),
-    };
-
-    onJobSubmit(jobData, reset);
+  const onSubmit: SubmitHandler<TJob> = (data) => {
+    onUpdate(data);
   };
 
   return (
-    <Box mt={2}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 2, md: 12 }}>
-          <Grid item xs={2} md={6}>
+    <Dialog maxWidth="sm" open fullWidth onClose={onClose}>
+      <DialogTitle>Update Job {data?.jobFriendlyName}</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={{ xs: 3 }} columns={{ xs: 12 }}>
+          <Grid item xs={12}>
             <Controller
-              name={jobName}
+              name={jobFriendlyName}
               control={control}
               rules={{ required: true }}
               render={({ field, fieldState: { error } }) => (
@@ -75,7 +80,7 @@ const AddJob = ({
             />
           </Grid>
 
-          <Grid item xs={2} md={6}>
+          <Grid item xs={12}>
             <Controller
               name={jobNumberOfServantsName}
               control={control}
@@ -98,12 +103,13 @@ const AddJob = ({
             />
           </Grid>
         </Grid>
-        <Button type="submit" variant="contained" sx={{ mt: 4 }}>
-          Add Job
-        </Button>
-      </form>
-    </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit(onSubmit)}>Update</Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
-export default AddJob;
+export default UpdateJob;
