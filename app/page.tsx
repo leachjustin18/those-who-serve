@@ -1,16 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getUserSession } from "@/lib/nextAuth/session";
 
-import { signIn } from "next-auth/react";
+export default async function Home() {
+  const session = await getUserSession();
 
-const handleSignIn = () => {
-  void signIn("google");
-};
-
-export default function Home() {
-  return (
-    <main>
-      Hello
-      <button onClick={handleSignIn}>Sign In</button>
-    </main>
-  );
+  if (session?.user?.email) {
+    redirect("/manage-men");
+  } else {
+    redirect("/login");
+  }
 }
