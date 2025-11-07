@@ -1,26 +1,27 @@
 import { alpha, createTheme } from "@mui/material/styles";
 import { roboto } from "@/lib/theme/fonts";
 
-const horizon = "#0c1a2f";
-const electricBlue = "#4d7dff";
-const electricBlueLight = "#7ea5ff";
-const electricBlueDark = "#2f4dc9";
-const ember = "#f98a5c";
-const emberDark = "#c65a2d";
-const ink = "#0f1c2e";
-const dusk = "#4c5c74";
-const cloud = "#f5f7fb";
-const panel = "#ffffff";
+const pineShadow = "#0f1b14";
+const evergreen = "#1f2a24";
+const moss = "#3e5b4a";
+const fern = "#4d8f73";
+const fernLight = "#7fb598";
+const fernDark = "#2f6448";
+const meadow = "#d3eedd"; // requested base color
+const mist = "#f1f8f4";
+const blush = "#f5cdbd";
+const blushDark = "#d29a84";
+const canvas = "#ffffff";
 
 export const backgroundGradient = `
-  radial-gradient(circle at 20% 20%, rgba(95,146,255,.22), transparent 45%),
-  radial-gradient(circle at 80% 0%, rgba(249,138,92,.22), transparent 55%),
-  linear-gradient(135deg, #030915, ${horizon})
+  radial-gradient(circle at 18% 25%, rgba(127,181,152,.28), transparent 45%),
+  radial-gradient(circle at 82% 8%, rgba(245,205,189,.28), transparent 55%),
+  linear-gradient(135deg, ${pineShadow}, ${evergreen})
 `;
 
 export const gridOverlay = `
-  linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-  linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
+  linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
 `;
 
 export const theme = createTheme({
@@ -38,37 +39,37 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: cloud,
-      paper: panel,
+      default: canvas,
+      paper: mist,
     },
     primary: {
-      main: electricBlue,
-      light: electricBlueLight,
-      dark: electricBlueDark,
+      main: fern,
+      light: fernLight,
+      dark: fernDark,
       contrastText: "#ffffff",
     },
     secondary: {
-      main: ember,
-      light: "#ffc2a4",
-      dark: emberDark,
-      contrastText: "#3b190b",
+      main: blush,
+      light: "#ffe1d7",
+      dark: blushDark,
+      contrastText: "#41241a",
     },
     text: {
-      primary: ink,
-      secondary: alpha(dusk, 0.9),
-      disabled: alpha(dusk, 0.4),
+      primary: evergreen,
+      secondary: alpha(moss, 0.9),
+      disabled: alpha(moss, 0.4),
     },
-    divider: alpha("#9ba9c4", 0.4),
+    divider: alpha(moss, 0.3),
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: cloud,
-          color: ink,
+          backgroundColor: canvas,
+          color: evergreen,
         },
         "::selection": {
-          backgroundColor: alpha(electricBlue, 0.3),
+          backgroundColor: alpha(fern, 0.35),
           color: "#ffffff",
         },
       },
@@ -76,10 +77,10 @@ export const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: panel,
+          backgroundColor: mist,
           borderRadius: 20,
-          border: `1px solid ${alpha("#cfd8ec", 0.8)}`,
-          boxShadow: "0 14px 50px rgba(15,28,46,0.08)",
+          border: `1px solid ${alpha(fernDark, 0.2)}`,
+          boxShadow: "0 14px 50px rgba(15,27,20,0.08)",
         },
       },
     },
@@ -90,9 +91,9 @@ export const theme = createTheme({
       },
       styleOverrides: {
         colorDefault: {
-          backgroundColor: alpha(panel, 0.95),
-          borderBottom: `1px solid ${alpha("#d7e0f2", 0.9)}`,
-          boxShadow: "0 15px 35px rgba(15,28,46,0.12)",
+          backgroundColor: alpha(mist, 0.92),
+          borderBottom: `1px solid ${alpha(moss, 0.18)}`,
+          boxShadow: "0 15px 35px rgba(15,27,20,0.12)",
           backdropFilter: "blur(14px)",
         },
       },
@@ -105,13 +106,13 @@ export const theme = createTheme({
           fontWeight: 600,
         },
         containedPrimary: {
-          boxShadow: `0 12px 30px ${alpha(electricBlue, 0.35)}`,
+          boxShadow: `0 12px 30px ${alpha(fern, 0.35)}`,
         },
         outlinedPrimary: {
-          borderColor: alpha(electricBlue, 0.45),
+          borderColor: alpha(fern, 0.45),
           "&:hover": {
-            borderColor: electricBlue,
-            backgroundColor: alpha(electricBlue, 0.08),
+            borderColor: fern,
+            backgroundColor: alpha(fern, 0.08),
           },
         },
       },
@@ -120,15 +121,15 @@ export const theme = createTheme({
       styleOverrides: {
         paper: {
           borderRadius: 16,
-          border: `1px solid ${alpha("#c9d5f0", 0.9)}`,
-          boxShadow: "0 20px 60px rgba(15,28,46,0.15)",
+          border: `1px solid ${alpha(moss, 0.2)}`,
+          boxShadow: "0 20px 60px rgba(15,27,20,0.12)",
         },
       },
     },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: ink,
+          backgroundColor: evergreen,
           color: "#ffffff",
         },
       },

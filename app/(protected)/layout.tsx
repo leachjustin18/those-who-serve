@@ -33,8 +33,6 @@ export default async function SecureLayout({ children }: LayoutProps) {
 
   const menCache = cache.get("men") as Man[];
 
-  console.log("session", session);
-
   return (
     <CacheProvider initialCache={{ men: menCache }}>
       <AppHeader

@@ -96,16 +96,9 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
-          <Chip
-            label={displayName}
-            size="small"
-            variant="outlined"
-            sx={(theme) => ({
-              color: theme.palette.text.primary,
-              borderColor: alpha(theme.palette.primary.main, 0.25),
-              backgroundColor: alpha(theme.palette.primary.main, 0.08),
-            })}
-          />
+          <Typography variant="body2" noWrap>
+            Hello, {displayName}
+          </Typography>
           <Tooltip title="Open menu">
             <IconButton
               onClick={handleOpenUserMenu}
@@ -140,10 +133,6 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
           >
-            <MenuItem onClick={handleCloseUserMenu} disabled>
-              <Typography textAlign="center">Hello {displayName}</Typography>
-            </MenuItem>
-            <Divider />
             <MenuItem onClick={handleLogout}>
               <Typography textAlign="center">Log out</Typography>
             </MenuItem>
