@@ -12,7 +12,10 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Stack,
+  Chip,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { signOut } from "next-auth/react";
 
@@ -42,27 +45,85 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
   return (
     <AppBar
       position="fixed"
-      sx={{
-        backgroundColor: "primary.main",
-        color: "primary.contrastText",
-      }}
-      elevation={0}
+      sx={(theme) => ({
+        left: 0,
+        right: 0,
+        top: 0,
+        px: { xs: 2, md: 4 },
+        backgroundColor: alpha(theme.palette.background.paper, 0.95),
+        color: theme.palette.text.primary,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+        borderTop: "none",
+        boxShadow: "0 20px 45px rgba(15,28,46,0.15)",
+        backdropFilter: "blur(14px)",
+      })}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        <Box display="flex" alignItems="center">
-          <GroupsIcon sx={{ mr: 1, color: "inherit" }} />
-          <Typography variant="h6" noWrap color="inherit">
-            39 COFC Those Who Serve
-          </Typography>
-        </Box>
+      <Toolbar
+        sx={{
+          justifyContent: "space-between",
+          gap: 2,
+          minHeight: { xs: 72, md: 80 },
+          px: 0,
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box
+            sx={(theme) => ({
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              display: "grid",
+              placeItems: "center",
+              background: alpha(theme.palette.primary.main, 0.12),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
+            })}
+          >
+            <GroupsIcon sx={{ color: "primary.main" }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" noWrap>
+              39 COFC Those Who Serve
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: (theme) => theme.palette.text.secondary }}
+            >
+              Mission access hub
+            </Typography>
+          </Box>
+        </Stack>
 
-        <Box>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Chip
+            label={displayName}
+            size="small"
+            variant="outlined"
+            sx={(theme) => ({
+              color: theme.palette.text.primary,
+              borderColor: alpha(theme.palette.primary.main, 0.25),
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+            })}
+          />
           <Tooltip title="Open menu">
             <IconButton
               onClick={handleOpenUserMenu}
-              sx={{ p: 0, color: "inherit" }}
+              sx={(theme) => ({
+                p: 0,
+                color: theme.palette.text.primary,
+                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              })}
             >
-              <Avatar alt={displayName} src={userImage ?? undefined} />
+              <Avatar
+                alt={displayName}
+                src={userImage ?? undefined}
+                sx={(theme) => ({
+                  width: 44,
+                  height: 44,
+                  border: `2px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                })}
+              />
             </IconButton>
           </Tooltip>
           <Menu
@@ -87,7 +148,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
               <Typography textAlign="center">Log out</Typography>
             </MenuItem>
           </Menu>
-        </Box>
+        </Stack>
       </Toolbar>
     </AppBar>
   );

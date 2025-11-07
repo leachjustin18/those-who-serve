@@ -3,6 +3,7 @@
 import { Box, Container, Stack, Typography } from "@mui/material";
 
 import { SignInWithGoogle } from "@/components/auth/SignInWithGoogle";
+import { backgroundGradient, gridOverlay } from "@/lib/theme";
 
 export default function Login() {
   return (
@@ -16,15 +17,13 @@ export default function Login() {
         position: "relative",
         overflow: "hidden",
         color: theme.palette.text.primary,
-        backgroundColor: theme.palette.mode === "dark" ? "#040915" : "#f5f7ff",
-        backgroundImage:
-          "radial-gradient(circle at 20% 20%, rgba(95,146,255,.35), transparent 45%), radial-gradient(circle at 80% 0%, rgba(255,162,120,.35), transparent 55%), linear-gradient(135deg, #030715, #0c1a2f)",
+        backgroundColor: theme.palette.background.default,
+        backgroundImage: backgroundGradient,
         "&::after": {
           content: '""',
           position: "absolute",
           inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
+          backgroundImage: gridOverlay,
           backgroundSize: "80px 80px",
           opacity: theme.palette.mode === "dark" ? 0.3 : 0.15,
           pointerEvents: "none",

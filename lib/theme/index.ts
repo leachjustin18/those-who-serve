@@ -1,17 +1,27 @@
 import { alpha, createTheme } from "@mui/material/styles";
-import { amber, blueGrey, deepOrange, teal } from "@mui/material/colors";
 import { roboto } from "@/lib/theme/fonts";
 
-const dreamyPastels = {
-  porcelain: "#fffef9",
-  glow: "#fff6e9",
-  butter: "#ffefd7",
-  mist: "#e3f0ff",
-  powder: "#d2e7ff",
-};
+const horizon = "#0c1a2f";
+const electricBlue = "#4d7dff";
+const electricBlueLight = "#7ea5ff";
+const electricBlueDark = "#2f4dc9";
+const ember = "#f98a5c";
+const emberDark = "#c65a2d";
+const ink = "#0f1c2e";
+const dusk = "#4c5c74";
+const cloud = "#f5f7fb";
+const panel = "#ffffff";
 
-const primaryMain = "#5f7ecf";
-const secondaryMain = "#f4b69c";
+export const backgroundGradient = `
+  radial-gradient(circle at 20% 20%, rgba(95,146,255,.22), transparent 45%),
+  radial-gradient(circle at 80% 0%, rgba(249,138,92,.22), transparent 55%),
+  linear-gradient(135deg, #030915, ${horizon})
+`;
+
+export const gridOverlay = `
+  linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
+`;
 
 export const theme = createTheme({
   typography: {
@@ -19,75 +29,57 @@ export const theme = createTheme({
     button: {
       fontWeight: 600,
       textTransform: "none",
+      letterSpacing: 0.3,
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 16,
   },
   palette: {
     mode: "light",
     background: {
-      default: dreamyPastels.porcelain,
-      paper: dreamyPastels.glow,
+      default: cloud,
+      paper: panel,
     },
     primary: {
-      main: primaryMain,
-      light: "#8ea4e5",
-      dark: "#3c528c",
-      contrastText: "#f6fbff",
+      main: electricBlue,
+      light: electricBlueLight,
+      dark: electricBlueDark,
+      contrastText: "#ffffff",
     },
     secondary: {
-      main: secondaryMain,
-      light: "#ffd9c7",
-      dark: "#cc8c73",
-      contrastText: "#3e1d16",
+      main: ember,
+      light: "#ffc2a4",
+      dark: emberDark,
+      contrastText: "#3b190b",
     },
-    info: {
-      main: "#82b3ff",
-      light: dreamyPastels.powder,
-      dark: "#4c7dd7",
-      contrastText: "#0f172a",
-    },
-    success: {
-      main: teal[400],
-      light: teal[200],
-      dark: teal[700],
-      contrastText: dreamyPastels.porcelain,
-    },
-    warning: {
-      main: amber[500],
-      light: amber[200],
-      dark: amber[700],
-      contrastText: "#3e2600",
-    },
-    error: {
-      main: deepOrange[400],
-      light: deepOrange[200],
-      dark: deepOrange[700],
-      contrastText: dreamyPastels.porcelain,
-    },
-    divider: alpha(blueGrey[200], 0.6),
     text: {
-      primary: blueGrey[900],
-      secondary: blueGrey[600],
-      disabled: alpha(blueGrey[600], 0.4),
+      primary: ink,
+      secondary: alpha(dusk, 0.9),
+      disabled: alpha(dusk, 0.4),
     },
+    divider: alpha("#9ba9c4", 0.4),
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: dreamyPastels.porcelain,
-          color: blueGrey[900],
+          backgroundColor: cloud,
+          color: ink,
+        },
+        "::selection": {
+          backgroundColor: alpha(electricBlue, 0.3),
+          color: "#ffffff",
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage: "none",
+          backgroundColor: panel,
           borderRadius: 20,
-          border: `1px solid ${alpha(blueGrey[100], 0.8)}`,
+          border: `1px solid ${alpha("#cfd8ec", 0.8)}`,
+          boxShadow: "0 14px 50px rgba(15,28,46,0.08)",
         },
       },
     },
@@ -98,16 +90,10 @@ export const theme = createTheme({
       },
       styleOverrides: {
         colorDefault: {
-          backgroundColor: alpha(dreamyPastels.glow, 0.85),
-          backdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${alpha(blueGrey[100], 0.6)}`,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-        },
-        colorPrimary: {
-          color: "#f6fbff",
+          backgroundColor: alpha(panel, 0.95),
+          borderBottom: `1px solid ${alpha("#d7e0f2", 0.9)}`,
+          boxShadow: "0 15px 35px rgba(15,28,46,0.12)",
+          backdropFilter: "blur(14px)",
         },
       },
     },
@@ -115,22 +101,35 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 999,
-          paddingInline: "1.25rem",
+          paddingInline: "1.35rem",
+          fontWeight: 600,
         },
-        outlined: {
-          borderColor: alpha(primaryMain, 0.4),
+        containedPrimary: {
+          boxShadow: `0 12px 30px ${alpha(electricBlue, 0.35)}`,
         },
-        containedSecondary: {
-          color: secondaryMain,
-          backgroundColor: alpha(dreamyPastels.porcelain, 0.9),
+        outlinedPrimary: {
+          borderColor: alpha(electricBlue, 0.45),
+          "&:hover": {
+            borderColor: electricBlue,
+            backgroundColor: alpha(electricBlue, 0.08),
+          },
         },
       },
     },
-    MuiChip: {
+    MuiMenu: {
       styleOverrides: {
-        root: {
-          borderRadius: 999,
-          fontWeight: 500,
+        paper: {
+          borderRadius: 16,
+          border: `1px solid ${alpha("#c9d5f0", 0.9)}`,
+          boxShadow: "0 20px 60px rgba(15,28,46,0.15)",
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: ink,
+          color: "#ffffff",
         },
       },
     },

@@ -26,10 +26,14 @@ export const BottomNavigation = () => {
         pb: 1.5,
         pt: 0.5,
         backgroundColor: alpha(theme.palette.background.paper, 0.95),
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
         borderBottomRightRadius: 0,
         borderBottomLeftRadius: 0,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+        borderBottom: "none",
+        boxShadow: "0 -15px 40px rgba(15,28,46,0.12)",
+        backdropFilter: "blur(18px)",
       })}
       elevation={6}
     >
@@ -47,6 +51,9 @@ export const BottomNavigation = () => {
             borderRadius: 999,
             px: 2,
             transition: theme.transitions.create(["color", "background-color"]),
+            "& .MuiSvgIcon-root": {
+              fontSize: 24,
+            },
           },
           "& .MuiBottomNavigationAction-root .MuiBottomNavigationAction-label":
             {
@@ -57,8 +64,8 @@ export const BottomNavigation = () => {
             },
           "& .MuiBottomNavigationAction-root.Mui-selected": {
             color: theme.palette.primary.main,
-            backgroundColor: alpha(theme.palette.primary.main, 0.16),
-            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+            backgroundColor: alpha(theme.palette.primary.main, 0.12),
+            boxShadow: `0 8px 18px ${alpha(theme.palette.primary.main, 0.22)}`,
           },
           "& .MuiBottomNavigationAction-root.Mui-selected .MuiBottomNavigationAction-label":
             {

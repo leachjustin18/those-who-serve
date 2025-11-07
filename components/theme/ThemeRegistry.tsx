@@ -70,16 +70,16 @@ export default function ThemeRegistry({
           styles={{
             "*,*::before,*::after": { boxSizing: "border-box" },
             html: {
-              height: "100%",
+              minHeight: "100%",
               backgroundColor: theme.palette.background.default,
             },
             body: {
-              height: "100%",
+              minHeight: "100%",
               margin: 0,
               backgroundColor: theme.palette.background.default,
               color: theme.palette.text.primary,
             },
-            "#__next": { height: "100%" },
+            "#__next": { minHeight: "100%" },
           }}
         />
         {children}
