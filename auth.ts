@@ -24,7 +24,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     // v4 types
     async signIn({ user }: { user: User }) {
-      console.log("user", user);
       return true;
       // const email = user?.email?.toLowerCase() ?? null;
       // if (!email) return false;

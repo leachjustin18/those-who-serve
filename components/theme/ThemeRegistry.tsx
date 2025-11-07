@@ -5,7 +5,7 @@ import { useServerInsertedHTML } from "next/navigation";
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
 import { CssBaseline, ThemeProvider, GlobalStyles } from "@mui/material";
-import { theme } from "@/lib/theme"
+import { theme } from "@/lib/theme";
 
 type CacheState = {
   cache: EmotionCache;
@@ -69,8 +69,17 @@ export default function ThemeRegistry({
         <GlobalStyles
           styles={{
             "*,*::before,*::after": { boxSizing: "border-box" },
-            html: { height: "100%" },
-            body: { height: "100%" },
+            html: {
+              height: "100%",
+              backgroundColor: theme.palette.background.default,
+            },
+            body: {
+              height: "100%",
+              margin: 0,
+              backgroundColor: theme.palette.background.default,
+              color: theme.palette.text.primary,
+            },
+            "#__next": { height: "100%" },
           }}
         />
         {children}

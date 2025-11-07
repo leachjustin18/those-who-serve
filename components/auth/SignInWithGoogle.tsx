@@ -1,5 +1,5 @@
 "use client";
-import { Card as MuiCard, Typography, Button } from "@mui/material";
+import { Card as MuiCard, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { signIn } from "next-auth/react";
 import { GoogleIcon } from "@/components/icons/Google";
@@ -28,14 +28,6 @@ const Card = styled(MuiCard)(({ theme }) => ({
 
 export const SignInWithGoogle = () => (
   <Card variant="outlined">
-    <Typography
-      component="h1"
-      variant="h4"
-      sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
-    >
-      Sign in
-    </Typography>
-
     <Button
       fullWidth
       variant="outlined"
