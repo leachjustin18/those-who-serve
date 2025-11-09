@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import {
   AppBar,
   Toolbar,
@@ -26,8 +26,12 @@ type AppHeaderProps = {
 
 export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const cacheUserNameRef = useRef(userName);
+  const cacheUserImageRef = useRef(userImage);
 
-  const displayName = userName?.trim().length ? userName : "Member";
+  const displayName = cacheUserNameRef.current?.trim().length
+    ? cacheUserNameRef.current
+    : "Member";
 
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -96,9 +100,6 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
-          <Typography variant="body2" noWrap>
-            Hello, {displayName}
-          </Typography>
           <Tooltip title="Open menu">
             <IconButton
               onClick={handleOpenUserMenu}
@@ -110,7 +111,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
             >
               <Avatar
                 alt={displayName}
-                src={userImage ?? undefined}
+                src={cacheUserImageRef.current ?? undefined}
                 sx={(theme) => ({
                   width: 44,
                   height: 44,
@@ -133,6 +134,9 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
           >
+            <MenuItem disabled>
+              <Typography textAlign="center"> Hello, {displayName}</Typography>
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <Typography textAlign="center">Log out</Typography>
             </MenuItem>

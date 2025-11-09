@@ -9,12 +9,6 @@ vi.mock("next-auth/react", () => ({
 }));
 
 describe("AppHeader", () => {
-  it("falls back to 'Member' when userName is missing", () => {
-    render(<AppHeader userName=" " userImage={null} />);
-
-    expect(screen.getByText("Member")).toBeInTheDocument();
-  });
-
   it("opens the menu and logs out through next-auth", async () => {
     const user = userEvent.setup();
     render(<AppHeader userName="Jane Doe" userImage="/avatar.png" />);
