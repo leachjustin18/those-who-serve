@@ -7,7 +7,6 @@ const moss = "#3e5b4a";
 const fern = "#4d8f73";
 const fernLight = "#7fb598";
 const fernDark = "#2f6448";
-const meadow = "#d3eedd"; // requested base color
 const mist = "#f1f8f4";
 const blush = "#f5cdbd";
 const blushDark = "#d29a84";
@@ -77,7 +76,7 @@ export const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: mist,
+          backgroundColor: canvas,
           borderRadius: 20,
           border: `1px solid ${alpha(fernDark, 0.2)}`,
           boxShadow: "0 14px 50px rgba(15,27,20,0.08)",

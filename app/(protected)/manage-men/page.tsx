@@ -17,12 +17,14 @@ import {
 import {
   ModeEdit as ModeEditIcon,
   DeleteForever as DeleteForeverIcon,
+  EventBusy as EventBusyIcon,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useCache } from "@/components/context/Cache";
 import { useRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { ManAvatar } from "@/components/ui/ManAvatar";
 import Link from "next/link";
+import { format } from "date-fns";
 
 export default function ManageMen() {
   const cachedMen = useCache()?.men;
@@ -109,8 +111,9 @@ export default function ManageMen() {
                         {man.unavailableDates.map((dateStr) => (
                           <Chip
                             key={dateStr}
-                            label={dateStr}
+                            label={format(dateStr, "MMM d, yyyy")}
                             color="info"
+                            icon={<EventBusyIcon />}
                             variant="outlined"
                           />
                         ))}
@@ -141,8 +144,13 @@ export default function ManageMen() {
                 )}
               </CardContent>
               <CardActions>
-                <Button size="small" startIcon={<ModeEditIcon />}>
-                  <Link href={`/manage-men/${man.id}`}>Edit</Link>
+                <Button
+                  size="small"
+                  startIcon={<ModeEditIcon />}
+                  component={Link}
+                  href={`/manage-men/${man.id}`}
+                >
+                  Edit
                 </Button>
 
                 <Button
