@@ -3,6 +3,10 @@ type CacheEntry<T> = {
   expiresAt: number;
 };
 
+/**
+ * SessionCache is a simple in-memory cache that expires entries after a given duration.
+ * It uses a background sweeper to remove expired entries periodically.
+ */
 export class SessionCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
   private sweeperId: ReturnType<typeof setInterval> | null = null;

@@ -12,7 +12,6 @@ export const SectionTitle = ({
     <Typography
       variant="h5"
       sx={{
-        color: "primary.main",
         fontWeight: 200,
         display: "flex",
         alignItems: "center",

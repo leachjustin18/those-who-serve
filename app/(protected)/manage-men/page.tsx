@@ -21,7 +21,7 @@ import {
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useCache } from "@/components/context/Cache";
-import { useRoleLabel } from "@/lib/helpers/getRoleLabel";
+import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { ManAvatar } from "@/components/ui/ManAvatar";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -61,7 +61,7 @@ export default function ManageMen() {
                         {man.roles.map((role, index) => (
                           <Chip
                             key={`${role}-${index}`}
-                            label={useRoleLabel(role)}
+                            label={getRoleLabel(role)}
                             color="info"
                           />
                         ))}
