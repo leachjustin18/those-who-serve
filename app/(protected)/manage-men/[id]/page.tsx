@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import {
   TextField,
@@ -30,6 +36,8 @@ import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   Restore as RestoreIcon,
+  PhotoCamera as PhotoCameraIcon,
+  RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { useCache } from "@/components/context/Cache";
@@ -38,6 +46,8 @@ import { AlertSnackbar } from "@/components/ui/AlertSnackbar";
 import { shouldDisableDate } from "@/lib/helpers/shouldDisableDate";
 import { ROLE_OPTIONS } from "@/lib/constants/roles";
 import { useRouter } from "next/navigation";
+import { useFilePreview } from "@/lib/hooks/useFilePreview";
+import { updateMan } from "@/lib/api/men/server";
 
 type DateValue = Date | string;
 
@@ -50,6 +60,12 @@ const formatReadableDate = (value: DateValue) =>
 const isSameDay = (a: DateValue, b: DateValue) =>
   format(normalizeDateValue(a), "yyyy-MM-dd") ===
   format(normalizeDateValue(b), "yyyy-MM-dd");
+
+const toIsoDateString = (value: DateValue) =>
+  normalizeDateValue(value).toISOString();
+
+const normalizeDatesForPayload = (dates?: DateValue[]) =>
+  dates?.map(toIsoDateString) ?? [];
 
 const getRoleLabel = (roleValue: string) =>
   ROLE_OPTIONS.find((role) => role.value === roleValue)?.label || roleValue;
@@ -66,7 +82,8 @@ type TFormInputs = {
   email: string;
   roles: string[];
   unavailableDates?: DateValue[];
-  photoFile?: File;
+  photoFile?: string;
+  notes?: string;
 };
 
 export default function EditMan() {
@@ -92,6 +109,19 @@ export default function EditMan() {
       });
     },
     [],
+  );
+
+  const handlePersistError = useCallback(
+    (error: Error) => {
+      console.error("Failed to persist servant update", error);
+      showSnackbar({
+        severity: "error",
+        title: "Save failed",
+        message:
+          "Changes were saved locally, but syncing to the server failed. Please try saving again.",
+      });
+    },
+    [showSnackbar],
   );
 
   const handleSnackbarClose = useCallback(
@@ -132,6 +162,7 @@ export default function EditMan() {
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { isSubmitting, isDirty },
   } = useForm<TFormInputs>({
     defaultValues: {
@@ -139,19 +170,49 @@ export default function EditMan() {
       email: manToEdit?.email || "",
       roles: manToEdit?.roles || [],
       unavailableDates: manToEdit?.unavailableDates || [],
-      photoFile: undefined,
+      photoFile: manToEdit?.photoFile || "",
+      notes: manToEdit?.notes || "",
     },
   });
+
   const onSubmit: SubmitHandler<TFormInputs> = async (data) => {
     try {
-      console.log(data);
+      const payload = {
+        name: data.name,
+        email: data.email,
+        roles: data.roles,
+        unavailableDates: normalizeDatesForPayload(data.unavailableDates),
+        photoFile: data.photoFile || undefined,
+        notes: data.notes || undefined,
+      };
+
+      const updatedMan = await updateMan(id, payload, {
+        onPersistError: handlePersistError,
+      });
+
+      if (cachedMen) {
+        const index = cachedMen.findIndex((man) => man.id === id);
+        if (index !== -1) {
+          cachedMen[index] = updatedMan;
+        }
+      }
+
+      reset({
+        name: updatedMan.name,
+        email: updatedMan.email,
+        roles: updatedMan.roles,
+        unavailableDates: updatedMan.unavailableDates,
+        photoFile: updatedMan.photoFile ?? "",
+        notes: updatedMan.notes ?? "",
+      });
+
       showSnackbar({
         severity: "success",
         title: "Changes saved",
         message: "Servant details updated successfully.",
       });
     } catch (error) {
-      console.error("Failed to save servant", error);
+      console.error("Failed to update servant", error);
       showSnackbar({
         severity: "error",
         title: "Save failed",
@@ -160,14 +221,50 @@ export default function EditMan() {
     }
   };
 
+  const { file, onFileChange, clearFile } = useFilePreview();
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+
   const handleResetForm = useCallback(() => {
     reset();
+    clearFile();
     showSnackbar({
       severity: "info",
       title: "Form reset",
       message: "Changes were reverted to the last saved values.",
     });
   }, [reset, showSnackbar]);
+
+  useEffect(() => {
+    if (isDirty) {
+      showSnackbar({
+        severity: "warning",
+        title: "Unsaved changes",
+        message: "You have unsaved changes. Please save or discard them.",
+      });
+    }
+  }, [isDirty, showSnackbar]);
+
+  useEffect(() => {
+    if (file) {
+      setValue("photoFile", file);
+
+      showSnackbar({
+        severity: "success",
+        title: "Preview Photo added",
+        message: `${manToEdit?.name} preview photo added. Will be saved when you save the form.`,
+      });
+    }
+  }, [setValue, file]);
+
+  const removePhoto = () => {
+    setValue("photoFile", "");
+    clearFile();
+    showSnackbar({
+      severity: "warning",
+      title: "Photo removed",
+      message: `${manToEdit?.name} photo removed.`,
+    });
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -300,12 +397,34 @@ export default function EditMan() {
                         </Grid>
                         <Grid>
                           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                            <Button color="info" variant="outlined">
+                            <Button
+                              startIcon={<PhotoCameraIcon />}
+                              color="info"
+                              variant="outlined"
+                              component="label"
+                            >
                               Change Photo
+                              <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                ref={photoInputRef}
+                                onChange={(e) => {
+                                  onFileChange(e, photoInputRef);
+                                  field.onChange(file);
+                                }}
+                              />
                             </Button>
-                            <Button color="error" variant="outlined">
-                              Remove Photo
-                            </Button>
+                            {field.value && (
+                              <Button
+                                color="error"
+                                variant="outlined"
+                                onClick={removePhoto}
+                                startIcon={<RemoveCircleOutlineIcon />}
+                              >
+                                Remove Photo
+                              </Button>
+                            )}
                           </Stack>
                         </Grid>
                       </Grid>
@@ -411,69 +530,70 @@ export default function EditMan() {
             <Controller
               name="roles"
               control={control}
-              rules={{
-                required: "Please select at least one role",
-              }}
-              render={({ field, fieldState }) => (
-                <>
-                  <ToggleButtonGroup
-                    {...field}
-                    onChange={(_, newValue) => {
-                      const previousRoles = field.value ?? [];
-                      const updatedRoles = (newValue as string[]) ?? [];
-                      handleRoleSelectionChange(previousRoles, updatedRoles);
-                      field.onChange(updatedRoles);
-                    }}
-                    aria-label="role"
-                    sx={{
-                      mb: 2,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 1,
-                      "& .MuiToggleButtonGroup-grouped": {
-                        margin: 0,
-                        border: (theme) => `1px solid ${theme.palette.divider}`,
-                        borderRadius: 1,
-                        borderLeft: (theme) =>
-                          `1px solid ${theme.palette.divider}`,
-                        flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
-                      },
-                      "& .MuiToggleButtonGroup-grouped:not(:first-of-type)": {
-                        borderLeft: (theme) =>
-                          `1px solid ${theme.palette.divider}`,
-                      },
-                    }}
-                  >
-                    {ROLE_OPTIONS.map((role, index) => (
-                      <ToggleButton
-                        key={`${index}-${role.value}`}
-                        value={role.value}
-                        sx={{
-                          justifyContent: "center",
-                          "&.Mui-selected": {
-                            boxShadow: 3,
-                            borderColor: "primary.main",
-                          },
-                          "&.Mui-selected:hover": {
-                            boxShadow: 4,
-                          },
-                        }}
-                      >
-                        {role.label}
-                      </ToggleButton>
-                    ))}
-                  </ToggleButtonGroup>
-                  {fieldState.error && (
-                    <Typography color="error">
-                      {fieldState.error.message}
-                      Error?
-                    </Typography>
-                  )}
-                </>
+              render={({ field }) => (
+                <ToggleButtonGroup
+                  {...field}
+                  onChange={(_, newValue) => {
+                    const previousRoles = field.value ?? [];
+                    const updatedRoles = (newValue as string[]) ?? [];
+                    handleRoleSelectionChange(previousRoles, updatedRoles);
+                    field.onChange(updatedRoles);
+                  }}
+                  aria-label="role"
+                  sx={{
+                    mb: 2,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    "& .MuiToggleButtonGroup-grouped": {
+                      margin: 0,
+                      border: (theme) => `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      borderLeft: (theme) =>
+                        `1px solid ${theme.palette.divider}`,
+                      flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
+                    },
+                    "& .MuiToggleButtonGroup-grouped:not(:first-of-type)": {
+                      borderLeft: (theme) =>
+                        `1px solid ${theme.palette.divider}`,
+                    },
+                  }}
+                >
+                  {ROLE_OPTIONS.map((role, index) => (
+                    <ToggleButton
+                      key={`${index}-${role.value}`}
+                      value={role.value}
+                      sx={{
+                        justifyContent: "center",
+                        "&.Mui-selected": {
+                          boxShadow: 3,
+                          borderColor: "primary.main",
+                        },
+                        "&.Mui-selected:hover": {
+                          boxShadow: 4,
+                        },
+                      }}
+                    >
+                      {role.label}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
               )}
             />
 
-            <TextField label="Notes" fullWidth multiline rows={4} />
+            <Controller
+              name="notes"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  label="Notes"
+                  {...field}
+                  fullWidth
+                  multiline
+                  rows={4}
+                />
+              )}
+            />
           </Paper>
 
           <Stack
