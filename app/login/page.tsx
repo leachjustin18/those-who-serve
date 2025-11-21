@@ -75,8 +75,8 @@ export default function Login() {
               align="center"
               sx={{ color: "rgba(255,255,255,0.65)" }}
             >
-              By continuing you confirm you're using an approved Google account
-              and accept the security practices for Those Who Serve.
+              By continuing you confirm you&apos;re using an approved Google
+              account and accept the security practices for Those Who Serve.
             </Typography>
           </Stack>
         </Stack>

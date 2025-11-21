@@ -7,7 +7,8 @@ describe("CacheProvider / useCache", () => {
   const stubMen: Man[] = [
     {
       id: "1",
-      name: "John Doe",
+      firstName: "John",
+      lastName: "Doe",
       email: "john@example.com",
       roles: ["admin"],
       unavailableDates: [],
@@ -17,7 +18,11 @@ describe("CacheProvider / useCache", () => {
   it("exposes cached data to descendants", () => {
     const Consumer = () => {
       const cache = useCache();
-      return <div>{cache.men[0]?.name}</div>;
+      const man = cache.men[0];
+      const fullName = [man?.firstName, man?.lastName]
+        .filter(Boolean)
+        .join(" ");
+      return <div>{fullName}</div>;
     };
 
     render(

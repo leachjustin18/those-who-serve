@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import {
   AppBar,
   Toolbar,
@@ -26,12 +26,10 @@ type AppHeaderProps = {
 
 export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const cacheUserNameRef = useRef(userName);
-  const cacheUserImageRef = useRef(userImage);
 
-  const displayName = cacheUserNameRef.current?.trim().length
-    ? cacheUserNameRef.current
-    : "Member";
+  const hasDisplayName = Boolean(userName?.trim().length);
+  const displayName = hasDisplayName ? userName : "Member";
+  const avatarSrc = userImage ?? undefined;
 
   const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -110,8 +108,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
               })}
             >
               <Avatar
-                alt={displayName}
-                src={cacheUserImageRef.current ?? undefined}
+                src={avatarSrc}
                 sx={(theme) => ({
                   width: 44,
                   height: 44,

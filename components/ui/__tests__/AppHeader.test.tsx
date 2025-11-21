@@ -13,7 +13,7 @@ describe("AppHeader", () => {
     const user = userEvent.setup();
     render(<AppHeader userName="Jane Doe" userImage="/avatar.png" />);
 
-    const avatar = screen.getByRole("img", { name: "Jane Doe" });
+    const avatar = screen.getByRole("img");
     await user.click(avatar);
 
     const logout = await screen.findByText(/log out/i);

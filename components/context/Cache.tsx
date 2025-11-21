@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useState } from "react";
 import type { Man } from "@/types/man";
 type CacheContextType = {
   men: Man[];
@@ -15,12 +15,10 @@ export const CacheProvider = ({
   initialCache: CacheContextType;
   children: React.ReactNode;
 }) => {
-  const cacheRef = useRef(initialCache);
+  const [cache] = useState(initialCache);
 
   return (
-    <CacheContext.Provider value={cacheRef.current}>
-      {children}
-    </CacheContext.Provider>
+    <CacheContext.Provider value={cache}>{children}</CacheContext.Provider>
   );
 };
 

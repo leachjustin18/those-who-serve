@@ -39,33 +39,21 @@ import {
   PhotoCamera as PhotoCameraIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from "@mui/icons-material";
-import { format } from "date-fns";
 import { useCache } from "@/components/context/Cache";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { AlertSnackbar } from "@/components/ui/AlertSnackbar";
-import { shouldDisableDate } from "@/lib/helpers/shouldDisableDate";
+import {
+  shouldDisableDate,
+  isSameDay,
+  normalizeDatesForPayload,
+  formatReadableDate,
+} from "@/lib/helpers/dates";
+import { fileToBase64 } from "@/lib/helpers/fileToBase64";
 import { ROLE_OPTIONS } from "@/lib/constants/roles";
 import { useRouter } from "next/navigation";
 import { useFilePreview } from "@/lib/hooks/useFilePreview";
 import { updateMan } from "@/lib/api/men/server";
-
-type DateValue = Date | string;
-
-const normalizeDateValue = (value: DateValue) =>
-  value instanceof Date ? value : new Date(value);
-
-const formatReadableDate = (value: DateValue) =>
-  format(normalizeDateValue(value), "MMM d, yyyy");
-
-const isSameDay = (a: DateValue, b: DateValue) =>
-  format(normalizeDateValue(a), "yyyy-MM-dd") ===
-  format(normalizeDateValue(b), "yyyy-MM-dd");
-
-const toIsoDateString = (value: DateValue) =>
-  normalizeDateValue(value).toISOString();
-
-const normalizeDatesForPayload = (dates?: DateValue[]) =>
-  dates?.map(toIsoDateString) ?? [];
+import { type DateValue } from "@/types";
 
 const getRoleLabel = (roleValue: string) =>
   ROLE_OPTIONS.find((role) => role.value === roleValue)?.label || roleValue;
@@ -78,11 +66,12 @@ type SnackbarState = {
 };
 
 type TFormInputs = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   roles: string[];
   unavailableDates?: DateValue[];
-  photoFile?: string;
+  photoFile?: File | string;
   notes?: string;
 };
 
@@ -94,6 +83,7 @@ export default function EditMan() {
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
 
   const manToEdit = cachedMen?.find((man) => man.id === id);
+  const manName = manToEdit?.firstName;
 
   const showSnackbar = useCallback(
     (payload: {
@@ -166,45 +156,55 @@ export default function EditMan() {
     formState: { isSubmitting, isDirty },
   } = useForm<TFormInputs>({
     defaultValues: {
-      name: manToEdit?.name || "",
+      firstName: manToEdit?.firstName || "",
+      lastName: manToEdit?.lastName || "",
       email: manToEdit?.email || "",
       roles: manToEdit?.roles || [],
       unavailableDates: manToEdit?.unavailableDates || [],
-      photoFile: manToEdit?.photoFile || "",
+      photoFile: manToEdit?.photoFile || undefined,
       notes: manToEdit?.notes || "",
     },
   });
 
   const onSubmit: SubmitHandler<TFormInputs> = async (data) => {
+    console.log("data", data);
+    debugger;
     try {
       const payload = {
-        name: data.name,
-        email: data.email,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.trim(),
         roles: data.roles,
         unavailableDates: normalizeDatesForPayload(data.unavailableDates),
-        photoFile: data.photoFile || undefined,
-        notes: data.notes || undefined,
+        photoFile: selectedFile
+          ? await fileToBase64(selectedFile)
+          : typeof data.photoFile === "string"
+            ? data.photoFile
+            : undefined,
+        notes: data.notes?.trim() || undefined,
       };
 
-      const updatedMan = await updateMan(id, payload, {
-        onPersistError: handlePersistError,
-      });
+      // const payload = {
+      //   name: data.name.trim(),
+      //   email: data.email.trim(),
+      //   roles: data.roles.map((r) => r.value),
+      5; //   unavailableDates: data.unavailableDates.map((d) =>
+      //     format(d, "yyyy-MM-dd"),
+      //   ),
+      //   photoFile: data.photoFile ? await fileToBase64(data.photoFile) : "",
+      // };
 
-      if (cachedMen) {
-        const index = cachedMen.findIndex((man) => man.id === id);
-        if (index !== -1) {
-          cachedMen[index] = updatedMan;
-        }
-      }
+      await updateMan(id, payload);
 
-      reset({
-        name: updatedMan.name,
-        email: updatedMan.email,
-        roles: updatedMan.roles,
-        unavailableDates: updatedMan.unavailableDates,
-        photoFile: updatedMan.photoFile ?? "",
-        notes: updatedMan.notes ?? "",
-      });
+      // reset({
+      //   name: updatedMan.name,
+      //   email: updatedMan.email,
+      //   roles: updatedMan.roles,
+      //   unavailableDates: updatedMan.unavailableDates,
+      //   photoFile: updatedMan.photoFile ?? "",
+      //   notes: updatedMan.notes ?? "",
+      //   lastName: updatedMan.lastName,
+      // });
 
       showSnackbar({
         severity: "success",
@@ -221,7 +221,12 @@ export default function EditMan() {
     }
   };
 
-  const { file, onFileChange, clearFile } = useFilePreview();
+  const {
+    file: selectedFile,
+    previewFile,
+    onFileChange,
+    clearFile,
+  } = useFilePreview();
   const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleResetForm = useCallback(() => {
@@ -232,37 +237,46 @@ export default function EditMan() {
       title: "Form reset",
       message: "Changes were reverted to the last saved values.",
     });
-  }, [reset, showSnackbar]);
+  }, [reset, clearFile, showSnackbar]);
 
   useEffect(() => {
-    if (isDirty) {
+    if (!isDirty) {
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
       showSnackbar({
         severity: "warning",
         title: "Unsaved changes",
         message: "You have unsaved changes. Please save or discard them.",
       });
-    }
+    });
+
+    return () => cancelAnimationFrame(frame);
   }, [isDirty, showSnackbar]);
 
   useEffect(() => {
-    if (file) {
-      setValue("photoFile", file);
+    if (!previewFile) return;
 
+    setValue("photoFile", previewFile, { shouldDirty: true });
+    const frame = requestAnimationFrame(() => {
       showSnackbar({
         severity: "success",
         title: "Preview Photo added",
-        message: `${manToEdit?.name} preview photo added. Will be saved when you save the form.`,
+        message: `${manName ?? "Servant"} preview photo added. Will be saved when you save the form.`,
       });
-    }
-  }, [setValue, file]);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [setValue, previewFile, manName, showSnackbar]);
 
   const removePhoto = () => {
-    setValue("photoFile", "");
+    setValue("photoFile", undefined, { shouldDirty: true });
     clearFile();
     showSnackbar({
       severity: "warning",
       title: "Photo removed",
-      message: `${manToEdit?.name} photo removed.`,
+      message: `${manToEdit?.firstName} photo removed.`,
     });
   };
 
@@ -285,7 +299,7 @@ export default function EditMan() {
           </Button>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Typography variant="h5">
-              Edit Servant • {manToEdit?.name || ""}
+              Edit Servant • {manToEdit?.firstName || ""}
             </Typography>
             {isDirty && (
               <Box
@@ -310,7 +324,7 @@ export default function EditMan() {
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 4 }}>
                 <Controller
-                  name="name"
+                  name="firstName"
                   control={control}
                   rules={{ required: "First name is required" }}
                   render={({ field, fieldState }) => (
@@ -328,7 +342,21 @@ export default function EditMan() {
               </Grid>
 
               <Grid size={{ xs: 12, md: 4 }}>
-                <TextField label="Last name" fullWidth />
+                <Controller
+                  name="lastName"
+                  control={control}
+                  rules={{ required: "Last name is required" }}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      label="Last name"
+                      {...field}
+                      error={!!fieldState.error}
+                      disabled={isSubmitting}
+                      fullWidth
+                      helperText={fieldState.error?.message}
+                    />
+                  )}
+                />
               </Grid>
 
               <Grid size={{ xs: 12, md: 4 }}>
@@ -372,6 +400,8 @@ export default function EditMan() {
                   name="photoFile"
                   control={control}
                   render={({ field }) => {
+                    const avatarSrc =
+                      typeof field.value === "string" ? field.value : undefined;
                     return (
                       <Grid
                         container
@@ -379,9 +409,9 @@ export default function EditMan() {
                         flexDirection="column"
                       >
                         <Grid>
-                          {field.value ? (
+                          {avatarSrc ? (
                             <Avatar
-                              src={field.value as unknown as string}
+                              src={avatarSrc}
                               sx={{ width: 128, height: 128 }}
                             />
                           ) : (
@@ -411,7 +441,6 @@ export default function EditMan() {
                                 ref={photoInputRef}
                                 onChange={(e) => {
                                   onFileChange(e, photoInputRef);
-                                  field.onChange(file);
                                 }}
                               />
                             </Button>

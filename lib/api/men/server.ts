@@ -6,9 +6,9 @@ import type { Man } from "@/types/man";
 const MEN_CACHE_KEY = "men";
 const menCache = new SessionCache<Man[]>();
 const MAX_PERSIST_ATTEMPTS = 3;
+const host = process.env.SERVER_HOST;
 
 async function requestMen(): Promise<Man[]> {
-  const host = process.env.SERVER_HOST;
   if (!host) throw new Error("SERVER_HOST is not defined");
 
   const res = await fetch(`${host}/api/men`, { cache: "no-store" });
@@ -34,7 +34,13 @@ export async function fetchMen(forceRefresh = false): Promise<Man[]> {
 
 type EditableManFields = Pick<
   Man,
-  "name" | "email" | "roles" | "unavailableDates" | "photoFile" | "notes"
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "roles"
+  | "unavailableDates"
+  | "photoFile"
+  | "notes"
 >;
 
 export type UpdateManInput = Partial<EditableManFields>;
@@ -45,41 +51,70 @@ type UpdateManOptions = {
 
 export async function updateMan(
   id: string,
-  updates: UpdateManInput,
-  options?: UpdateManOptions,
-): Promise<Man> {
-  const men = await fetchMen();
-  const index = men.findIndex((man) => man.id === id);
-
-  if (index === -1) {
-    throw new Error(`Unable to find man with id "${id}" in cache`);
+  data: Partial<Omit<Man, "id">>,
+): Promise<unknown> {
+  if (!host || !id) {
+    throw new Error("Required value is not defined; unable to PATCH");
   }
 
-  const now = Date.now();
-  const updatedMan: Man = {
-    ...men[index],
-    ...updates,
-    unavailableDates:
-      updates.unavailableDates ?? men[index].unavailableDates ?? [],
-    updatedAt: now,
-  };
+  try {
+    const res = await fetch(`${host}/api/men/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, updatedAt: Date.now() }),
+    });
 
-  const nextMen = [...men];
-  nextMen[index] = updatedMan;
-  menCache.set(MEN_CACHE_KEY, nextMen);
+    if (!res.ok) {
+      throw new Error(`PUT /api/men/${id} failed with ${res.status}`);
+    }
 
-  const payload = sanitizePayload({ ...updates, updatedAt: now });
-  if (Object.keys(payload).length > 0) {
-    fireAndForgetPersist(id, payload, options?.onPersistError);
+    const response = await res.json();
+
+    return response;
+  } catch (error) {
+    throw new Error(`Error updating man: ${error}`);
   }
 
-  return updatedMan;
+  // const index = cachedMen.findIndex((man) => man.id === id);
+
+  // if (index === -1) {
+  //   throw new Error(`Unable to find man with id "${id}" in cache`);
+  // }
+
+  // console.log("updates", updates);
+  // debugger;
+
+  // const now = Date.now();
+  // const updatedMan: Man = {
+  //   ...cachedMen[index],
+  //   ...updates,
+  //   unavailableDates:
+  //     updates.unavailableDates ?? cachedMen[index].unavailableDates ?? [],
+  //   updatedAt: now,
+  // };
+
+  // const nextMen = [...cachedMen];
+  // nextMen[index] = updatedMan;
+  // menCache.set(MEN_CACHE_KEY, nextMen);
+
+  // const payload = sanitizePayload({ ...updates, updatedAt: now });
+
+  // return updatedMan;
+  //
+
+  return true;
 }
 
 type PatchPayload = Partial<
   Pick<
     Man,
-    "name" | "email" | "roles" | "unavailableDates" | "photoFile" | "notes"
+    | "firstName"
+    | "lastName"
+    | "email"
+    | "roles"
+    | "unavailableDates"
+    | "photoFile"
+    | "notes"
   > & { updatedAt: number }
 >;
 
@@ -104,40 +139,7 @@ function sanitizePayload(payload: PatchPayload): PatchPayload {
 }
 
 async function persistManUpdate(id: string, payload: PatchPayload) {
-  const host = process.env.SERVER_HOST;
-  if (!host) {
-    console.warn("SERVER_HOST is not defined; skipping remote PATCH.");
-    return;
-  }
-
   let lastError: Error | null = null;
 
-  for (let attempt = 1; attempt <= MAX_PERSIST_ATTEMPTS; attempt++) {
-    try {
-      const res = await fetch(`${host}/api/men/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`PATCH /api/men/${id} failed with ${res.status}`);
-      }
-
-      return;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      const isFinalAttempt = attempt === MAX_PERSIST_ATTEMPTS;
-      const logFn = isFinalAttempt ? console.error : console.warn;
-      const attemptMessage = isFinalAttempt
-        ? `Failed to persist man update after ${MAX_PERSIST_ATTEMPTS} attempts.`
-        : `Failed to persist man update (attempt ${attempt}/${MAX_PERSIST_ATTEMPTS}). Retrying...`;
-
-      logFn(attemptMessage, lastError);
-
-      if (isFinalAttempt) {
-        throw lastError;
-      }
-    }
-  }
+  for (let attempt = 1; attempt <= MAX_PERSIST_ATTEMPTS; attempt++) {}
 }

@@ -1,10 +1,12 @@
 export type Man = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   roles: string[];
   unavailableDates: string[];
-  photoFile?: string;
+  photoFile?: File | string;
+  notes?: string;
   updatedAt?: number;
   createdAt?: number;
 };
