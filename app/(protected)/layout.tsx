@@ -5,10 +5,10 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getUserSession } from "@/lib/nextAuth/session";
 import { CacheProvider } from "@/components/context/Cache";
-import { fetchMen } from "@/lib/api/men/server";
+import { fetchMen } from "@/lib/api/men";
 import { BottomNavigation } from "@/components/ui/BottomNavigation";
 import { AppHeader } from "@/components/ui/AppHeader";
-import { Man } from "@/types/man";
+import type { Man } from "@/types/man";
 import { Container } from "@mui/material";
 
 type LayoutProps = {
@@ -30,7 +30,7 @@ export default async function SecureLayout({ children }: LayoutProps) {
   }
 
   return (
-    <CacheProvider initialCache={{ men: menCache }}>
+    <CacheProvider initialMen={menCache}>
       <AppHeader
         userName={session.user?.name}
         userImage={session.user?.image}

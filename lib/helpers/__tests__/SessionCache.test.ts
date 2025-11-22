@@ -42,8 +42,9 @@ describe("SessionCache", () => {
     cache.set("foo", "bar");
     cache.set("baz", "qux");
 
-    cache.delete("foo");
+    expect(cache.delete("foo")).toBe(true);
     expect(cache.get("foo")).toBeUndefined();
+    expect(cache.delete("foo")).toBe(false);
 
     cache.clear();
     expect(cache.get("baz")).toBeUndefined();

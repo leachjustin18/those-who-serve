@@ -1,4 +1,4 @@
-import { ROLE_OPTIONS } from "@/lib/constants/roles";
+import { ROLE_OPTIONS } from "@/lib/constants";
 
 /**
  * Returns the label for a given role.

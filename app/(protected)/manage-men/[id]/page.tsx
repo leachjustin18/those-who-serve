@@ -5,7 +5,9 @@ import {
   useState,
   useRef,
   useEffect,
+  useMemo,
   type ReactNode,
+  type ChangeEvent,
 } from "react";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import {
@@ -49,10 +51,14 @@ import {
   formatReadableDate,
 } from "@/lib/helpers/dates";
 import { fileToBase64 } from "@/lib/helpers/fileToBase64";
-import { ROLE_OPTIONS } from "@/lib/constants/roles";
+import {
+  ROLE_OPTIONS,
+  ALLOWED_PHOTO_TYPES,
+  MAX_PHOTO_SIZE_BYTES,
+} from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useFilePreview } from "@/lib/hooks/useFilePreview";
-import { updateMan } from "@/lib/api/men/server";
+import { updateMan } from "@/lib/api/men";
 import { type DateValue } from "@/types";
 
 const getRoleLabel = (roleValue: string) =>
@@ -78,11 +84,13 @@ type TFormInputs = {
 export default function EditMan() {
   const params = useParams<{ id: string }>();
   const { id } = params;
-  const cachedMen = useCache()?.men;
+  const { men, setMen } = useCache();
   const router = useRouter();
-  const [snackbar, setSnackbar] = useState<SnackbarState | null>(null);
+  const [snackbars, setSnackbars] = useState<SnackbarState[]>([]);
+  const [open, setOpen] = useState(false);
+  const [messageInfo, setMessageInfo] = useState<SnackbarState | undefined>();
 
-  const manToEdit = cachedMen?.find((man) => man.id === id);
+  const manToEdit = men?.find((man) => man.id === id);
   const manName = manToEdit?.firstName;
 
   const showSnackbar = useCallback(
@@ -91,27 +99,15 @@ export default function EditMan() {
       title?: string;
       message: ReactNode;
     }) => {
-      setSnackbar({
+      const next = {
         key: Date.now(),
         severity: payload.severity ?? "info",
         title: payload.title,
         message: payload.message,
-      });
+      };
+      setSnackbars((prev) => [...prev, next]);
     },
     [],
-  );
-
-  const handlePersistError = useCallback(
-    (error: Error) => {
-      console.error("Failed to persist servant update", error);
-      showSnackbar({
-        severity: "error",
-        title: "Save failed",
-        message:
-          "Changes were saved locally, but syncing to the server failed. Please try saving again.",
-      });
-    },
-    [showSnackbar],
   );
 
   const handleSnackbarClose = useCallback(
@@ -119,9 +115,41 @@ export default function EditMan() {
       if (reason === "clickaway") {
         return;
       }
-      setSnackbar(null);
+      setOpen(false);
     },
     [],
+  );
+
+  const handleSnackbarExited = useCallback(() => {
+    setMessageInfo(undefined);
+  }, []);
+
+  const handleSnakeShows = ({
+    snackPack,
+    message,
+    isOpen,
+  }: {
+    snackPack: SnackbarState[];
+    message?: SnackbarState;
+    isOpen?: boolean;
+  }) => {
+    if (snackPack.length && !message) {
+      setMessageInfo({ ...snackPack[0] });
+      setSnackbars((prev) => prev.slice(1));
+      setOpen(true);
+    } else if (snackPack.length && message && isOpen) {
+      setOpen(false);
+    }
+  };
+
+  useMemo(
+    () =>
+      handleSnakeShows({
+        snackPack: snackbars,
+        message: messageInfo,
+        isOpen: open,
+      }),
+    [snackbars, messageInfo, open],
   );
 
   const handleRoleSelectionChange = useCallback(
@@ -167,8 +195,6 @@ export default function EditMan() {
   });
 
   const onSubmit: SubmitHandler<TFormInputs> = async (data) => {
-    console.log("data", data);
-    debugger;
     try {
       const payload = {
         firstName: data.firstName.trim(),
@@ -184,27 +210,23 @@ export default function EditMan() {
         notes: data.notes?.trim() || undefined,
       };
 
-      // const payload = {
-      //   name: data.name.trim(),
-      //   email: data.email.trim(),
-      //   roles: data.roles.map((r) => r.value),
-      5; //   unavailableDates: data.unavailableDates.map((d) =>
-      //     format(d, "yyyy-MM-dd"),
-      //   ),
-      //   photoFile: data.photoFile ? await fileToBase64(data.photoFile) : "",
-      // };
+      const updatedMan = await updateMan(id, payload);
 
-      await updateMan(id, payload);
+      setMen(
+        men.map((m) =>
+          m.id === updatedMan.id ? ({ ...m, ...updatedMan }) : m,
+        ),
+      );
 
-      // reset({
-      //   name: updatedMan.name,
-      //   email: updatedMan.email,
-      //   roles: updatedMan.roles,
-      //   unavailableDates: updatedMan.unavailableDates,
-      //   photoFile: updatedMan.photoFile ?? "",
-      //   notes: updatedMan.notes ?? "",
-      //   lastName: updatedMan.lastName,
-      // });
+      reset({
+        firstName: updatedMan.firstName,
+        lastName: updatedMan.lastName,
+        email: updatedMan.email,
+        roles: updatedMan.roles,
+        unavailableDates: updatedMan.unavailableDates,
+        photoFile: updatedMan.photoFile ?? "",
+        notes: updatedMan.notes ?? "",
+      });
 
       showSnackbar({
         severity: "success",
@@ -216,7 +238,7 @@ export default function EditMan() {
       showSnackbar({
         severity: "error",
         title: "Save failed",
-        message: "Unable to save servant details. Please try again.",
+        message: `Unable to save servant details with error ${error} Please try again.`,
       });
     }
   };
@@ -255,23 +277,8 @@ export default function EditMan() {
     return () => cancelAnimationFrame(frame);
   }, [isDirty, showSnackbar]);
 
-  useEffect(() => {
-    if (!previewFile) return;
-
-    setValue("photoFile", previewFile, { shouldDirty: true });
-    const frame = requestAnimationFrame(() => {
-      showSnackbar({
-        severity: "success",
-        title: "Preview Photo added",
-        message: `${manName ?? "Servant"} preview photo added. Will be saved when you save the form.`,
-      });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [setValue, previewFile, manName, showSnackbar]);
-
   const removePhoto = () => {
-    setValue("photoFile", undefined, { shouldDirty: true });
+    setValue("photoFile", "", { shouldDirty: true });
     clearFile();
     showSnackbar({
       severity: "warning",
@@ -279,6 +286,51 @@ export default function EditMan() {
       message: `${manToEdit?.firstName} photo removed.`,
     });
   };
+  const handlePhotoSelection = useCallback(
+    (
+      event: ChangeEvent<HTMLInputElement>,
+      onChange: (value: string | undefined) => void,
+    ) => {
+      const selected = event.target.files?.[0];
+
+      if (!selected) {
+        const nextPreview = onFileChange(event, photoInputRef);
+        onChange(nextPreview);
+        return;
+      }
+
+      if (!ALLOWED_PHOTO_TYPES.includes(selected.type)) {
+        event.target.value = "";
+        showSnackbar({
+          severity: "error",
+          title: "Unsupported file",
+          message: "Please choose a JPG, PNG, or WebP image.",
+        });
+        return;
+      }
+
+      if (selected.size > MAX_PHOTO_SIZE_BYTES) {
+        event.target.value = "";
+        showSnackbar({
+          severity: "error",
+          title: "File too large",
+          message: "Photo uploads must be 5MB or smaller.",
+        });
+        return;
+      }
+
+      const nextPreview = onFileChange(event, photoInputRef);
+      onChange(nextPreview);
+      if (nextPreview) {
+        showSnackbar({
+          severity: "success",
+          title: "Preview photo added",
+          message: `${manName ?? "Servant"} preview photo added. Will be saved when you save the form.`,
+        });
+      }
+    },
+    [onFileChange, photoInputRef, showSnackbar, manName],
+  );
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -401,7 +453,10 @@ export default function EditMan() {
                   control={control}
                   render={({ field }) => {
                     const avatarSrc =
-                      typeof field.value === "string" ? field.value : undefined;
+                      previewFile ??
+                      (typeof field.value === "string"
+                        ? field.value
+                        : undefined);
                     return (
                       <Grid
                         container
@@ -439,9 +494,9 @@ export default function EditMan() {
                                 hidden
                                 accept="image/*"
                                 ref={photoInputRef}
-                                onChange={(e) => {
-                                  onFileChange(e, photoInputRef);
-                                }}
+                                onChange={(event) =>
+                                  handlePhotoSelection(event, field.onChange)
+                                }
                               />
                             </Button>
                             {field.value && (
@@ -645,6 +700,8 @@ export default function EditMan() {
               type="submit"
               startIcon={<SaveIcon />}
               variant="contained"
+              loadingPosition="end"
+              loading={isSubmitting}
               disabled={isSubmitting || !isDirty}
               fullWidth
               sx={{ maxWidth: { sm: 200 } }}
@@ -655,12 +712,13 @@ export default function EditMan() {
         </form>
       </Container>
       <AlertSnackbar
-        key={snackbar?.key}
-        open={!!snackbar}
-        severity={snackbar?.severity ?? "info"}
-        title={snackbar?.title}
-        message={snackbar?.message ?? ""}
+        key={messageInfo ? messageInfo.key : undefined}
+        open={open}
+        severity={messageInfo?.severity ?? "info"}
+        title={messageInfo?.title}
+        message={messageInfo?.message ?? ""}
         autoHideDuration={3000}
+        slotProps={{ transition: { onExited: handleSnackbarExited } }}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         onClose={handleSnackbarClose}
       />

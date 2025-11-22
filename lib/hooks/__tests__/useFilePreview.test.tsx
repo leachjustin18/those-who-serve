@@ -36,14 +36,16 @@ describe("useFilePreview", () => {
     const file = new File(["payload"], "avatar.png", { type: "image/png" });
     const event = createChangeEvent(file);
     const inputRef = createRef<HTMLInputElement>();
+    let preview: string | undefined;
 
     act(() => {
-      result.current.onFileChange(event, inputRef);
+      preview = result.current.onFileChange(event, inputRef);
     });
 
     expect(result.current.file).toBe(file);
     expect(result.current.previewFile).toBe("blob:preview");
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+    expect(preview).toBe("blob:preview");
   });
 
   it("clears the controlled input value after handling a change event", () => {

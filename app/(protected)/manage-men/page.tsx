@@ -25,6 +25,14 @@ import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { ManAvatar } from "@/components/ui/ManAvatar";
 import Link from "next/link";
 import { format } from "date-fns";
+import type { Man } from "@/types/man";
+
+const getManDisplayName = (man: Man) =>
+  [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
+  "Unnamed Servant";
+
+const getManPhotoUrl = (man: Man) =>
+  typeof man.photoFile === "string" ? man.photoFile : undefined;
 
 export default function ManageMen() {
   const cachedMen = useCache()?.men;
@@ -36,11 +44,8 @@ export default function ManageMen() {
     <>
       <Grid container spacing={3} sx={{ mt: 2 }}>
         {cachedMen.map((man) => {
-          const displayName =
-            [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
-            "Unnamed Servant";
-          const avatarPhoto =
-            typeof man.photoFile === "string" ? man.photoFile : undefined;
+          const displayName = getManDisplayName(man);
+          const avatarPhoto = getManPhotoUrl(man);
 
           return (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={man.id}>

@@ -26,7 +26,7 @@ describe("CacheProvider / useCache", () => {
     };
 
     render(
-      <CacheProvider initialCache={{ men: stubMen }}>
+      <CacheProvider initialMen={stubMen}>
         <Consumer />
       </CacheProvider>,
     );

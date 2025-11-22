@@ -6,7 +6,10 @@ import {
   type SnackbarOrigin,
   type SnackbarCloseReason,
   type AlertColor,
+  type SxProps,
+  type SnackbarProps,
 } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import {
   CheckCircleOutline as CheckCircleOutlineIcon,
   InfoOutlined as InfoOutlinedIcon,
@@ -34,6 +37,8 @@ export type AlertSnackbarProps = {
   anchorOrigin?: SnackbarOrigin;
   action?: React.ReactNode;
   variant?: "standard" | "filled" | "outlined";
+  snackbarSx?: SxProps<Theme>;
+  slotProps?: SnackbarProps["slotProps"];
 };
 
 /**
@@ -53,11 +58,12 @@ export const AlertSnackbar = ({
   severity = "info",
   title,
   message,
-  autoHideDuration = 6000,
+  autoHideDuration,
   onClose,
   anchorOrigin = { vertical: "top", horizontal: "center" },
   action,
   variant = "filled",
+  slotProps,
 }: AlertSnackbarProps) => {
   return (
     <Snackbar
@@ -65,6 +71,7 @@ export const AlertSnackbar = ({
       autoHideDuration={autoHideDuration}
       onClose={onClose}
       anchorOrigin={anchorOrigin}
+      slotProps={slotProps}
     >
       <Alert
         severity={severity}

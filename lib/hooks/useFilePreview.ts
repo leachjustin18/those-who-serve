@@ -9,13 +9,15 @@ export function useFilePreview() {
     photoInputRef: RefObject<HTMLInputElement | null>,
   ) => {
     const f = e.target.files?.[0];
+    let nextPreview: string | undefined;
 
     if (f) {
       if (previewFile) {
         URL.revokeObjectURL(previewFile);
       }
       setFile(f);
-      setPreviewFile(URL.createObjectURL(f));
+      nextPreview = URL.createObjectURL(f);
+      setPreviewFile(nextPreview);
     } else {
       if (previewFile) {
         URL.revokeObjectURL(previewFile);
@@ -27,6 +29,8 @@ export function useFilePreview() {
     if (photoInputRef?.current?.value) {
       photoInputRef.current.value = "";
     }
+
+    return nextPreview;
   };
 
   const clearFile = () => {
