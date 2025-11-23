@@ -1,86 +1,143 @@
 "use client";
 
-import { Box, Container, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+} from "@mui/material";
 
 import { SignInWithGoogle } from "@/components/auth/SignInWithGoogle";
 import { backgroundGradient, gridOverlay } from "@/lib/theme";
 
 export default function Login() {
-  return (
-    <Box
-      component="main"
-      sx={(theme) => ({
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-        color: theme.palette.text.primary,
-        backgroundColor: theme.palette.background.default,
-        backgroundImage: backgroundGradient,
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          backgroundImage: gridOverlay,
-          backgroundSize: "80px 80px",
-          opacity: theme.palette.mode === "dark" ? 0.3 : 0.15,
-          pointerEvents: "none",
-        },
-      })}
-    >
-      <Container
-        maxWidth="lg"
-        sx={{
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={{ xs: 6, md: 10 }}
-          alignItems="center"
-        >
-          <Stack spacing={3} flex={1} maxWidth={520}>
-            <Typography
-              component="h1"
-              variant="h2"
-              sx={{
-                fontSize: "clamp(2.5rem, 4vw, 3.25rem)",
-                lineHeight: 1.1,
-                color: "white",
-              }}
-            >
-              Sign in with your Google account.
-            </Typography>
-          </Stack>
+  const accentGradient =
+    "linear-gradient(135deg, #5AC2E7 0%, #6E90F2 48%, #D982F0 85%)";
+  const ambientGradient =
+    "linear-gradient(135deg, rgba(236,251,247,0.96) 0%, rgba(244,247,255,0.94) 55%, rgba(253,242,255,0.98) 100%)";
 
-          <Stack spacing={2} alignItems="center" width="100%" maxWidth={460}>
-            <Box
-              sx={{
-                width: "100%",
-                borderRadius: 4,
-                p: 1.5,
-                backgroundColor: "rgba(3, 7, 21, 0.55)",
-                backdropFilter: "blur(18px)",
-                boxShadow:
-                  "hsla(220, 30%, 5%, 0.45) 0px 25px 80px -20px, hsla(197, 100%, 87%, 0.3) 0px 35px 80px -40px",
-              }}
-            >
-              <SignInWithGoogle />
-            </Box>
-            <Typography
-              variant="caption"
-              align="center"
-              sx={{ color: "rgba(255,255,255,0.65)" }}
-            >
-              By continuing you confirm you&apos;re using an approved Google
-              account and accept the security practices for Those Who Serve.
-            </Typography>
-          </Stack>
+  return (
+    <Box sx={{
+      minHeight: "100vh",
+      backgroundImage: `${ambientGradient}, ${backgroundGradient}`,
+      position: "relative",
+
+
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        inset: 0,
+        backgroundImage: gridOverlay,
+        backgroundSize: "80px 80px",
+        opacity: 0.12,
+        pointerEvents: "none",
+      },
+
+
+    }}>
+
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          top: { xs: "-120px", md: "-220px" },
+          right: { xs: "-50px", md: "-100px" },
+          width: { xs: 300, md: 420 },
+          height: { xs: 300, md: 420 },
+          background:
+            "radial-gradient(circle, rgba(218,241,255,0.7) 0%, rgba(218,241,255,0) 70%)",
+          filter: "blur(2px)",
+        }}
+      />
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          bottom: { xs: "-120px", md: "-200px" },
+          left: { xs: "-60px", md: "-120px" },
+          width: { xs: 320, md: 400 },
+          height: { xs: 320, md: 400 },
+          background:
+            "radial-gradient(circle, rgba(255,226,239,0.85) 0%, rgba(255,226,239,0) 75%)",
+          filter: "blur(6px)",
+        }}
+      />
+
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+
+          width: 160,
+          height: 160,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle, rgba(118,169,250,0.45) 0%, rgba(118,169,250,0) 70%)",
+          filter: "blur(10px)",
+          zIndex: 0,
+        }}
+      />
+
+
+      <Stack spacing={4} alignContent="center" alignItems="center" pt={12} px={2}>
+        <Stack
+          spacing={3}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.75)",
+            borderRadius: 5,
+            p: { xs: 3, md: 4 },
+            backdropFilter: "blur(14px)",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 30px 70px rgba(125, 153, 183, 0.25)",
+          }}
+        >
+          <Box
+            sx={{
+              width: 72,
+              height: 5,
+              borderRadius: 999,
+              background: accentGradient,
+            }}
+          />
+          <Typography
+            component="h1"
+            variant="h2"
+            sx={{
+              fontSize: "clamp(2.5rem, 4vw, 3.4rem)",
+              lineHeight: 1.15,
+              color: "#0f1729",
+            }}
+            textAlign="center"
+          >
+            Sign in with your {<br />}
+            Google account.
+          </Typography>
         </Stack>
-      </Container>
+
+        <Stack
+          spacing={3}
+          alignItems="center"
+          width="100%"
+          maxWidth={460}
+          sx={{
+            position: "relative",
+          }}
+        >
+
+
+
+          <SignInWithGoogle />
+
+
+          <Typography
+            variant="caption"
+            align="center"
+            sx={{ color: "rgba(52,63,92,0.75)" }}
+          >
+            By continuing you confirm you&apos;re using an approved Google
+            account and accept the security practices for Those Who Serve.
+          </Typography>
+        </Stack>
+      </Stack>
     </Box>
-  );
+  )
 }
