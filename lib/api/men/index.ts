@@ -84,3 +84,28 @@ export async function updateMan(
 
   return updatedMan;
 }
+
+/**
+ * Deletes a man record from the backend.
+ *
+ * @param id - ID of the man to delete.
+ * @returns The deleted man's ID for client-side cache updates.
+ * @throws If the ID or host is missing, or the request fails.
+ */
+export async function deleteMan(
+  id: string,
+): Promise<{ id: string; success: boolean }> {
+  if (!host || !id) {
+    throw new Error("Required value is not defined; unable to DELETE");
+  }
+
+  const res = await fetch(`${host}/api/men/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error(`DELETE /api/men/${id} failed with ${res.status}`);
+  }
+
+  return { id, success: true };
+}

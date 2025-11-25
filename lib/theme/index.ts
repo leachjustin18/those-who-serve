@@ -37,7 +37,6 @@ export const theme = createTheme({
     borderRadius: 16,
   },
   palette: {
-    mode: "light",
     background: {
       // page background behind your main card
       default: "#edf5f1", // soft mint/gray wash
@@ -46,7 +45,7 @@ export const theme = createTheme({
     },
     primary: {
       // calmer, mid-tone green
-      main: fernLight,
+      main: fern,
       light: "#9ccab0",
       dark: fern,
       contrastText: "#ffffff",
@@ -111,14 +110,18 @@ export const theme = createTheme({
           paddingInline: "1.3rem",
           fontWeight: 600,
         },
-        containedPrimary: {
-          boxShadow: `0 10px 24px ${alpha(fernLight, 0.35)}`,
-        },
         outlinedPrimary: {
-          borderColor: alpha(fern, 0.35),
+          borderColor: alpha(fernDark, 0.6),
           "&:hover": {
-            borderColor: fern,
-            backgroundColor: alpha(fernLight, 0.08),
+            borderColor: fernDark,
+            backgroundColor: alpha(fern, 0.08),
+          },
+        },
+        containedPrimary: {
+          borderColor: alpha(fernDark, 0.6),
+          "&:hover": {
+            borderColor: fernDark,
+            backgroundColor: alpha(fern, 0.75),
           },
         },
       },

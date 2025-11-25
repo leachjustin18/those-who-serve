@@ -13,11 +13,20 @@ import {
   Box,
   Divider,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  type SnackbarCloseReason,
+  type AlertColor,
 } from "@mui/material";
 import {
   ModeEdit as ModeEditIcon,
   DeleteForever as DeleteForeverIcon,
   EventBusy as EventBusyIcon,
+  Cancel as CancelIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useCache } from "@/components/context/Cache";
@@ -26,6 +35,9 @@ import { ManAvatar } from "@/components/ui/ManAvatar";
 import Link from "next/link";
 import { format } from "date-fns";
 import type { Man } from "@/types/man";
+import { useCallback, useMemo, useState } from "react";
+import { AlertSnackbar } from "@/components/ui/AlertSnackbar";
+import { deleteMan } from "@/lib/api/men";
 
 const getManDisplayName = (man: Man) =>
   [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
@@ -35,7 +47,74 @@ const getManPhotoUrl = (man: Man) =>
   typeof man.photoFile === "string" ? man.photoFile : undefined;
 
 export default function ManageMen() {
-  const cachedMen = useCache()?.men;
+  const { men: cachedMen, setMen } = useCache();
+  const [deleteTarget, setDeleteTarget] = useState<Man | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [snackbarState, setSnackbarState] = useState<{
+    open: boolean;
+    severity: AlertColor;
+    message: string;
+  }>({
+    open: false,
+    severity: "success",
+    message: "",
+  });
+
+  const deleteTargetName = useMemo(() => {
+    if (!deleteTarget) return "";
+    return getManDisplayName(deleteTarget);
+  }, [deleteTarget]);
+
+  const showSnackbar = useCallback(
+    (payload: { severity?: AlertColor; message: string }) => {
+      setSnackbarState({
+        open: true,
+        severity: payload.severity ?? "info",
+        message: payload.message,
+      });
+    },
+    [],
+  );
+
+  const handleSnackbarClose = useCallback(
+    (_?: unknown, reason?: SnackbarCloseReason) => {
+      if (reason === "clickaway") return;
+      setSnackbarState((prev) => ({ ...prev, open: false }));
+    },
+    [],
+  );
+
+  const handleRequestDelete = useCallback((man: Man) => {
+    setDeleteTarget(man);
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    if (isDeleting) return;
+    setDeleteTarget(null);
+  }, [isDeleting]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+
+    try {
+      await deleteMan(deleteTarget.id);
+      setMen(cachedMen.filter((man) => man.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      showSnackbar({
+        severity: "success",
+        message: `${deleteTargetName || "Servant"} was removed.`,
+      });
+    } catch (error) {
+      console.error("Failed to delete servant", error);
+      showSnackbar({
+        severity: "error",
+        message: "Unable to delete servant. Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [cachedMen, deleteTarget, deleteTargetName, setMen, showSnackbar]);
 
   if (!cachedMen)
     return <CircularProgress sx={{ display: "block", margin: "20px auto" }} />;
@@ -167,8 +246,9 @@ export default function ManageMen() {
 
                   <Button
                     size="small"
-                    startIcon={<DeleteForeverIcon />}
+                    startIcon={<DeleteIcon />}
                     color="error"
+                    onClick={() => handleRequestDelete(man)}
                   >
                     Delete
                   </Button>
@@ -178,6 +258,50 @@ export default function ManageMen() {
           );
         })}
       </Grid>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={handleDialogClose}
+        aria-labelledby="delete-servant-title"
+      >
+        <DialogTitle id="delete-servant-title">
+          Remove {deleteTargetName || "this servant"}?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to remove servant{" "}
+            {deleteTargetName || "this servant"}? This data will be gone
+            forever.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleDialogClose}
+            startIcon={<CancelIcon />}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDelete}
+            startIcon={<DeleteForeverIcon />}
+            disabled={isDeleting}
+            loading={isDeleting}
+            loadingPosition="end"
+          >
+            Yes, delete
+
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <AlertSnackbar
+        open={snackbarState.open}
+        onClose={handleSnackbarClose}
+        severity={snackbarState.severity}
+        message={snackbarState.message}
+        autoHideDuration={4000}
+      />
     </>
   );
 }

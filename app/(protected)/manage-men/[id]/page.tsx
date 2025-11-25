@@ -717,9 +717,7 @@ export default function EditMan() {
         severity={messageInfo?.severity ?? "info"}
         title={messageInfo?.title}
         message={messageInfo?.message ?? ""}
-        autoHideDuration={3000}
         slotProps={{ transition: { onExited: handleSnackbarExited } }}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
         onClose={handleSnackbarClose}
       />
     </LocalizationProvider>
