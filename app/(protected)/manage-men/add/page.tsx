@@ -51,10 +51,10 @@ import {
   RemoveCircleOutline as RemoveCircleOutlineIcon,
   EventBusy as EventBusyIcon,
   PersonSearch as PersonSearchIcon,
-
-  PersonAddAlt1 as PersonAddAlt1Icon,
   CheckCircleOutline as CheckCircleOutlineIcon,
   AddCircleOutline as AddCircleOutlineIcon,
+  ArrowForwardIos as ArrowForwardIosIcon,
+  ArrowBackIos as ArrowBackIosIcon,
 } from "@mui/icons-material";
 import {
   useForm,
@@ -84,7 +84,6 @@ import {
   buildIdentityFieldValidations,
 } from "@/lib/helpers/validateFields";
 import type { TFormInputs } from "@/types";
-import { useRouter } from "next/navigation";
 import { addMan } from "@/lib/api/men";
 import { useCache } from "@/components/context/Cache";
 
@@ -847,6 +846,7 @@ export default function AddMan() {
                   <Button
                     size="small"
                     onClick={handleBackStep}
+                    startIcon={<ArrowBackIosIcon />}
                     disabled={activeStep === 0 || shouldDisableBtnsFields}
                   >
                     Back
@@ -857,7 +857,7 @@ export default function AddMan() {
                     type="submit"
                     variant="contained"
                     startIcon={<SaveIcon />}
-                    // disabled={shouldDisableBtnsFields}
+                    disabled={shouldDisableBtnsFields}
                     loadingPosition="end"
                     loading={isSubmitting}
                     sx={{ display: isLastStep ? "inline-flex" : "none" }}
@@ -868,6 +868,7 @@ export default function AddMan() {
                   <Button
                     size="small"
                     onClick={handleNextStep}
+                    endIcon={<ArrowForwardIosIcon />}
                     disabled={shouldDisableBtnsFields}
                     sx={{ display: isLastStep ? "none" : "inline-flex" }}
                   >
@@ -878,9 +879,9 @@ export default function AddMan() {
               </Box>
             ) : (
               <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                sx={{ mt: 2, justifyContent: "flex-end" }}
+                direction="row"
+                spacing={1}
+                sx={{ justifyContent: "center" }}
               >
                 <MobileStepper
                   variant="dots"
@@ -889,19 +890,36 @@ export default function AddMan() {
                   activeStep={activeStep}
                   sx={{ mt: 2, maxWidth: 400, flexGrow: 1 }}
                   nextButton={
-                    <Button
-                      size="small"
-                      type={isLastStep ? "submit" : "button"}
-                      onClick={isLastStep ? undefined : handleNextStep}
-                      disabled={shouldDisableBtnsFields}
-                    >
-                      {isLastStep ? "Save" : "Next"}
-                    </Button>
+                    <>
+                      <Button
+                        size="small"
+                        type="submit"
+                        variant="contained"
+                        startIcon={<SaveIcon />}
+                        disabled={shouldDisableBtnsFields}
+                        loadingPosition="end"
+                        loading={isSubmitting}
+                        sx={{ display: isLastStep ? "inline-flex" : "none" }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="small"
+                        onClick={handleNextStep}
+                        endIcon={<ArrowForwardIosIcon />}
+                        disabled={shouldDisableBtnsFields}
+                        sx={{ display: isLastStep ? "none" : "inline-flex" }}
+                      >
+                        Next
+                      </Button>
+
+                    </>
                   }
                   backButton={
                     <Button
                       size="small"
                       onClick={handleBackStep}
+                      startIcon={<ArrowBackIosIcon />}
                       disabled={activeStep === 0 || shouldDisableBtnsFields}
                     >
                       Back
