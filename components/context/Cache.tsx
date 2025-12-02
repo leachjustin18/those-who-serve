@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Man } from "@/types/man";
+import type { TMan } from "@/types";
 import { SessionCache } from "@/lib/helpers/Cache";
 
 const MEN_CACHE_KEY = "men";
@@ -12,18 +12,18 @@ const MEN_CACHE_KEY = "men";
  * This lives in the browser runtime (per tab) and is separate from any
  * server-side logic.
  */
-const menClientCache = new SessionCache<Man[]>();
+const menClientCache = new SessionCache<TMan[]>();
 
 /**
  * Shape of the cache context exposed to components.
  */
 type CacheContextType = {
   /** Current men list, derived from the client SessionCache. */
-  men: Man[];
+  men: TMan[];
   /** Convenience setter to replace the men list in the cache. */
-  setMen: (men: Man[]) => void;
+  setMen: (men: TMan[]) => void;
   /** Underlying SessionCache instance, if you need lower-level access. */
-  cache: SessionCache<Man[]>;
+  cache: SessionCache<TMan[]>;
 };
 
 const CacheContext = createContext<CacheContextType | null>(null);
@@ -33,7 +33,7 @@ const CacheContext = createContext<CacheContextType | null>(null);
  */
 type CacheProviderProps = {
   /** Initial men list, typically fetched on the server in a layout. */
-  initialMen: Man[];
+  initialMen: TMan[];
   /** React children rendered within the provider. */
   children: React.ReactNode;
 };
@@ -64,21 +64,21 @@ export const CacheProvider = ({ initialMen, children }: CacheProviderProps) => {
     return unsubscribe;
   }, [initialMen]);
 
-const value = useMemo<CacheContextType>(() => {
-  const _ = version; // force-reactive dependency
+  const value = useMemo<CacheContextType>(() => {
+    const _ = version; // force-reactive dependency
 
-  const men = menClientCache.get(MEN_CACHE_KEY) ?? initialMen ?? [];
+    const men = menClientCache.get(MEN_CACHE_KEY) ?? initialMen ?? [];
 
-  const setMen = (next: Man[]) => {
-    menClientCache.set(MEN_CACHE_KEY, next);
-  };
+    const setMen = (next: TMan[]) => {
+      menClientCache.set(MEN_CACHE_KEY, next);
+    };
 
-  return {
-    men,
-    setMen,
-    cache: menClientCache,
-  };
-}, [version, initialMen]);
+    return {
+      men,
+      setMen,
+      cache: menClientCache,
+    };
+  }, [version, initialMen]);
 
 
   return (

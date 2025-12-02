@@ -2,10 +2,8 @@
 
 import {
   useCallback,
-  useState,
   useRef,
   useEffect,
-  useMemo,
   type ReactNode,
   type ChangeEvent,
 } from "react";
@@ -24,7 +22,6 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   type AlertColor,
-  type SnackbarCloseReason,
 } from "@mui/material";
 import { useParams } from "next/navigation";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -42,8 +39,7 @@ import {
   RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from "@mui/icons-material";
 import { useCache } from "@/components/context/Cache";
-import { SectionTitle } from "@/components/ui/SectionTitle";
-import { AlertSnackbar } from "@/components/ui/AlertSnackbar";
+import { AlertSnackbar, SectionTitle } from "@/components/ui";
 import {
   shouldDisableDate,
   isSameDay,
@@ -55,28 +51,24 @@ import {
   ROLE_OPTIONS,
   ALLOWED_PHOTO_TYPES,
   MAX_PHOTO_SIZE_BYTES,
+  EMAIL_REGEX,
 } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useFilePreview } from "@/lib/hooks/useFilePreview";
 import { updateMan } from "@/lib/api/men";
-import { type DateValue } from "@/types";
+import { type TDateValue } from "@/types";
+import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
+import { buildIdentityFieldValidations } from "@/lib/helpers/validateFields";
 
 const getRoleLabel = (roleValue: string) =>
   ROLE_OPTIONS.find((role) => role.value === roleValue)?.label || roleValue;
-
-type SnackbarState = {
-  key: number;
-  severity: AlertColor;
-  title?: string;
-  message: ReactNode;
-};
 
 type TFormInputs = {
   firstName: string;
   lastName: string;
   email: string;
   roles: string[];
-  unavailableDates?: DateValue[];
+  unavailableDates?: TDateValue[];
   photoFile?: File | string;
   notes?: string;
 };
@@ -86,71 +78,11 @@ export default function EditMan() {
   const { id } = params;
   const { men, setMen } = useCache();
   const router = useRouter();
-  const [snackbars, setSnackbars] = useState<SnackbarState[]>([]);
-  const [open, setOpen] = useState(false);
-  const [messageInfo, setMessageInfo] = useState<SnackbarState | undefined>();
 
   const manToEdit = men?.find((man) => man.id === id);
   const manName = manToEdit?.firstName;
 
-  const showSnackbar = useCallback(
-    (payload: {
-      severity?: AlertColor;
-      title?: string;
-      message: ReactNode;
-    }) => {
-      const next = {
-        key: Date.now(),
-        severity: payload.severity ?? "info",
-        title: payload.title,
-        message: payload.message,
-      };
-      setSnackbars((prev) => [...prev, next]);
-    },
-    [],
-  );
-
-  const handleSnackbarClose = useCallback(
-    (_?: unknown, reason?: SnackbarCloseReason) => {
-      if (reason === "clickaway") {
-        return;
-      }
-      setOpen(false);
-    },
-    [],
-  );
-
-  const handleSnackbarExited = useCallback(() => {
-    setMessageInfo(undefined);
-  }, []);
-
-  const handleSnakeShows = ({
-    snackPack,
-    message,
-    isOpen,
-  }: {
-    snackPack: SnackbarState[];
-    message?: SnackbarState;
-    isOpen?: boolean;
-  }) => {
-    if (snackPack.length && !message) {
-      setMessageInfo({ ...snackPack[0] });
-      setSnackbars((prev) => prev.slice(1));
-      setOpen(true);
-    } else if (snackPack.length && message && isOpen) {
-      setOpen(false);
-    }
-  };
-
-  useMemo(
-    () =>
-      handleSnakeShows({
-        snackPack: snackbars,
-        message: messageInfo,
-        isOpen: open,
-      }),
-    [snackbars, messageInfo, open],
-  );
+  const { showSnackbar, open, messageInfo, handleClose, handleExited } = useSnackbarQueue();
 
   const handleRoleSelectionChange = useCallback(
     (previousRoles: string[] = [], nextRoles: string[] = []) => {
@@ -181,6 +113,8 @@ export default function EditMan() {
     control,
     reset,
     setValue,
+    setError,
+    clearErrors,
     formState: { isSubmitting, isDirty },
   } = useForm<TFormInputs>({
     defaultValues: {
@@ -194,7 +128,41 @@ export default function EditMan() {
     },
   });
 
+  const ensureFormValidBeforeSubmit = useCallback(
+    (formValues: TFormInputs) => {
+      const validations = buildIdentityFieldValidations(formValues);
+
+      let hasError = false;
+
+      validations.forEach(({ field, result }) => {
+        if (result !== true) {
+          hasError = true;
+          setError(field, { type: "manual", message: result });
+        } else {
+          clearErrors(field);
+        }
+      });
+
+      if (hasError) {
+        showSnackbar({
+          severity: "error",
+          title: "Validation error",
+          message: "Please resolve the highlighted fields before submitting.",
+        });
+        return false;
+      }
+
+      return true;
+    },
+    [clearErrors, setError, showSnackbar],
+  );
+
   const onSubmit: SubmitHandler<TFormInputs> = async (data) => {
+    const isValid = ensureFormValidBeforeSubmit(data);
+    if (!isValid) {
+      return;
+    }
+
     try {
       const payload = {
         firstName: data.firstName.trim(),
@@ -249,6 +217,9 @@ export default function EditMan() {
     onFileChange,
     clearFile,
   } = useFilePreview();
+
+
+
   const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleResetForm = useCallback(() => {
@@ -329,7 +300,7 @@ export default function EditMan() {
         });
       }
     },
-    [onFileChange, photoInputRef, showSnackbar, manName],
+    [manName, onFileChange, showSnackbar]
   );
 
   return (
@@ -418,7 +389,7 @@ export default function EditMan() {
                   rules={{
                     required: "Email is required",
                     pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      value: EMAIL_REGEX,
                       message: "Invalid email format",
                     },
                   }}
@@ -668,13 +639,15 @@ export default function EditMan() {
             <Controller
               name="notes"
               control={control}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <TextField
                   label="Notes"
                   {...field}
                   fullWidth
                   multiline
                   rows={4}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
                 />
               )}
             />
@@ -717,8 +690,8 @@ export default function EditMan() {
         severity={messageInfo?.severity ?? "info"}
         title={messageInfo?.title}
         message={messageInfo?.message ?? ""}
-        slotProps={{ transition: { onExited: handleSnackbarExited } }}
-        onClose={handleSnackbarClose}
+        onClose={handleClose}
+        slotProps={{ transition: { onExited: handleExited } }}
       />
     </LocalizationProvider>
   );

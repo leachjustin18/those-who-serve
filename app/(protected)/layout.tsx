@@ -6,9 +6,8 @@ import { redirect } from "next/navigation";
 import { getUserSession } from "@/lib/nextAuth/session";
 import { CacheProvider } from "@/components/context/Cache";
 import { fetchMen } from "@/lib/api/men";
-import { BottomNavigation } from "@/components/ui/BottomNavigation";
-import { AppHeader } from "@/components/ui/AppHeader";
-import type { Man } from "@/types/man";
+import { AppHeader, BottomNavigation } from "@/components/ui";
+import type { TMan } from "@/types";
 import { Container } from "@mui/material";
 
 type LayoutProps = {
@@ -22,7 +21,7 @@ export default async function SecureLayout({ children }: LayoutProps) {
     redirect("/login");
   }
 
-  let menCache: Man[] = [];
+  let menCache: TMan[] = [];
   try {
     menCache = await fetchMen();
   } catch (err) {

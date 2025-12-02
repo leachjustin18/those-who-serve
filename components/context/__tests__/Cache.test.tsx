@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CacheProvider, useCache } from "../Cache";
-import type { Man } from "@/types/man";
+import type { TMan } from "@/types";
 
 describe("CacheProvider / useCache", () => {
   const stubMen: Man[] = [
@@ -37,7 +37,7 @@ describe("CacheProvider / useCache", () => {
   it("throws when useCache is called outside of the provider", () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     const Thrower = () => {
       useCache();

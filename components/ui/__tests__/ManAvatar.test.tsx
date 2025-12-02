@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { ManAvatar } from "../ManAvatar";
+import { ManAvatar } from "../";
 
 describe("ManAvatar", () => {
   it("renders initials derived from the provided name when no photo is supplied", () => {

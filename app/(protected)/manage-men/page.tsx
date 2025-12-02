@@ -27,28 +27,28 @@ import {
   EventBusy as EventBusyIcon,
   Cancel as CancelIcon,
   Delete as DeleteIcon,
+  PersonAdd as PersonAddIcon,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useCache } from "@/components/context/Cache";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
-import { ManAvatar } from "@/components/ui/ManAvatar";
+import { AlertSnackbar, ManAvatar } from "@/components/ui";
 import Link from "next/link";
 import { format } from "date-fns";
-import type { Man } from "@/types/man";
+import type { TMan } from "@/types";
 import { useCallback, useMemo, useState } from "react";
-import { AlertSnackbar } from "@/components/ui/AlertSnackbar";
 import { deleteMan } from "@/lib/api/men";
 
-const getManDisplayName = (man: Man) =>
+const getManDisplayName = (man: TMan) =>
   [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
   "Unnamed Servant";
 
-const getManPhotoUrl = (man: Man) =>
+const getManPhotoUrl = (man: TMan) =>
   typeof man.photoFile === "string" ? man.photoFile : undefined;
 
 export default function ManageMen() {
   const { men: cachedMen, setMen } = useCache();
-  const [deleteTarget, setDeleteTarget] = useState<Man | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TMan | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [snackbarState, setSnackbarState] = useState<{
     open: boolean;
@@ -84,7 +84,7 @@ export default function ManageMen() {
     [],
   );
 
-  const handleRequestDelete = useCallback((man: Man) => {
+  const handleRequestDelete = useCallback((man: TMan) => {
     setDeleteTarget(man);
   }, []);
 
@@ -121,6 +121,27 @@ export default function ManageMen() {
 
   return (
     <>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        alignItems={{ sm: "center" }}
+        justifyContent="space-between"
+        sx={{ mt: 2, mb: 2 }}
+      >
+        <Typography variant="h4" fontWeight={200}>
+          Manage Servants
+        </Typography>
+        <Button
+          component={Link}
+          href="/manage-men/add"
+          variant="contained"
+          color="primary"
+          startIcon={<PersonAddIcon />}
+          sx={{ alignSelf: { xs: "stretch", sm: "flex-end" } }}
+        >
+          Add New Servant
+        </Button>
+      </Stack>
       <Grid container spacing={3} sx={{ mt: 2 }}>
         {cachedMen.map((man) => {
           const displayName = getManDisplayName(man);

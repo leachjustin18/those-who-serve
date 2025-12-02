@@ -1,6 +1,6 @@
 "use server";
 
-import type { Man } from "@/types/man";
+import type { TMan } from "@/types";
 
 const host = process.env.SERVER_HOST;
 
@@ -10,7 +10,7 @@ const host = process.env.SERVER_HOST;
  * @throws If SERVER_HOST is not defined or the request fails.
  * @returns A list of men from the backend API.
  */
-async function requestMen(): Promise<Man[]> {
+async function requestMen(): Promise<TMan[]> {
   if (!host) throw new Error("SERVER_HOST is not defined");
 
   const res = await fetch(`${host}/api/men`, { cache: "no-store" });
@@ -18,7 +18,7 @@ async function requestMen(): Promise<Man[]> {
     throw new Error(`Failed to fetch men (status ${res.status})`);
   }
 
-  return res.json() as Promise<Man[]>;
+  return res.json() as Promise<TMan[]>;
 }
 
 /**
@@ -30,7 +30,7 @@ async function requestMen(): Promise<Man[]> {
  * @returns A list of men.
  * @throws If the underlying network request fails.
  */
-export async function fetchMen(): Promise<Man[]> {
+export async function fetchMen(): Promise<TMan[]> {
   try {
     const men = await requestMen();
     return men;
@@ -55,13 +55,13 @@ export async function fetchMen(): Promise<Man[]> {
  */
 export async function updateMan(
   id: string,
-  data: Partial<Omit<Man, "id">>,
-): Promise<Partial<Man> & { id: string }> {
+  data: Partial<Omit<TMan, "id">>,
+): Promise<Partial<TMan> & { id: string }> {
   if (!host || !id) {
     throw new Error("Required value is not defined; unable to PATCH");
   }
 
-  const updates: Partial<Omit<Man, "id">> & { updatedAt: number } = {
+  const updates: Partial<Omit<TMan, "id">> & { updatedAt: number } = {
     ...data,
     updatedAt: Date.now(),
   };
@@ -77,7 +77,7 @@ export async function updateMan(
   }
 
   // Return a minimal updated man representation for client-side patching
-  const updatedMan: Partial<Man> & { id: string } = {
+  const updatedMan: Partial<TMan> & { id: string } = {
     id,
     ...updates,
   };
@@ -108,4 +108,14 @@ export async function deleteMan(
   }
 
   return { id, success: true };
+}
+
+export async function addMan(data: Omit<TMan, "id">) {
+  const res = await fetch(`${host}/api/men`, {
+    method: "POST",
+    body: JSON.stringify({ ...data, createdAt: Date.now(), updatedAt: Date.now() }),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to add man");
+  return res.json();
 }

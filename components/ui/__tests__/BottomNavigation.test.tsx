@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BottomNavigation } from "../BottomNavigation";
+import { BottomNavigation } from "../";
 
 describe("BottomNavigation", () => {
   it("allows switching between actions", async () => {

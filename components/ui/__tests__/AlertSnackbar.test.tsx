@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { AlertSnackbar } from "../AlertSnackbar";
+import { AlertSnackbar } from "../";
 
 describe("AlertSnackbar", () => {
   it("renders severity-specific icon, title, message, and action when open", () => {
