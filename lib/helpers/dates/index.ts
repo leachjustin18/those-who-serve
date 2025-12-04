@@ -1,4 +1,4 @@
-import { type DateValue } from "@/types";
+import { type TDateValue } from "@/types";
 import { format, startOfDay, isAfter } from "date-fns";
 
 /**
@@ -7,7 +7,7 @@ import { format, startOfDay, isAfter } from "date-fns";
  * @param value - Either a Date instance or a string/number that can be parsed into one.
  * @returns A Date object representation of the provided value.
  */
-const _normalizeDateValue = (value: DateValue) =>
+const _normalizeDateValue = (value: TDateValue) =>
   value instanceof Date ? value : new Date(value);
 
 /**
@@ -16,7 +16,7 @@ const _normalizeDateValue = (value: DateValue) =>
  * @param value - The date-like value to convert.
  * @returns ISO string (e.g. 2024-01-01T00:00:00.000Z).
  */
-const _toIsoDateString = (value: DateValue) =>
+const _toIsoDateString = (value: TDateValue) =>
   _normalizeDateValue(value).toISOString();
 
 /**
@@ -24,7 +24,7 @@ const _toIsoDateString = (value: DateValue) =>
  * @param value - Date instance, timestamp, or ISO string to format.
  * @returns Formatted date string.
  */
-export const formatReadableDate = (value: DateValue) =>
+export const formatReadableDate = (value: TDateValue) =>
   format(_normalizeDateValue(value), "MMM d, yyyy");
 
 /**
@@ -33,7 +33,7 @@ export const formatReadableDate = (value: DateValue) =>
  * @param b - Second date-like value.
  * @returns True when both dates fall on the same yyyy-MM-dd, otherwise false.
  */
-export const isSameDay = (a: DateValue, b: DateValue) =>
+export const isSameDay = (a: TDateValue, b: TDateValue) =>
   format(_normalizeDateValue(a), "yyyy-MM-dd") ===
   format(_normalizeDateValue(b), "yyyy-MM-dd");
 
@@ -42,7 +42,7 @@ export const isSameDay = (a: DateValue, b: DateValue) =>
  * @param dates - Array of date-like values or undefined.
  * @returns Array of ISO date strings; defaults to an empty array.
  */
-export const normalizeDatesForPayload = (dates?: DateValue[]) =>
+export const normalizeDatesForPayload = (dates?: TDateValue[]) =>
   dates?.map(_toIsoDateString) ?? [];
 
 /**

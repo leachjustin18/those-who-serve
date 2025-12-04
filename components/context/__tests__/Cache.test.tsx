@@ -4,7 +4,7 @@ import { CacheProvider, useCache } from "../Cache";
 import type { TMan } from "@/types";
 
 describe("CacheProvider / useCache", () => {
-  const stubMen: Man[] = [
+  const stubMen: TMan[] = [
     {
       id: "1",
       firstName: "John",
