@@ -38,8 +38,8 @@ import {
     ArrowBack as ArrowBackIcon,
     People as PeopleIcon,
     Logout as LogoutIcon,
+    CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
-import { CalendarIcon } from "@/components/icons/Calendar";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -339,7 +339,7 @@ export const BottomNavigation = () => {
                 })}
             >
                 <BottomNavigationAction label="Men" icon={<PeopleIcon />} />
-                <BottomNavigationAction label="Calendar" icon={<CalendarIcon />} />
+                <BottomNavigationAction label="Calendar" icon={<CalendarMonthIcon />} />
                 <BottomNavigationAction label="Logout" icon={<LogoutIcon />} />
             </MuiBottomNavigation>
         </Paper>

@@ -192,6 +192,43 @@ export function generateScheduleForMonth(
     }
   }
 
+  // Ensure Lord's Table has exactly 6 assignments by adding extras on the last Sunday if needed
+  const lordsTableEntries = entries.filter((e) => e.role === "lords_table");
+  const lordsNeeded = 6 - lordsTableEntries.length;
+  if (lordsNeeded > 0) {
+    const sundayDates = dates.filter((d) => getDayName(d) === "Sunday");
+    const lastSundayDate = sundayDates[sundayDates.length - 1];
+
+    for (let i = 0; i < lordsNeeded && lastSundayDate; i++) {
+      const remainingMen = men.filter(
+        (m) =>
+          !entries.some(
+            (e) =>
+              e.role === "lords_table" &&
+              e.servantId === m.id,
+          ),
+      );
+
+      const selected = selectBestServantForRole(
+        "lords_table",
+        lastSundayDate,
+        remainingMen,
+        entries,
+      );
+
+      if (selected) {
+        entries.push({
+          date: lastSundayDate,
+          role: "lords_table",
+          servantId: selected.id,
+        });
+      } else {
+        // No more unique men available for Lord's Table.
+        break;
+      }
+    }
+  }
+
   // Generate monthly role assignments (one per role for the whole month)
   const monthlyRoles = getMonthlyRoles();
 

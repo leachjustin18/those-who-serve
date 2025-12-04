@@ -13,6 +13,11 @@ import {
   Box,
   Divider,
   Button,
+  TextField,
+  Autocomplete,
+  InputAdornment,
+  ToggleButtonGroup,
+  ToggleButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -28,6 +33,10 @@ import {
   Cancel as CancelIcon,
   Delete as DeleteIcon,
   PersonAdd as PersonAddIcon,
+  Search as SearchIcon,
+  SortByAlpha as SortByAlphaIcon,
+  SwapVert as SwapVertIcon,
+  FilterAltOff as FilterAltOffIcon,
 } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { useCache } from "@/components/context/Cache";
@@ -38,6 +47,7 @@ import { format } from "date-fns";
 import type { TMan } from "@/types";
 import { useCallback, useMemo, useState } from "react";
 import { deleteMan } from "@/lib/api/men";
+import { ROLE_OPTIONS } from "@/lib/constants";
 
 const getManDisplayName = (man: TMan) =>
   [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
@@ -59,6 +69,51 @@ export default function ManageMen() {
     severity: "success",
     message: "",
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const selectedRoleOptions = useMemo(
+    () => ROLE_OPTIONS.filter((role) => selectedRoles.includes(role.value)),
+    [selectedRoles],
+  );
+
+  const filteredMen = useMemo(() => {
+    if (!cachedMen) return [];
+
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    const matchesSearch = (man: TMan) => {
+      if (!normalizedQuery) return true;
+      const first = man.firstName?.toLowerCase() ?? "";
+      const last = man.lastName?.toLowerCase() ?? "";
+      return (
+        first.includes(normalizedQuery) ||
+        last.includes(normalizedQuery) ||
+        `${first} ${last}`.includes(normalizedQuery)
+      );
+    };
+
+    const matchesRole = (man: TMan) => {
+      if (selectedRoles.length === 0) return true;
+      return man.roles?.some((role) => selectedRoles.includes(role));
+    };
+
+    const sortByLastName = (a: TMan, b: TMan) => {
+      const lastA = a.lastName?.toLowerCase() ?? "";
+      const lastB = b.lastName?.toLowerCase() ?? "";
+      if (lastA === lastB) {
+        return (a.firstName ?? "").localeCompare(b.firstName ?? "");
+      }
+      const comparison = lastA.localeCompare(lastB);
+      return sortDirection === "asc" ? comparison : -comparison;
+    };
+
+    return cachedMen
+      .filter((man) => matchesSearch(man) && matchesRole(man))
+      .slice()
+      .sort(sortByLastName);
+  }, [cachedMen, searchQuery, selectedRoles, sortDirection]);
 
   const deleteTargetName = useMemo(() => {
     if (!deleteTarget) return "";
@@ -116,6 +171,19 @@ export default function ManageMen() {
     }
   }, [cachedMen, deleteTarget, deleteTargetName, setMen, showSnackbar]);
 
+  const handleResetFilters = useCallback(() => {
+    setSearchQuery("");
+    setSelectedRoles([]);
+    setSortDirection("asc");
+  }, []);
+
+  const handleSortDirectionChange = useCallback(
+    (_: unknown, value: "asc" | "desc" | null) => {
+      if (value) setSortDirection(value);
+    },
+    [],
+  );
+
   if (!cachedMen)
     return <CircularProgress sx={{ display: "block", margin: "20px auto" }} />;
 
@@ -142,8 +210,84 @@ export default function ManageMen() {
           Add New Servant
         </Button>
       </Stack>
+      <Stack spacing={2} sx={{ mb: 2 }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          alignItems={{ md: "center" }}
+        >
+          <TextField
+            fullWidth
+            label="Search servants"
+            placeholder="Search by first or last name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Autocomplete
+            multiple
+            options={ROLE_OPTIONS}
+            getOptionLabel={(option) => option.label}
+            value={selectedRoleOptions}
+            onChange={(_, newValue) =>
+              setSelectedRoles(newValue.map((role) => role.value))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Filter by roles"
+                placeholder="Select roles"
+              />
+            )}
+            sx={{ minWidth: { md: 320 } }}
+          />
+        </Stack>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          justifyContent="space-between"
+        >
+          <ToggleButtonGroup
+            exclusive
+            value={sortDirection}
+            onChange={handleSortDirectionChange}
+            size="small"
+          >
+            <ToggleButton value="asc">
+              <SortByAlphaIcon fontSize="small" sx={{ mr: 1 }} />
+              Last Name (A-Z)
+            </ToggleButton>
+            <ToggleButton value="desc">
+              <SwapVertIcon fontSize="small" sx={{ mr: 1 }} />
+              Last Name (Z-A)
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button
+            variant="text"
+            startIcon={<FilterAltOffIcon />}
+            onClick={handleResetFilters}
+            sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}
+          >
+            Reset filters
+          </Button>
+        </Stack>
+      </Stack>
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        {cachedMen.map((man) => {
+        {filteredMen.length === 0 && (
+          <Grid size={12}>
+            <Typography variant="body1" color="text.secondary">
+              No servants match the current filters.
+            </Typography>
+          </Grid>
+        )}
+        {filteredMen.map((man) => {
           const displayName = getManDisplayName(man);
           const avatarPhoto = getManPhotoUrl(man);
 

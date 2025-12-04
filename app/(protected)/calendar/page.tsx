@@ -24,8 +24,10 @@ import {
   CheckCircle as CheckCircleIcon,
   Edit as EditIcon,
   Add as AddIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 } from "@mui/icons-material";
-import { format, parse } from "date-fns";
+import { format, parse, addMonths } from "date-fns";
 import { useCache } from "@/components/context/Cache";
 import { AlertSnackbar } from "@/components/ui";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
@@ -45,13 +47,13 @@ import { updateMan } from "@/lib/api/men";
 import type { TScheduleEntry, TSchedule } from "@/types";
 import { ROLE_OPTIONS } from "@/lib/constants";
 
-const currentMonthStr = format(new Date(), "yyyy-MM");
+const todayMonthStr = format(new Date(), "yyyy-MM");
 
 /**
  * Gets day name from ISO date string.
  */
 function getDayNameFromDate(dateStr: string): "Wednesday" | "Sunday" {
-  const date = new Date(dateStr);
+  const date = parse(dateStr, "yyyy-MM-dd", new Date());
   const dayOfWeek = date.getDay();
   return dayOfWeek === 0 ? "Sunday" : "Wednesday";
 }
@@ -60,6 +62,7 @@ export default function Calendar() {
   const { men: allMen, setMen, schedules, setSchedules } = useCache();
 
   // State
+  const [viewedMonth, setViewedMonth] = useState(todayMonthStr);
   const [currentSchedule, setCurrentSchedule] = useState<TSchedule | null>(null);
   const [loading, setLoading] = useState(true);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
@@ -80,14 +83,16 @@ export default function Calendar() {
   });
 
 
-  // Load current schedule on mount
+  // Load schedule when viewed month changes
   useEffect(() => {
     const loadSchedule = async () => {
       try {
         setLoading(true);
-        const schedule = await fetchSchedule(currentMonthStr);
+        const schedule = await fetchSchedule(viewedMonth);
         if (schedule) {
           setCurrentSchedule(schedule);
+        } else {
+          setCurrentSchedule(null);
         }
       } catch (err) {
         setAlertMessage("Failed to load schedule");
@@ -99,7 +104,7 @@ export default function Calendar() {
     };
 
     loadSchedule();
-  }, []);
+  }, [viewedMonth]);
 
   // Get servant name
   const getServantName = (servantId: string): string => {
@@ -113,10 +118,10 @@ export default function Calendar() {
   const handleGenerateSchedule = useCallback(async () => {
     try {
       setGeneratingSchedule(true);
-      const entries = generateScheduleForMonth(currentMonthStr, allMen);
+      const entries = generateScheduleForMonth(viewedMonth, allMen);
       const newSchedule: TSchedule = {
-        id: currentMonthStr,
-        month: currentMonthStr,
+        id: viewedMonth,
+        month: viewedMonth,
         entries,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -146,7 +151,7 @@ export default function Calendar() {
       setMen(updatedMen);
 
       // Update cache schedules
-      const updated = schedules.filter((s) => s.month !== currentMonthStr);
+      const updated = schedules.filter((s) => s.month !== viewedMonth);
       setSchedules([...updated, created]);
 
       setAlertMessage("Schedule generated successfully");
@@ -159,7 +164,7 @@ export default function Calendar() {
     } finally {
       setGeneratingSchedule(false);
     }
-  }, [allMen, setMen, schedules, setSchedules]);
+  }, [allMen, setMen, schedules, setSchedules, viewedMonth]);
 
   // Update single entry
   const handleUpdateEntry = useCallback(async (originalEntry: TScheduleEntry, newServantId: string) => {
@@ -174,7 +179,7 @@ export default function Calendar() {
           : e,
       );
 
-      const updated = await updateSchedule(currentMonthStr, {
+      const updated = await updateSchedule(viewedMonth, {
         entries: newEntries,
       });
 
@@ -182,7 +187,7 @@ export default function Calendar() {
 
       // Update cache
       const updatedSchedules = schedules.map((s) =>
-        s.month === currentMonthStr ? updated : s,
+        s.month === viewedMonth ? updated : s,
       );
       setSchedules(updatedSchedules);
 
@@ -194,7 +199,7 @@ export default function Calendar() {
       setAlertSeverity("error");
       setAlertOpen(true);
     }
-  }, [currentSchedule, schedules, setSchedules]);
+  }, [currentSchedule, schedules, setSchedules, viewedMonth]);
 
   // Add/Override Worship in Song entry
   const handleAddWorshipInSong = useCallback(
@@ -213,7 +218,7 @@ export default function Calendar() {
             },
           ]);
 
-        const updated = await updateSchedule(currentMonthStr, {
+        const updated = await updateSchedule(viewedMonth, {
           entries: newEntries,
         });
 
@@ -221,7 +226,7 @@ export default function Calendar() {
 
         // Update cache
         const updatedSchedules = schedules.map((s) =>
-          s.month === currentMonthStr ? updated : s,
+          s.month === viewedMonth ? updated : s,
         );
         setSchedules(updatedSchedules);
 
@@ -234,7 +239,7 @@ export default function Calendar() {
         setAlertOpen(true);
       }
     },
-    [currentSchedule, schedules, setSchedules],
+    [currentSchedule, schedules, setSchedules, viewedMonth],
   );
 
   // Finalize schedule and update lastServed
@@ -271,12 +276,12 @@ export default function Calendar() {
         updatedAt: Date.now(),
       };
 
-      const updated = await updateSchedule(currentMonthStr, finalizedSchedule);
+      const updated = await updateSchedule(viewedMonth, finalizedSchedule);
       setCurrentSchedule(updated);
 
       // Update cache
       const updatedSchedules = schedules.map((s) =>
-        s.month === currentMonthStr ? updated : s,
+        s.month === viewedMonth ? updated : s,
       );
       setSchedules(updatedSchedules);
 
@@ -290,7 +295,22 @@ export default function Calendar() {
     } finally {
       setFinalizingSchedule(false);
     }
-  }, [currentSchedule, schedules, setSchedules]);
+  }, [currentSchedule, schedules, setSchedules, viewedMonth]);
+
+  // Navigate to previous month
+  const handlePreviousMonth = () => {
+    setViewedMonth((prev) => format(addMonths(parse(prev, "yyyy-MM", new Date()), -1), "yyyy-MM"));
+  };
+
+  // Navigate to next month
+  const handleNextMonth = () => {
+    setViewedMonth((prev) => format(addMonths(parse(prev, "yyyy-MM", new Date()), 1), "yyyy-MM"));
+  };
+
+  // Go back to today
+  const handleGoToToday = () => {
+    setViewedMonth(todayMonthStr);
+  };
 
   // Get entries for a specific date
   const getEntriesForDate = (dateStr: string): TScheduleEntry[] => {
@@ -348,7 +368,14 @@ export default function Calendar() {
   }, [currentSchedule]);
 
   // Get Wed and Sun dates
-  const allDates = getWednesdaysAndSundaysInMonth(currentMonthStr);
+  const allDates = getWednesdaysAndSundaysInMonth(viewedMonth);
+  const isPastMonth = useMemo(() => {
+    const now = new Date();
+    const viewed = parse(viewedMonth, "yyyy-MM", new Date());
+    const startOfViewed = new Date(viewed.getFullYear(), viewed.getMonth(), 1);
+    const startOfCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
+    return startOfViewed < startOfCurrent;
+  }, [viewedMonth]);
 
   if (loading) {
     return (
@@ -367,15 +394,42 @@ export default function Calendar() {
         alignItems="center"
         mb={3}
       >
-        <Typography variant="h4" fontWeight={600}>
-          {format(parse(currentMonthStr, "yyyy-MM", new Date()), "MMMM yyyy")}
-        </Typography>
+        <Stack direction="row" alignItems="center" gap={2}>
+          <Button
+            size="small"
+            onClick={handlePreviousMonth}
+            startIcon={<ChevronLeftIcon />}
+          >
+            Previous
+          </Button>
+          <Stack alignItems="center" sx={{ minWidth: 200 }}>
+            <Typography variant="h5" fontWeight={600}>
+              {format(parse(viewedMonth, "yyyy-MM", new Date()), "MMMM yyyy")}
+            </Typography>
+            {viewedMonth !== todayMonthStr && (
+              <Button
+                size="small"
+                variant="text"
+                onClick={handleGoToToday}
+              >
+                Back to Today
+              </Button>
+            )}
+          </Stack>
+          <Button
+            size="small"
+            onClick={handleNextMonth}
+            endIcon={<ChevronRightIcon />}
+          >
+            Next
+          </Button>
+        </Stack>
         {!currentSchedule ? (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleGenerateSchedule}
-            disabled={generatingSchedule}
+            disabled={generatingSchedule || isPastMonth}
           >
             {generatingSchedule ? "Generating..." : "Generate Schedule"}
           </Button>
@@ -430,18 +484,25 @@ export default function Calendar() {
                           <Typography variant="subtitle2" color="textSecondary">
                             {getRoleLabel(entry.role)}
                           </Typography>
-                          <Typography variant="h6">
-                            {getServantName(entry.servantId)}
-                          </Typography>
-                          <Button
-                            size="small"
-                            startIcon={<EditIcon />}
-                            onClick={() => handleOpenEditModal(entry)}
-                            disabled={currentSchedule.finalized}
-                            sx={{ mt: 1 }}
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            gap={1.5}
+                            sx={{ mt: 0.5 }}
                           >
-                            Change
-                          </Button>
+                            <Typography variant="h6">
+                              {getServantName(entry.servantId)}
+                            </Typography>
+                            <Button
+                              size="small"
+                              startIcon={<EditIcon />}
+                              onClick={() => handleOpenEditModal(entry)}
+                              disabled={currentSchedule.finalized}
+                            >
+                              Change
+                            </Button>
+                          </Stack>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -498,7 +559,7 @@ export default function Calendar() {
                           </Box>
                           <Button
                             size="small"
-                            variant="outlined"
+                            startIcon={<EditIcon />}
                             disabled={currentSchedule.finalized}
                             onClick={async () => {
                               try {
@@ -508,10 +569,10 @@ export default function Calendar() {
                                     (e) => !(e.date === dateStr && e.role === "worship_in_song"),
                                   ),
                                 };
-                                await updateSchedule(currentMonthStr, updated);
+                                await updateSchedule(viewedMonth, updated);
                                 setCurrentSchedule(updated);
                                 const updatedSchedules = schedules.map((s) =>
-                                  s.month === currentMonthStr ? updated : s,
+                                  s.month === viewedMonth ? updated : s,
                                 );
                                 setSchedules(updatedSchedules);
                                 setAlertMessage("Worship in Song removed");
@@ -524,7 +585,7 @@ export default function Calendar() {
                               }
                             }}
                           >
-                            Remove
+                            Change
                           </Button>
                         </Stack>
                       ) : (
@@ -537,43 +598,40 @@ export default function Calendar() {
                               bgcolor="action.hover"
                               borderRadius={1}
                               sx={{
-                                cursor: currentSchedule.finalized ? "default" : "pointer",
-                                transition: (theme) =>
-                                  theme.transitions.create(["background-color", "box-shadow"]),
-                                opacity: currentSchedule.finalized ? 0.7 : 1,
-                                "&:hover": !currentSchedule.finalized ? {
-                                  bgcolor: "action.selected",
-                                  boxShadow: (theme) =>
-                                    `0 4px 8px ${theme.palette.action.hover}`,
-                                } : {},
+                                border: `1px solid ${currentSchedule.finalized ? "transparent" : "rgba(25, 118, 210, 0.12)"}`,
                               }}
-                              onClick={() => !currentSchedule.finalized && handleOpenEditModal(entry)}
                             >
-                              <Typography variant="caption" display="block" color="textSecondary">
-                                {getRoleLabel(entry.role)}
-                              </Typography>
-                              <Typography variant="body2" fontWeight={600}>
-                                {getServantName(entry.servantId)}
-                              </Typography>
-                              {!currentSchedule.finalized && (
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  color="primary"
-                                  sx={{ mt: 0.5, fontSize: "0.7rem" }}
-                                >
-                                  Click to change
-                                </Typography>
-                              )}
-                            </Box>
-                          ))}
+                          <Typography variant="subtitle2" color="textSecondary">
+                            {getRoleLabel(entry.role)}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            gap={1}
+                            sx={{ mt: 0.5 }}
+                          >
+                            <Typography variant="body2" fontWeight={600}>
+                              {getServantName(entry.servantId)}
+                            </Typography>
+                            <Button
+                              size="small"
+                              startIcon={<EditIcon />}
+                              onClick={() => handleOpenEditModal(entry)}
+                              disabled={currentSchedule.finalized}
+                            >
+                              Change
+                            </Button>
+                          </Stack>
+                        </Box>
+                      ))}
                           <Button
                             size="small"
-                            variant="text"
-                            disabled={currentSchedule.finalized}
+                            startIcon={<EditIcon />}
                             onClick={() =>
                               handleOpenWorshipInSongModal(dateStr, dayName)
                             }
+                            disabled={currentSchedule.finalized}
                             sx={{ mt: 1 }}
                           >
                             Mark as Worship in Song
