@@ -1,10 +1,11 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { TMan } from "@/types";
+import type { TMan, TSchedule } from "@/types";
 import { SessionCache } from "@/lib/helpers/Cache";
 
 const MEN_CACHE_KEY = "men";
+const SCHEDULES_CACHE_KEY = "schedules";
 
 /**
  * Singleton client-side cache instance for men.
@@ -15,6 +16,11 @@ const MEN_CACHE_KEY = "men";
 const menClientCache = new SessionCache<TMan[]>();
 
 /**
+ * Singleton client-side cache instance for schedules.
+ */
+const schedulesClientCache = new SessionCache<TSchedule[]>();
+
+/**
  * Shape of the cache context exposed to components.
  */
 type CacheContextType = {
@@ -22,6 +28,10 @@ type CacheContextType = {
   men: TMan[];
   /** Convenience setter to replace the men list in the cache. */
   setMen: (men: TMan[]) => void;
+  /** Current schedules list, derived from the client SessionCache. */
+  schedules: TSchedule[];
+  /** Convenience setter to replace the schedules list in the cache. */
+  setSchedules: (schedules: TSchedule[]) => void;
   /** Underlying SessionCache instance, if you need lower-level access. */
   cache: SessionCache<TMan[]>;
 };
@@ -57,25 +67,39 @@ export const CacheProvider = ({ initialMen, children }: CacheProviderProps) => {
     }
 
     // Subscribe to cache changes; bump version on each change.
-    const unsubscribe = menClientCache.subscribe(() => {
+    const unsubscribeMen = menClientCache.subscribe(() => {
       setVersion((v) => v + 1);
     });
 
-    return unsubscribe;
+    const unsubscribeSchedules = schedulesClientCache.subscribe(() => {
+      setVersion((v) => v + 1);
+    });
+
+    return () => {
+      unsubscribeMen();
+      unsubscribeSchedules();
+    };
   }, [initialMen]);
 
   const value = useMemo<CacheContextType>(() => {
     const _ = version; // force-reactive dependency
 
     const men = menClientCache.get(MEN_CACHE_KEY) ?? initialMen ?? [];
+    const schedules = schedulesClientCache.get(SCHEDULES_CACHE_KEY) ?? [];
 
     const setMen = (next: TMan[]) => {
       menClientCache.set(MEN_CACHE_KEY, next);
     };
 
+    const setSchedules = (next: TSchedule[]) => {
+      schedulesClientCache.set(SCHEDULES_CACHE_KEY, next);
+    };
+
     return {
       men,
       setMen,
+      schedules,
+      setSchedules,
       cache: menClientCache,
     };
   }, [version, initialMen]);

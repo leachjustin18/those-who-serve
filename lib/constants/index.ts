@@ -6,46 +6,72 @@ export const ROLE_OPTIONS = [
     label: "Announcements",
     value: "announcements",
     number: 1,
+    isMonthly: true,
   },
   {
     label: "Closing Prayer",
     value: "closing_prayer",
     day: "Wednesday",
     number: 1,
+    conflictsWith: ["devotional", "lead_singing", "morning_prayer"],
   },
-  { label: "Devotional", value: "devotional", day: "Wednesday", number: 1 },
+  {
+    label: "Devotional",
+    value: "devotional",
+    day: "Wednesday",
+    number: 1,
+    conflictsWith: ["closing_prayer", "lead_singing", "morning_prayer", "evening_prayers"],
+  },
   {
     label: "Evening Prayers",
     value: "evening_prayers",
     day: "Sunday",
     number: 2,
+    conflictsWith: ["devotional", "morning_prayer", "evening_singing", "morning_singing"],
   },
   {
     label: "Evening Singing",
     value: "evening_singing",
     day: "Sunday",
     number: 1,
+    conflictsWith: ["evening_prayers", "morning_prayer", "morning_singing"],
   },
-  { label: "Lead Singing", value: "lead_singing", day: "Wednesday", number: 1 },
+  {
+    label: "Lead Singing",
+    value: "lead_singing",
+    day: "Wednesday",
+    number: 1,
+    conflictsWith: ["devotional", "closing_prayer", "morning_prayer"],
+  },
   { label: "Lord's Table", value: "lords_table", day: "Sunday", number: 1 },
   {
     label: "Morning Prayer",
     value: "morning_prayer",
     day: "Sunday",
     number: 2,
+    conflictsWith: ["devotional", "closing_prayer", "lead_singing", "evening_prayers", "evening_singing", "morning_singing"],
   },
   {
     label: "Morning Singing",
     value: "morning_singing",
     day: "Sunday",
     number: 1,
+    conflictsWith: ["evening_prayers", "morning_prayer", "evening_singing"],
   },
   {
     label: "Usher",
     value: "usher",
     number: 3,
+    isMonthly: true,
   },
 ];
+
+/**
+ * Roles that are assigned monthly rather than per Wed/Sun.
+ */
+export const MONTHLY_ROLES = ROLE_OPTIONS.filter((r) => r.isMonthly).map(
+  (r) => r.value,
+);
 
 /**
  * Acceptable MIME types for uploaded profile or service photos.

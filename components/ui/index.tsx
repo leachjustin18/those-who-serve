@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type MouseEvent } from "react";
+import { usePathname } from "next/navigation";
 
 import {
     Snackbar,
@@ -38,6 +39,7 @@ import {
     People as PeopleIcon,
     Logout as LogoutIcon,
 } from "@mui/icons-material";
+import { CalendarIcon } from "@/components/icons/Calendar";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -244,7 +246,38 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
 };
 
 export const BottomNavigation = () => {
-    const [navigationValue, setNavigationValue] = useState(0);
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Derive navigation value from current pathname
+    const getNavigationValue = () => {
+        if (pathname?.includes("/calendar")) {
+            return 1;
+        } else if (pathname?.includes("/manage-men")) {
+            return 0;
+        }
+        return 0;
+    };
+
+    const navigationValue = getNavigationValue();
+
+    const handleNavigation = (newValue: number) => {
+        switch (newValue) {
+            case 0:
+                router.push("/manage-men");
+                break;
+            case 1:
+                router.push("/calendar");
+                break;
+            case 2:
+                handleLogout();
+                break;
+        }
+    };
+
+    const handleLogout = async () => {
+        await signOut({ redirect: true, callbackUrl: "/login" });
+    };
 
     return (
         <Paper
@@ -272,7 +305,7 @@ export const BottomNavigation = () => {
                 showLabels
                 value={navigationValue}
                 onChange={(_, newValue) => {
-                    setNavigationValue(newValue);
+                    handleNavigation(newValue);
                 }}
                 sx={(theme) => ({
                     backgroundColor: "transparent",
@@ -306,6 +339,7 @@ export const BottomNavigation = () => {
                 })}
             >
                 <BottomNavigationAction label="Men" icon={<PeopleIcon />} />
+                <BottomNavigationAction label="Calendar" icon={<CalendarIcon />} />
                 <BottomNavigationAction label="Logout" icon={<LogoutIcon />} />
             </MuiBottomNavigation>
         </Paper>
