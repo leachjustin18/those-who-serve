@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useState, useCallback, useEffect, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -250,18 +250,28 @@ export const BottomNavigation = () => {
     const pathname = usePathname();
 
     // Derive navigation value from current pathname
-    const getNavigationValue = () => {
-        if (pathname?.includes("/calendar")) {
-            return 1;
-        } else if (pathname?.includes("/manage-men")) {
+    const getNavigationValue = useCallback(
+        (path?: string | null) => {
+            if (path?.includes("/calendar")) {
+                return 1;
+            } else if (path?.includes("/manage-men")) {
+                return 0;
+            }
             return 0;
-        }
-        return 0;
-    };
+        },
+        [],
+    );
 
-    const navigationValue = getNavigationValue();
+    const [navigationValue, setNavigationValue] = useState(() =>
+        getNavigationValue(pathname),
+    );
+
+    useEffect(() => {
+        setNavigationValue(getNavigationValue(pathname));
+    }, [getNavigationValue, pathname]);
 
     const handleNavigation = (newValue: number) => {
+        setNavigationValue(newValue);
         switch (newValue) {
             case 0:
                 router.push("/manage-men");
@@ -270,7 +280,7 @@ export const BottomNavigation = () => {
                 router.push("/calendar");
                 break;
             case 2:
-                handleLogout();
+                void handleLogout();
                 break;
         }
     };
