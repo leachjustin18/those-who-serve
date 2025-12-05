@@ -187,7 +187,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                     </Box>
                     <Box>
                         <Typography variant="h6" noWrap>
-                            39 COFC Those Who Serve
+                            Those Who Serve - 39th St Church of Christ
                         </Typography>
                         <Typography
                             variant="body2"
@@ -361,7 +361,7 @@ export const BottomNavigation = () => {
  * @param {string} [title="Back to Manage Men"] - Text displayed next to the back icon.
  * @returns {JSX.Element} Primary button with routing handler for the manage-men page.
  */
-export const BackToManageMen = ({ title = "Back to Manage Men" }) => {
+export const BackToManageMen = ({ title = "Back to Manage Men", ...props }) => {
     const router = useRouter();
     return (
         <Button
@@ -374,6 +374,7 @@ export const BackToManageMen = ({ title = "Back to Manage Men" }) => {
                 px: 2,
             }}
             onClick={() => router.push("/manage-men")}
+            {...props}
         >
             {title}
         </Button>

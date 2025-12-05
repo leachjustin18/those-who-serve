@@ -4,7 +4,6 @@ import {
   useCallback,
   useRef,
   useEffect,
-  type ReactNode,
   type ChangeEvent,
 } from "react";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
@@ -21,7 +20,6 @@ import {
   Button,
   ToggleButtonGroup,
   ToggleButton,
-  type AlertColor,
 } from "@mui/material";
 import { useParams } from "next/navigation";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -32,14 +30,13 @@ import {
   Camera as CameraIcon,
   PersonSearch as PersonSearchIcon,
   TaskAlt as TaskAltIcon,
-  ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   Restore as RestoreIcon,
   PhotoCamera as PhotoCameraIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from "@mui/icons-material";
 import { useCache } from "@/components/context/Cache";
-import { AlertSnackbar, SectionTitle } from "@/components/ui";
+import { AlertSnackbar, SectionTitle, BackToManageMen } from "@/components/ui";
 import {
   shouldDisableDate,
   isSameDay,
@@ -53,7 +50,6 @@ import {
   MAX_PHOTO_SIZE_BYTES,
   EMAIL_REGEX,
 } from "@/lib/constants";
-import { useRouter } from "next/navigation";
 import { useFilePreview } from "@/lib/hooks/useFilePreview";
 import { updateMan } from "@/lib/api/men";
 import { type TDateValue } from "@/types";
@@ -77,7 +73,6 @@ export default function EditMan() {
   const params = useParams<{ id: string }>();
   const { id } = params;
   const { men, setMen } = useCache();
-  const router = useRouter();
 
   const manToEdit = men?.find((man) => man.id === id);
   const manName = manToEdit?.firstName;
@@ -115,7 +110,7 @@ export default function EditMan() {
     setValue,
     setError,
     clearErrors,
-    formState: { isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty, isSubmitSuccessful },
   } = useForm<TFormInputs>({
     defaultValues: {
       firstName: manToEdit?.firstName || "",
@@ -307,19 +302,7 @@ export default function EditMan() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={1} sx={{ mb: 2 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            variant="contained"
-            color="primary"
-            sx={{
-              alignSelf: { xs: "stretch", sm: "flex-start" },
-              fontWeight: 600,
-              px: 2,
-            }}
-            onClick={() => router.push("/manage-men")}
-          >
-            Back to Manage Men
-          </Button>
+          <BackToManageMen />
           <Stack direction="row" alignItems="center" spacing={1}>
             <Typography variant="h5">
               Edit Servant • {manToEdit?.firstName || ""}
@@ -681,6 +664,10 @@ export default function EditMan() {
             >
               Save Changes
             </Button>
+            {isSubmitSuccessful && (
+              <BackToManageMen fullWidth
+                sx={{ maxWidth: { sm: 220 } }} />
+            )}
           </Stack>
         </form>
       </Container>

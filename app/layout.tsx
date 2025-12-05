@@ -3,7 +3,7 @@ import ThemeRegistry from "@/components/theme/ThemeRegistry";
 import { roboto } from "@/lib/theme/fonts";
 
 export const metadata: Metadata = {
-  title: "Those Who Serve - 39th ST COFC",
+  title: "Those Who Serve - 39th St Church of Christ",
   description: "Track and plan out men to serve in the congergation",
 };
 

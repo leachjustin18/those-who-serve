@@ -43,7 +43,7 @@ import { useCache } from "@/components/context/Cache";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { AlertSnackbar, ManAvatar } from "@/components/ui";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import type { TMan } from "@/types";
 import { useCallback, useMemo, useState } from "react";
 import { deleteMan } from "@/lib/api/men";
@@ -364,15 +364,19 @@ export default function ManageMen() {
                             flexWrap: "nowrap",
                           }}
                         >
-                          {man.unavailableDates.map((dateStr) => (
-                            <Chip
-                              key={dateStr}
-                              label={format(dateStr, "MMM d, yyyy")}
-                              color="info"
-                              icon={<EventBusyIcon />}
-                              variant="outlined"
-                            />
-                          ))}
+                          {man.unavailableDates.map((dateStr) => {
+                            // Parse as local date to avoid timezone drift between SSR/CSR
+                            const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
+                            return (
+                              <Chip
+                                key={dateStr}
+                                label={format(parsedDate, "MMM d, yyyy")}
+                                color="info"
+                                icon={<EventBusyIcon />}
+                                variant="outlined"
+                              />
+                            );
+                          })}
                         </Stack>
                         <Box
                           sx={(theme) => ({

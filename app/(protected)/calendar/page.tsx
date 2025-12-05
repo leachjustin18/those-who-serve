@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Backdrop,
   Dialog,
   DialogActions,
   DialogContent,
@@ -30,18 +31,17 @@ import {
 import { format, parse, addMonths } from "date-fns";
 import { useCache } from "@/components/context/Cache";
 import { AlertSnackbar } from "@/components/ui";
+import { ManAvatar } from "@/components/ui";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import {
   generateScheduleForMonth,
   getWednesdaysAndSundaysInMonth,
-  getMonthlyRoles,
   hasRoleConflict,
 } from "@/lib/helpers/scheduling";
 import {
   fetchSchedule,
   createSchedule,
   updateSchedule,
-  updateMenLastServed,
 } from "@/lib/api/schedules";
 import { updateMan } from "@/lib/api/men";
 import type { TScheduleEntry, TSchedule } from "@/types";
@@ -67,6 +67,7 @@ export default function Calendar() {
   const [loading, setLoading] = useState(true);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [finalizingSchedule, setFinalizingSchedule] = useState(false);
+  const [sendingNotifications, setSendingNotifications] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState<"success" | "error" | "info" | "warning">("info");
@@ -107,8 +108,9 @@ export default function Calendar() {
   }, [viewedMonth]);
 
   // Get servant name
+  const getServant = (servantId: string) => allMen.find((m) => m.id === servantId);
   const getServantName = (servantId: string): string => {
-    const servant = allMen.find((m) => m.id === servantId);
+    const servant = getServant(servantId);
     return servant
       ? `${servant.firstName} ${servant.lastName}`.trim()
       : "Unknown";
@@ -248,6 +250,7 @@ export default function Calendar() {
 
     try {
       setFinalizingSchedule(true);
+      setSendingNotifications(true);
 
       // Build lastServed updates
       const lastServedUpdates: Record<string, Record<string, number>> = {};
@@ -262,9 +265,7 @@ export default function Calendar() {
       // Update each man's lastServed in Firebase
       const updatePromises = Object.entries(lastServedUpdates).map(
         ([servantId, roles]) =>
-          updateMan(servantId, { lastServed: roles }).catch((err) => {
-            console.error(`Failed to update lastServed for ${servantId}:`, err);
-          }),
+          updateMan(servantId, { lastServed: roles })
       );
 
       await Promise.all(updatePromises);
@@ -285,9 +286,37 @@ export default function Calendar() {
       );
       setSchedules(updatedSchedules);
 
-      setAlertMessage("Schedule finalized and service history updated");
-      setAlertSeverity("success");
-      setAlertOpen(true);
+      try {
+        const res = await fetch("/api/notifications/schedule-finalized", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ month: viewedMonth }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.failed) && data.failed.length > 0) {
+            setAlertMessage(
+              `Schedule finalized; notifications sent to ${data.sent?.length ?? 0}. ${data.failed.length} failed.`,
+            );
+            setAlertSeverity("warning");
+          } else {
+            setAlertMessage("Schedule finalized and notifications sent");
+            setAlertSeverity("success");
+          }
+        } else {
+          setAlertMessage("Schedule finalized, but notifications failed to send");
+          setAlertSeverity("warning");
+        }
+        setAlertOpen(true);
+      } catch (notifyErr) {
+        console.error("Failed to send schedule notifications", notifyErr);
+        setAlertMessage("Schedule finalized, but notifications failed to send");
+        setAlertSeverity("warning");
+        setAlertOpen(true);
+      } finally {
+        setSendingNotifications(false);
+      }
     } catch (err) {
       setAlertMessage("Failed to finalize schedule");
       setAlertSeverity("error");
@@ -464,6 +493,33 @@ export default function Calendar() {
         message={alertMessage}
         onClose={() => setAlertOpen(false)}
       />
+      <Backdrop
+        open={sendingNotifications}
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1, flexDirection: "column", gap: 2 }}
+      >
+
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          border: '2px solid #000',
+          boxShadow: 24,
+          p: 4
+        }}>
+          <Box textAlign="center" mb={2}>
+            <CircularProgress />
+          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 600 }} gutterBottom>
+            Finializing & Sending Schedule Emails…
+          </Typography>
+          <Typography variant="body2" sx={{ opacity: 0.85 }}>
+            We&apos;re notifying everyone on this month&apos;s schedule.
+          </Typography>
+        </Box>
+      </Backdrop>
 
       {currentSchedule ? (
         <>
@@ -491,9 +547,15 @@ export default function Calendar() {
                             gap={1.5}
                             sx={{ mt: 0.5 }}
                           >
-                            <Typography variant="h6">
-                              {getServantName(entry.servantId)}
-                            </Typography>
+                            <Stack direction="row" alignItems="center" gap={1}>
+                              <ManAvatar
+                                name={getServantName(entry.servantId)}
+                                photo={getServant(entry.servantId)?.photoFile as string | undefined}
+                              />
+                              <Typography variant="h6">
+                                {getServantName(entry.servantId)}
+                              </Typography>
+                            </Stack>
                             <Button
                               size="small"
                               startIcon={<EditIcon />}
@@ -601,30 +663,36 @@ export default function Calendar() {
                                 border: `1px solid ${currentSchedule.finalized ? "transparent" : "rgba(25, 118, 210, 0.12)"}`,
                               }}
                             >
-                          <Typography variant="subtitle2" color="textSecondary">
-                            {getRoleLabel(entry.role)}
-                          </Typography>
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            gap={1}
-                            sx={{ mt: 0.5 }}
-                          >
-                            <Typography variant="body2" fontWeight={600}>
-                              {getServantName(entry.servantId)}
-                            </Typography>
-                            <Button
-                              size="small"
-                              startIcon={<EditIcon />}
-                              onClick={() => handleOpenEditModal(entry)}
-                              disabled={currentSchedule.finalized}
-                            >
-                              Change
-                            </Button>
-                          </Stack>
-                        </Box>
-                      ))}
+                              <Typography variant="subtitle2" color="textSecondary">
+                                {getRoleLabel(entry.role)}
+                              </Typography>
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
+                                gap={1}
+                                sx={{ mt: 0.5 }}
+                              >
+                                <Stack direction="row" alignItems="center" gap={1}>
+                                  <ManAvatar
+                                    name={getServantName(entry.servantId)}
+                                    photo={getServant(entry.servantId)?.photoFile as string | undefined}
+                                  />
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {getServantName(entry.servantId)}
+                                  </Typography>
+                                </Stack>
+                                <Button
+                                  size="small"
+                                  startIcon={<EditIcon />}
+                                  onClick={() => handleOpenEditModal(entry)}
+                                  disabled={currentSchedule.finalized}
+                                >
+                                  Change
+                                </Button>
+                              </Stack>
+                            </Box>
+                          ))}
                           <Button
                             size="small"
                             startIcon={<EditIcon />}
