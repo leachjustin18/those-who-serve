@@ -9,6 +9,33 @@ import { FirestoreAdapter } from "@auth/firebase-adapter";
 import type { JWT } from "next-auth/jwt";
 import { firestore } from "@/lib/firebase/init";
 
+const authHost = process.env.SERVER_HOST;
+
+async function isEmailAuthorized(email: string): Promise<boolean> {
+  if (!authHost) {
+    console.error("Authorization check failed: SERVER_HOST or NEXTAUTH_URL not set");
+    return false;
+  }
+
+  try {
+    const res = await fetch(
+      `${authHost}/api/authorized?email=${encodeURIComponent(email)}`,
+      { cache: "no-store" },
+    );
+
+    if (!res.ok) {
+      console.error(`Authorization API responded with ${res.status}`);
+      return false;
+    }
+
+    const data = (await res.json()) as { authorized?: boolean };
+    return !!data.authorized;
+  } catch (err) {
+    console.error("Authorization API call failed", err);
+    return false;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     Google({
@@ -30,13 +57,16 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/error",
   },
   callbacks: {
-    // v4 types
     async signIn({ user }: { user: User }) {
+      const email = user?.email?.toLowerCase() ?? "";
+      if (!email) return false;
+
+      const isAllowed = await isEmailAuthorized(email);
+      if (!isAllowed) {
+        return "/auth/not-authorized";
+      }
+
       return true;
-      // const email = user?.email?.toLowerCase() ?? null;
-      // if (!email) return false;
-      // const exists = await prisma.user.findUnique({ where: { email } });
-      // return !!exists; // generic failure if not found
     },
 
     async session({
