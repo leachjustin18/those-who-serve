@@ -34,7 +34,6 @@ import {
     InfoOutlined as InfoOutlinedIcon,
     WarningAmber as WarningAmberIcon,
     ReportProblemOutlined as ReportProblemOutlinedIcon,
-    Group as GroupsIcon,
     ArrowBack as ArrowBackIcon,
     People as PeopleIcon,
     Logout as LogoutIcon,
@@ -181,19 +180,22 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                             placeItems: "center",
                             background: alpha(theme.palette.primary.main, 0.12),
                             border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
+                            overflow: "hidden",
                         })}
                     >
-                        <GroupsIcon sx={{ color: "primary.main" }} />
+                        <Avatar
+                            src="/logo.png"
+                            alt="Those Who Serve"
+                            sx={{
+                                width: 44,
+                                height: 44,
+                                backgroundColor: "transparent",
+                            }}
+                        />
                     </Box>
                     <Box>
                         <Typography variant="h6" noWrap>
                             Those Who Serve - 39th St Church of Christ
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: (theme) => theme.palette.text.secondary }}
-                        >
-                            Mission access hub
                         </Typography>
                     </Box>
                 </Stack>
