@@ -212,6 +212,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                         >
                             <Avatar
                                 src={avatarSrc}
+                                alt={displayName || "Account avatar"}
                                 sx={(theme) => ({
                                     width: 44,
                                     height: 44,

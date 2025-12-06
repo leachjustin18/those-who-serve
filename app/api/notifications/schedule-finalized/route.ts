@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         dayName: string;
         roleLabel: string;
         calendarLink: string;
+        icsLink: string;
         timestamp: number;
       }>
     >();
