@@ -1,3 +1,7 @@
+ignoredBuiltDependencies:
+  - esbuild
+  - rollup
+
 onlyBuiltDependencies:
   - '@firebase/util'
   - protobufjs
