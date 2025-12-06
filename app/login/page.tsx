@@ -4,10 +4,12 @@ import {
   Box,
   Stack,
   Typography,
+  Link as MuiLink,
 } from "@mui/material";
 
 import { SignInWithGoogle } from "@/components/auth/SignInWithGoogle";
 import { backgroundGradient, gridOverlay } from "@/lib/theme";
+import Link from "next/link";
 
 export default function Login() {
   const accentGradient =
@@ -121,7 +123,7 @@ export default function Login() {
           sx={{
             position: "relative",
           }}
-        >
+        > 
 
 
 
@@ -136,6 +138,14 @@ export default function Login() {
             By continuing you confirm you&apos;re using an approved Google
             account and accept the security practices for Those Who Serve.
           </Typography>
+          <MuiLink
+            component={Link}
+            href="/privacy"
+            underline="hover"
+            sx={{ color: "rgba(52,63,92,0.85)", fontWeight: 600 }}
+          >
+            Privacy Policy
+          </MuiLink>
         </Stack>
       </Stack>
     </Box>
