@@ -1,0 +1,100 @@
+import NextAuth, {
+  type NextAuthOptions,
+  type Session,
+  type User,
+} from "next-auth";
+import type { AdapterUser } from "next-auth/adapters";
+import Google from "next-auth/providers/google";
+import { FirestoreAdapter } from "@auth/firebase-adapter";
+import type { JWT } from "next-auth/jwt";
+import { firestore } from "@/lib/firebase/init";
+
+const authHost = process.env.SERVER_HOST;
+
+async function isEmailAuthorized(email: string): Promise<boolean> {
+  if (!authHost) {
+    console.error("Authorization check failed: SERVER_HOST or NEXTAUTH_URL not set");
+    return false;
+  }
+
+  try {
+    const res = await fetch(
+      `${authHost}/api/authorized?email=${encodeURIComponent(email)}`,
+      { cache: "no-store" },
+    );
+
+    if (!res.ok) {
+      console.error(`Authorization API responded with ${res.status}`);
+      return false;
+    }
+
+    const data = (await res.json()) as { authorized?: boolean };
+    return !!data.authorized;
+  } catch (err) {
+    console.error("Authorization API call failed", err);
+    return false;
+  }
+}
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      authorization: {
+        params: {
+          scope:
+            "openid email profile https://www.googleapis.com/auth/gmail.send",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    }),
+  ],
+  adapter: FirestoreAdapter(firestore),
+  session: { strategy: "jwt" },
+  pages: {
+    error: "/auth/error",
+  },
+  callbacks: {
+    async signIn({ user }: { user: User }) {
+      const email = user?.email?.toLowerCase() ?? "";
+      if (!email) return false;
+
+      const isAllowed = await isEmailAuthorized(email);
+      if (!isAllowed) {
+        return "/auth/not-authorized";
+      }
+
+      return true;
+    },
+
+    async session({
+      session,
+      token,
+      user,
+    }: {
+      session: Session;
+      token: JWT;
+      user: User;
+    }): Promise<Session> {
+      const id = (user as AdapterUser)?.id ?? token?.sub ?? null;
+      if (session.user && id) {
+        (session.user as typeof session.user & { id: string }).id = id;
+      }
+      return session;
+    },
+
+    async redirect({
+      baseUrl,
+    }: {
+      url: string;
+      baseUrl: string;
+    }): Promise<string> {
+      return `${baseUrl}/manage-men`;
+    },
+  },
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };

@@ -1,0 +1,2 @@
+echo "Running lint and test suites before push..."
+pnpm lint && pnpm test
