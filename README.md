@@ -1,7 +1,7 @@
 # Those Who Serve
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.1-black)](#)
-[![React](https://img.shields.io/badge/React-19.2.0-61dafb)](#)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.7-black)](#)
+[![React](https://img.shields.io/badge/React-19.2.1-61dafb)](#)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A518.x-43853d)](#)
 [![pnpm](https://img.shields.io/badge/pnpm-10.17.0-orange)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
