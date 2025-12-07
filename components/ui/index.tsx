@@ -143,7 +143,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
     const handleLogout = async () => {
         handleCloseUserMenu();
         await clearAuthCache();
-        await signOut({ callbackUrl: "/" });
+        await signOut({ callbackUrl: "/login" });
     };
 
     return (
@@ -292,7 +292,7 @@ export const BottomNavigation = () => {
 
     const handleLogout = useCallback(async () => {
         await clearAuthCache();
-        await signOut({ callbackUrl: "/" });
+        await signOut({ callbackUrl: "/login" });
     }, []);
 
     return (
