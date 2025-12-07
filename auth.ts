@@ -7,7 +7,7 @@ import type { AdapterUser } from "next-auth/adapters";
 import Google from "next-auth/providers/google";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import type { JWT } from "next-auth/jwt";
-import { firestore } from "@/lib/firebase/init";
+import { firestore } from "@/lib/firebase/admin";
 
 const authHost = process.env.SERVER_HOST;
 

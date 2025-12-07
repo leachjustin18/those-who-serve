@@ -41,6 +41,7 @@ import {
 } from "@mui/icons-material";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { clearAuthCache } from "@/lib/helpers/serviceWorker";
 
 const severityIcons: Record<AlertColor, React.ReactNode> = {
     success: <CheckCircleOutlineIcon fontSize="inherit" />,
@@ -141,7 +142,8 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
 
     const handleLogout = async () => {
         handleCloseUserMenu();
-        await signOut({ callbackUrl: "/login" });
+        await clearAuthCache();
+        await signOut({ callbackUrl: "/" });
     };
 
     return (
@@ -288,9 +290,10 @@ export const BottomNavigation = () => {
         }
     };
 
-    const handleLogout = async () => {
-        await signOut({ redirect: true, callbackUrl: "/login" });
-    };
+    const handleLogout = useCallback(async () => {
+        await clearAuthCache();
+        await signOut({ callbackUrl: "/" });
+    }, []);
 
     return (
         <Paper

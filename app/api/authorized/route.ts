@@ -25,9 +25,6 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  console.log("allowed emails:", allowed);
-  console.log("email query:", emailQuery);
-
   if (emailQuery) {
     return NextResponse.json({ authorized: allowed.has(emailQuery) });
   }
