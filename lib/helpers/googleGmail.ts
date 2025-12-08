@@ -65,11 +65,7 @@ async function getRefreshTokenFromAccounts(): Promise<string | null> {
 }
 
 export async function getStoredRefreshToken(): Promise<string | null> {
-    // Prefer the token stored with the NextAuth account (single source)
-    const accountToken = await getRefreshTokenFromAccounts();
-    if (accountToken) return accountToken;
-
-    // Fallback to the dedicated refresh_tokens/{id} doc if present
+    // Prefer the dedicated refresh_tokens/{id} doc created via the Gmail consent flow.
     const doc = await db
         .collection(REFRESH_TOKENS_COLLECTION)
         .doc(GMAIL_DOC_ID)
@@ -79,6 +75,11 @@ export async function getStoredRefreshToken(): Promise<string | null> {
         const data = doc.data() as RefreshTokenDoc | undefined;
         if (data?.refresh_token) return data.refresh_token;
     }
+
+    // NextAuth account refresh tokens might lack the gmail.send scope if they were
+    // issued before we requested it, so treat them as a fallback only.
+    const accountToken = await getRefreshTokenFromAccounts();
+    if (accountToken) return accountToken;
 
     // Last resort: grab the newest doc in refresh_tokens collection
     const fallbackSnapshot = await db
@@ -142,10 +143,22 @@ export async function sendGmail({
         .replace(/\//g, "_")
         .replace(/=+$/, "");
 
-    await gmail.users.messages.send({
-        userId: "me",
-        requestBody: {
-            raw: encodedMessage,
-        },
-    });
+    try {
+        await gmail.users.messages.send({
+            userId: "me",
+            requestBody: {
+                raw: encodedMessage,
+            },
+        });
+    } catch (err: any) {
+        // Surface more detail to aid debugging (e.g., unauthorized_client vs insufficient_scope)
+        const reason =
+            err?.response?.data ||
+            err?.errors ||
+            err?.message ||
+            "Unknown Gmail API error";
+        throw new Error(
+            `Gmail send failed: ${typeof reason === "string" ? reason : JSON.stringify(reason)}`,
+        );
+    }
 }
