@@ -1,3 +1,5 @@
+import type { TSchedulePrintExtras } from "@/types";
+
 /**
  * Available scheduling roles with metadata for day ordering and display labeling.
  */
@@ -109,3 +111,12 @@ export const NAME_PATTERN_MESSAGE =
  * Max number of characters stored for free-form notes fields.
  */
 export const NOTES_MAX_LENGTH = 500;
+
+export const EMPTY_PRINT_EXTRAS: TSchedulePrintExtras = {
+  cards: "",
+  communionFamily: "",
+  deaconInCharge1Name: "",
+  deaconInCharge1Phone: "",
+  deaconInCharge2Name: "",
+  deaconInCharge2Phone: "",
+};
