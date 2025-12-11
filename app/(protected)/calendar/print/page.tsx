@@ -27,7 +27,7 @@ import { fetchSchedule } from "@/lib/api/schedules";
 import type { TSchedule, TSchedulePrintExtras } from "@/types";
 
 const PRINT_EXTRAS_FIELDS = [
-  { name: "cards" as const, label: "Cards", required: true },
+  { name: "cardBoys" as const, label: "Card Boys", required: true },
   { name: "communionFamily" as const, label: "Communion Family", required: true },
   { name: "deaconInCharge1Name" as const, label: "Deacon in Charge Name 1", required: true },
   { name: "deaconInCharge1Phone" as const, label: "Deacon in Charge Phone 1", required: true },
@@ -39,7 +39,7 @@ export default function PrintableCalendarPage() {
   const searchParams = useSearchParams();
   const monthParam = searchParams.get("month") || format(new Date(), "yyyy-MM");
 
-  const { men: allMen } = useCache();
+  const { men: allMen, deacons: allDeacons } = useCache();
 
   const contentRef = useRef(null);
 
@@ -200,6 +200,7 @@ export default function PrintableCalendarPage() {
                   <PrintableSchedule
                     schedule={schedule}
                     men={allMen}
+                    deacons={allDeacons}
                     extras={printExtras || EMPTY_PRINT_EXTRAS}
                     monthLabel={monthLabel}
                   />

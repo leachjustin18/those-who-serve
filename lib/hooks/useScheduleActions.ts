@@ -21,10 +21,10 @@ type AlertFn = (
 export function useScheduleActions(
   viewedMonth: string,
   currentSchedule: TSchedule | null,
-  setCurrentSchedule: Dispatch<SetStateAction<TSchedule | null>>,
+  allSchedules: TSchedule[],
   showAlert?: AlertFn,
 ) {
-  const { men: allMen, setMen, schedules, setSchedules } = useCache();
+  const { men: allMen, setMen, setSchedules } = useCache();
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [finalizingSchedule, setFinalizingSchedule] = useState(false);
   const [sendingNotifications, setSendingNotifications] = useState(false);
@@ -57,7 +57,6 @@ export function useScheduleActions(
       };
 
       const created = await createSchedule(newSchedule);
-      setCurrentSchedule(created);
 
       const updatedMen = allMen.map((man) => {
         let updated = { ...man };
@@ -79,7 +78,7 @@ export function useScheduleActions(
 
       setMen(updatedMen);
 
-      const updatedSchedules = schedules.filter((s) => s.month !== viewedMonth);
+      const updatedSchedules = allSchedules.filter((s) => s.month !== viewedMonth);
       setSchedules([...updatedSchedules, created]);
 
       notify("Schedule generated successfully", "success");
@@ -89,7 +88,7 @@ export function useScheduleActions(
     } finally {
       setGeneratingSchedule(false);
     }
-  }, [allMen, notify, schedules, setCurrentSchedule, setMen, setSchedules, viewedMonth]);
+  }, [allMen, notify, allSchedules, setMen, setSchedules, viewedMonth]);
 
   const updateEntry = useCallback(
     async (originalEntry: TScheduleEntry, newServantId: string) => {
@@ -108,9 +107,7 @@ export function useScheduleActions(
           entries: newEntries,
         });
 
-        setCurrentSchedule(updated);
-
-        const updatedSchedules = schedules.map((s) =>
+        const updatedSchedules = allSchedules.map((s) =>
           s.month === viewedMonth ? updated : s,
         );
         setSchedules(updatedSchedules);
@@ -121,7 +118,7 @@ export function useScheduleActions(
         notify("Failed to update assignment", "error");
       }
     },
-    [currentSchedule, notify, schedules, setCurrentSchedule, setSchedules, viewedMonth],
+    [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
   );
 
   const addWorshipInSong = useCallback(
@@ -143,9 +140,9 @@ export function useScheduleActions(
           entries: newEntries,
         });
 
-        setCurrentSchedule(updated);
 
-        const updatedSchedules = schedules.map((s) =>
+
+        const updatedSchedules = allSchedules.map((s) =>
           s.month === viewedMonth ? updated : s,
         );
         setSchedules(updatedSchedules);
@@ -156,7 +153,7 @@ export function useScheduleActions(
         notify("Failed to set Worship in Song", "error");
       }
     },
-    [currentSchedule, notify, schedules, setCurrentSchedule, setSchedules, viewedMonth],
+    [allSchedules, currentSchedule, notify, setSchedules, viewedMonth],
   );
 
   const removeWorshipInSong = useCallback(
@@ -172,9 +169,9 @@ export function useScheduleActions(
         };
 
         const saved = await updateSchedule(viewedMonth, updatedSchedule);
-        setCurrentSchedule(saved);
 
-        const updatedSchedules = schedules.map((s) =>
+
+        const updatedSchedules = allSchedules.map((s) =>
           s.month === viewedMonth ? saved : s,
         );
         setSchedules(updatedSchedules);
@@ -185,7 +182,7 @@ export function useScheduleActions(
         notify("Failed to remove Worship in Song", "error");
       }
     },
-    [currentSchedule, notify, schedules, setCurrentSchedule, setSchedules, viewedMonth],
+    [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
   );
 
   const finalizeSchedule = useCallback(async () => {
@@ -217,9 +214,8 @@ export function useScheduleActions(
       };
 
       const updated = await updateSchedule(viewedMonth, finalizedSchedule);
-      setCurrentSchedule(updated);
 
-      const updatedSchedules = schedules.map((s) =>
+      const updatedSchedules = allSchedules.map((s) =>
         s.month === viewedMonth ? updated : s,
       );
       setSchedules(updatedSchedules);
@@ -261,7 +257,7 @@ export function useScheduleActions(
       setSendingNotifications(false);
       setFinalizingSchedule(false);
     }
-  }, [currentSchedule, notify, schedules, setCurrentSchedule, setSchedules, viewedMonth]);
+  }, [currentSchedule, notify, allSchedules, setSchedules, viewedMonth]);
 
   return {
     generateSchedule,

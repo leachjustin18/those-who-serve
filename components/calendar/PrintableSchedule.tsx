@@ -6,6 +6,7 @@ import type {
   TSchedule,
   TScheduleEntry,
   TSchedulePrintExtras,
+  TDeacons,
 } from "@/types";
 
 export type WorshipScope = "full" | "morning" | "evening" | null;
@@ -55,6 +56,7 @@ const worshipCell = {
 type PrintableScheduleProps = {
   schedule: TSchedule;
   men: Array<{ id: string; firstName: string; lastName: string; photoFile?: string | File }>;
+  deacons: TDeacons[];
   extras: TSchedulePrintExtras;
   monthLabel: string;
 };
@@ -62,6 +64,7 @@ type PrintableScheduleProps = {
 export function PrintableSchedule({
   schedule,
   men,
+  deacons,
   extras,
   monthLabel,
 }: PrintableScheduleProps) {
@@ -115,6 +118,16 @@ export function PrintableSchedule({
 
   const announcements = monthlyNames("announcements").join(", ") || "—";
   const ushers = monthlyNames("usher").join(", ") || "—";
+  const deaconNames =
+    (extras.monthlyDeacons || [])
+      .map((id) => {
+        const match = deacons.find((d) => d.id === id);
+        return match
+          ? `${match.firstName ?? ""} ${match.lastName ?? ""}`.trim()
+          : "";
+      })
+      .filter(Boolean)
+      .join(", ") || "—";
 
   return (
     <Box sx={{ color: "text.primary" }}>
@@ -154,7 +167,8 @@ export function PrintableSchedule({
           <Stack spacing={0.5}>
             {[
               { label: "Communion", value: extras.communionFamily || "—" },
-              { label: "Cards", value: extras.cards || "—" },
+              { label: "Card Boys", value: extras.cardBoys || "—" },
+              { label: "Deacons for the Month", value: deaconNames },
             ].map((item) => (
               <Stack
                 key={item.label}

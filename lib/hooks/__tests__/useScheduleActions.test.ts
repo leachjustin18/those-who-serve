@@ -82,7 +82,7 @@ describe("useScheduleActions", () => {
       const actions = useScheduleActions(
         "2024-01",
         currentSchedule,
-        setCurrentSchedule,
+        schedulesMock,
         vi.fn(),
       );
       return { actions, currentSchedule };
@@ -110,7 +110,7 @@ describe("useScheduleActions", () => {
       const actions = useScheduleActions(
         "2024-01",
         currentSchedule,
-        setCurrentSchedule,
+        schedulesMock,
         vi.fn(),
       );
       return { actions, get schedule() { return currentSchedule; } };
@@ -136,7 +136,7 @@ describe("useScheduleActions", () => {
       const actions = useScheduleActions(
         "2024-01",
         currentSchedule,
-        setCurrentSchedule,
+        schedulesMock,
         vi.fn(),
       );
       return { actions };
@@ -164,7 +164,7 @@ describe("useScheduleActions", () => {
       const actions = useScheduleActions(
         "2024-01",
         currentSchedule,
-        setCurrentSchedule,
+        schedulesMock,
         vi.fn(),
       );
       return { actions };

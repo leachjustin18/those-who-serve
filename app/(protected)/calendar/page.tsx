@@ -1,8 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Box, CircularProgress, Typography, Grid } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Card,
+  CardContent,
+  Chip,
+  FormHelperText,
+} from "@mui/material";
 import { addMonths, format, parse } from "date-fns";
+import { useForm, Controller } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
 
 import { CalendarHeader } from "@/components/calendar/CalendarHeader";
 import { DayCard } from "@/components/calendar/DayCard";
@@ -23,26 +38,34 @@ import { getWednesdaysAndSundaysInMonth } from "@/lib/helpers/scheduling";
 import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
 import { useEditModal } from "@/lib/hooks/useEditModal";
 import { useScheduleActions } from "@/lib/hooks/useScheduleActions";
-import { useScheduleData } from "@/lib/hooks/useScheduleData";
+import { EMPTY_PRINT_EXTRAS } from "@/lib/constants";
+import type { TSchedulePrintExtras } from "@/types";
 
-const todayMonthStr = format(new Date(), "yyyy-MM");
 
 export default function Calendar() {
-  const { men: allMen } = useCache();
-  const [viewedMonth, setViewedMonth] = useState(todayMonthStr);
+  const { men: allMen, schedules: allSchedules, deacons: allDeacons } = useCache();
+  const [viewedMonth, setViewedMonth] = useState(format(new Date(), "yyyy-MM"));
 
   const snackbar = useSnackbarQueue();
-  const { currentSchedule, setCurrentSchedule, loading } = useScheduleData(
-    viewedMonth,
-    (message, severity) => snackbar.showSnackbar({ message, severity }),
-  );
+
+  const currentSchedule = allSchedules.find(s => s.month === viewedMonth) || null;
+
   const scheduleActions = useScheduleActions(
     viewedMonth,
     currentSchedule,
-    setCurrentSchedule,
+    allSchedules,
     (message, severity) => snackbar.showSnackbar({ message, severity }),
   );
+
   const editModal = useEditModal(scheduleActions.updateEntry);
+
+  const {
+    control,
+    formState: { errors },
+  } = useForm<TSchedulePrintExtras>({
+    defaultValues: EMPTY_PRINT_EXTRAS,
+    mode: "onBlur",
+  });
 
   const handlePreviousMonth = () => {
     setViewedMonth((prev) =>
@@ -57,7 +80,7 @@ export default function Calendar() {
   };
 
   const handleGoToToday = () => {
-    setViewedMonth(todayMonthStr);
+    setViewedMonth(viewedMonth);
   };
 
   const getServant = (servantId: string) => allMen.find((m) => m.id === servantId);
@@ -72,13 +95,6 @@ export default function Calendar() {
   const allDates = getWednesdaysAndSundaysInMonth(viewedMonth);
   const pastMonth = isPastMonth(viewedMonth);
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -108,6 +124,7 @@ export default function Calendar() {
 
       {currentSchedule ? (
         <>
+
           {monthlyEntries.length > 0 && (
             <MonthlyRolesSection
               entries={monthlyEntries}
@@ -117,6 +134,139 @@ export default function Calendar() {
               isFinalized={currentSchedule.finalized || false}
             />
           )}
+
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <form>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Controller
+                      name="cardBoys"
+                      control={control}
+                      rules={{ required: "Card boys are required" }}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          label="Card Boys"
+                          {...field}
+                          error={!!fieldState.error}
+                          fullWidth
+                          helperText={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+
+                    <Controller
+                      name="communionFamily"
+                      control={control}
+                      rules={{ required: "Communion family is required" }}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          label="Communion family"
+                          {...field}
+                          error={!!fieldState.error}
+                          fullWidth
+                          helperText={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Controller
+                      name="monthlyDeacons"
+                      control={control}
+                      rules={{
+                        validate: (value) =>
+                          value && value.length === 2
+                            ? true
+                            : "Select exactly two deacons",
+                      }}
+                      render={({ field, fieldState }) => (
+                        <FormControl fullWidth error={!!fieldState.error} >
+                          <InputLabel id="monthly-deacons-label">
+                            Deacons for the Month
+                          </InputLabel>
+                          <Select<string[]>
+                            labelId="monthly-deacons-label"
+                            multiple
+                            value={field.value ?? []}
+                            onChange={(event, _child) => {
+                              const {
+                                target: { value },
+                              } = event;
+                              field.onChange(
+                                typeof value === "string" ? value.split(",") : value,
+                              );
+                            }}
+
+                            renderValue={(selected) => {
+                              const selectedIds = Array.isArray(selected)
+                                ? selected
+                                : [];
+                              if (selectedIds.length === 0) {
+                                return "Select two deacons";
+                              }
+
+                              return (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: 0.5,
+                                  }}
+                                >
+                                  {selectedIds.map((id) => {
+                                    const deacon = allDeacons.find(
+                                      (d) => d.id === id,
+                                    );
+                                    const name = deacon
+                                      ? `${deacon.firstName} ${deacon.lastName}`.trim()
+                                      : "Unknown";
+                                    return (
+                                      <Chip
+                                        key={id}
+                                        label={name}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onDelete={() => {
+                                          const updated = selectedIds.filter(
+                                            (selectedId) => selectedId !== id,
+                                          );
+                                          field.onChange(updated ?? "");
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                </Box>
+                              );
+                            }}
+                          >
+                            {allDeacons.map((deacon) => (
+                              <MenuItem
+                                key={deacon.id}
+                                value={deacon.id}
+                                disabled={
+                                  (field.value || []).length >= 2 &&
+                                  !(field.value || []).includes(deacon.id)
+                                }
+                              >
+                                {`${deacon.firstName} ${deacon.lastName}`.trim()}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          <FormHelperText>
+                            {fieldState.error?.message}
+                          </FormHelperText>
+                        </FormControl>
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              </form>
+            </CardContent>
+          </Card>
 
           <Typography variant="h6" fontWeight={600} mb={2}>
             Schedule
