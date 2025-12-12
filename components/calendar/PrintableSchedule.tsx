@@ -118,16 +118,17 @@ export function PrintableSchedule({
 
   const announcements = monthlyNames("announcements").join(", ") || "—";
   const ushers = monthlyNames("usher").join(", ") || "—";
-  const deaconNames =
+  const deaconsInCharage =
     (extras.monthlyDeacons || [])
       .map((id) => {
         const match = deacons.find((d) => d.id === id);
-        return match
-          ? `${match.firstName ?? ""} ${match.lastName ?? ""}`.trim()
-          : "";
+
+        return {
+          name: match ? `${match.firstName} ${match.lastName}` : undefined,
+          phoneNumber: match?.phoneNumber,
+        };
+
       })
-      .filter(Boolean)
-      .join(", ") || "—";
 
   return (
     <Box sx={{ color: "text.primary" }}>
@@ -167,8 +168,7 @@ export function PrintableSchedule({
           <Stack spacing={0.5}>
             {[
               { label: "Communion", value: extras.communionFamily || "—" },
-              { label: "Card Boys", value: extras.cardBoys || "—" },
-              { label: "Deacons for the Month", value: deaconNames },
+              { label: "Card Boys", value: extras.cardBoys || "—" }
             ].map((item) => (
               <Stack
                 key={item.label}
@@ -348,10 +348,14 @@ export function PrintableSchedule({
           variant="body2"
           sx={{ fontWeight: 700, letterSpacing: 0.3, mt: 0.5 }}
         >
-          {extras.deaconInCharge1Name || "__________"}{" "}
-          {extras.deaconInCharge1Phone || "__________"} &amp;{" "}
-          {extras.deaconInCharge2Name || "__________"}{" "}
-          {extras.deaconInCharge2Phone || "__________"}
+          {deaconsInCharage.length !== 2
+            ? "__________ & __________"
+            : deaconsInCharage
+              .map(
+                (d) =>
+                  `${d?.name || "__________"} ${d?.phoneNumber || "__________"}`,
+              )
+              .join(" & ")}
         </Typography>
       </Box>
     </Box>

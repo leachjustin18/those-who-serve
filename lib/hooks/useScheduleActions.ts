@@ -11,7 +11,7 @@ import { useCache } from "@/components/context/Cache";
 import { updateMan } from "@/lib/api/men";
 import { createSchedule, updateSchedule } from "@/lib/api/schedules";
 import { generateScheduleForMonth } from "@/lib/helpers/scheduling";
-import type { TSchedule, TScheduleEntry } from "@/types";
+import type { TSchedule, TScheduleEntry, TSchedulePrintExtras } from "@/types";
 
 type AlertFn = (
   message: string,
@@ -185,79 +185,83 @@ export function useScheduleActions(
     [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
   );
 
-  const finalizeSchedule = useCallback(async () => {
-    if (!currentSchedule) return;
+  const finalizeSchedule = useCallback(
+    async (printExtras?: TSchedulePrintExtras) => {
+      if (!currentSchedule) return;
 
-    setFinalizingSchedule(true);
-    setSendingNotifications(true);
-
-    try {
-      const lastServedUpdates: Record<string, Record<string, number>> = {};
-
-      for (const entry of currentSchedule.entries) {
-        if (!lastServedUpdates[entry.servantId]) {
-          lastServedUpdates[entry.servantId] = {};
-        }
-        lastServedUpdates[entry.servantId][entry.role] = Date.now();
-      }
-
-      const updatePromises = Object.entries(lastServedUpdates).map(
-        ([servantId, roles]) => updateMan(servantId, { lastServed: roles }),
-      );
-
-      await Promise.all(updatePromises);
-
-      const finalizedSchedule = {
-        ...currentSchedule,
-        finalized: true,
-        updatedAt: Date.now(),
-      };
-
-      const updated = await updateSchedule(viewedMonth, finalizedSchedule);
-
-      const updatedSchedules = allSchedules.map((s) =>
-        s.month === viewedMonth ? updated : s,
-      );
-      setSchedules(updatedSchedules);
+      setFinalizingSchedule(true);
+      setSendingNotifications(true);
 
       try {
-        const res = await fetch("/api/notifications/schedule-finalized", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ month: viewedMonth }),
-        });
+        const lastServedUpdates: Record<string, Record<string, number>> = {};
 
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data.failed) && data.failed.length > 0) {
+        for (const entry of currentSchedule.entries) {
+          if (!lastServedUpdates[entry.servantId]) {
+            lastServedUpdates[entry.servantId] = {};
+          }
+          lastServedUpdates[entry.servantId][entry.role] = Date.now();
+        }
+
+        const updatePromises = Object.entries(lastServedUpdates).map(
+          ([servantId, roles]) => updateMan(servantId, { lastServed: roles }),
+        );
+
+        await Promise.all(updatePromises);
+
+        const finalizedSchedule: TSchedule = {
+          ...currentSchedule,
+          finalized: true,
+          updatedAt: Date.now(),
+          printExtras: printExtras ?? currentSchedule.printExtras ?? null,
+        };
+
+        const updated = await updateSchedule(viewedMonth, finalizedSchedule);
+
+        const updatedSchedules = allSchedules.map((s) =>
+          s.month === viewedMonth ? updated : s,
+        );
+        setSchedules(updatedSchedules);
+
+        try {
+          const res = await fetch("/api/notifications/schedule-finalized", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ month: viewedMonth }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.failed) && data.failed.length > 0) {
+              notify(
+                `Schedule finalized; notifications sent to ${data.sent?.length ?? 0}. ${data.failed.length} failed.`,
+                "warning",
+              );
+            } else {
+              notify("Schedule finalized and notifications sent", "success");
+            }
+          } else {
             notify(
-              `Schedule finalized; notifications sent to ${data.sent?.length ?? 0}. ${data.failed.length} failed.`,
+              "Schedule finalized, but notifications failed to send",
               "warning",
             );
-          } else {
-            notify("Schedule finalized and notifications sent", "success");
           }
-        } else {
+        } catch (notifyErr) {
+          console.error("Failed to send schedule notifications", notifyErr);
           notify(
             "Schedule finalized, but notifications failed to send",
             "warning",
           );
         }
-      } catch (notifyErr) {
-        console.error("Failed to send schedule notifications", notifyErr);
-        notify(
-          "Schedule finalized, but notifications failed to send",
-          "warning",
-        );
+      } catch (err) {
+        console.error("Failed to finalize schedule", err);
+        notify("Failed to finalize schedule", "error");
+      } finally {
+        setSendingNotifications(false);
+        setFinalizingSchedule(false);
       }
-    } catch (err) {
-      console.error("Failed to finalize schedule", err);
-      notify("Failed to finalize schedule", "error");
-    } finally {
-      setSendingNotifications(false);
-      setFinalizingSchedule(false);
-    }
-  }, [currentSchedule, notify, allSchedules, setSchedules, viewedMonth]);
+    },
+    [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
+  );
 
   return {
     generateSchedule,

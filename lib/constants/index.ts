@@ -115,9 +115,5 @@ export const NOTES_MAX_LENGTH = 500;
 export const EMPTY_PRINT_EXTRAS: TSchedulePrintExtras = {
   cardBoys: "",
   communionFamily: "",
-  deaconInCharge1Name: "",
-  deaconInCharge1Phone: "",
-  deaconInCharge2Name: "",
-  deaconInCharge2Phone: "",
   monthlyDeacons: [],
 };

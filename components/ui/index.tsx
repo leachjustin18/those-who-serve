@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -34,14 +34,14 @@ import {
     InfoOutlined as InfoOutlinedIcon,
     WarningAmber as WarningAmberIcon,
     ReportProblemOutlined as ReportProblemOutlinedIcon,
+    Group as GroupsIcon,
     ArrowBack as ArrowBackIcon,
     People as PeopleIcon,
     Logout as LogoutIcon,
-    CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
+import { CalendarIcon } from "@/components/icons/Calendar";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { clearAuthCache } from "@/lib/helpers/serviceWorker";
 
 const severityIcons: Record<AlertColor, React.ReactNode> = {
     success: <CheckCircleOutlineIcon fontSize="inherit" />,
@@ -142,7 +142,6 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
 
     const handleLogout = async () => {
         handleCloseUserMenu();
-        await clearAuthCache();
         await signOut({ callbackUrl: "/login" });
     };
 
@@ -156,11 +155,11 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                 px: { xs: 2, md: 4 },
                 backgroundColor: alpha(theme.palette.background.paper, 0.95),
                 color: theme.palette.text.primary,
+                borderRadius: 0,
                 borderBottomLeftRadius: 28,
                 borderBottomRightRadius: 28,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                borderTop: "none",
-                boxShadow: "0 20px 45px rgba(15,28,46,0.15)",
+                border: 0,
+                boxShadow: "0 10px 10px rgba(15,28,46,0.15)",
                 backdropFilter: "blur(14px)",
             })}
         >
@@ -182,22 +181,19 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                             placeItems: "center",
                             background: alpha(theme.palette.primary.main, 0.12),
                             border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-                            overflow: "hidden",
                         })}
                     >
-                        <Avatar
-                            src="/logo.png"
-                            alt="Those Who Serve"
-                            sx={{
-                                width: 44,
-                                height: 44,
-                                backgroundColor: "transparent",
-                            }}
-                        />
+                        <GroupsIcon sx={{ color: "primary.main" }} />
                     </Box>
                     <Box>
                         <Typography variant="h6" noWrap>
-                            Those Who Serve - 39th St Church of Christ
+                            39 COFC Those Who Serve
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: (theme) => theme.palette.text.secondary }}
+                        >
+                            Mission access hub
                         </Typography>
                     </Box>
                 </Stack>
@@ -214,7 +210,6 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                         >
                             <Avatar
                                 src={avatarSrc}
-                                alt={displayName || "Account avatar"}
                                 sx={(theme) => ({
                                     width: 44,
                                     height: 44,
@@ -255,28 +250,18 @@ export const BottomNavigation = () => {
     const pathname = usePathname();
 
     // Derive navigation value from current pathname
-    const getNavigationValue = useCallback(
-        (path?: string | null) => {
-            if (path?.includes("/calendar")) {
-                return 1;
-            } else if (path?.includes("/manage-men")) {
-                return 0;
-            }
+    const getNavigationValue = () => {
+        if (pathname?.includes("/calendar")) {
+            return 1;
+        } else if (pathname?.includes("/manage-men")) {
             return 0;
-        },
-        [],
-    );
+        }
+        return 0;
+    };
 
-    const [navigationValue, setNavigationValue] = useState(() =>
-        getNavigationValue(pathname),
-    );
-
-    useEffect(() => {
-        setNavigationValue(getNavigationValue(pathname));
-    }, [getNavigationValue, pathname]);
+    const navigationValue = getNavigationValue();
 
     const handleNavigation = (newValue: number) => {
-        setNavigationValue(newValue);
         switch (newValue) {
             case 0:
                 router.push("/manage-men");
@@ -285,15 +270,14 @@ export const BottomNavigation = () => {
                 router.push("/calendar");
                 break;
             case 2:
-                void handleLogout();
+                handleLogout();
                 break;
         }
     };
 
-    const handleLogout = useCallback(async () => {
-        await clearAuthCache();
-        await signOut({ callbackUrl: "/login" });
-    }, []);
+    const handleLogout = async () => {
+        await signOut({ redirect: true, callbackUrl: "/login" });
+    };
 
     return (
         <Paper
@@ -305,15 +289,13 @@ export const BottomNavigation = () => {
                 px: 2,
                 pb: 1.5,
                 pt: 0.5,
-                backgroundColor: alpha(theme.palette.background.paper, 0.95),
                 borderTopLeftRadius: 28,
                 borderTopRightRadius: 28,
                 borderBottomRightRadius: 0,
                 borderBottomLeftRadius: 0,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                borderBottom: "none",
                 boxShadow: "0 -15px 40px rgba(15,28,46,0.12)",
                 backdropFilter: "blur(18px)",
+                zIndex: theme.zIndex.appBar - 1,
             })}
             elevation={6}
         >
@@ -325,11 +307,13 @@ export const BottomNavigation = () => {
                 }}
                 sx={(theme) => ({
                     backgroundColor: "transparent",
+                    border: 0,
                     "& .MuiBottomNavigationAction-root": {
                         color: theme.palette.text.secondary,
                         fontWeight: 500,
                         borderRadius: 999,
                         px: 2,
+
                         transition: theme.transitions.create(["color", "background-color"]),
                         "& .MuiSvgIcon-root": {
                             fontSize: 24,
@@ -337,6 +321,7 @@ export const BottomNavigation = () => {
                     },
                     "& .MuiBottomNavigationAction-root .MuiBottomNavigationAction-label":
                     {
+
                         fontSize: 14,
                         fontWeight: 600,
                         lineHeight: 1.2,
@@ -355,7 +340,7 @@ export const BottomNavigation = () => {
                 })}
             >
                 <BottomNavigationAction label="Men" icon={<PeopleIcon />} />
-                <BottomNavigationAction label="Calendar" icon={<CalendarMonthIcon />} />
+                <BottomNavigationAction label="Calendar" icon={<CalendarIcon />} />
                 <BottomNavigationAction label="Logout" icon={<LogoutIcon />} />
             </MuiBottomNavigation>
         </Paper>
@@ -367,7 +352,7 @@ export const BottomNavigation = () => {
  * @param {string} [title="Back to Manage Men"] - Text displayed next to the back icon.
  * @returns {JSX.Element} Primary button with routing handler for the manage-men page.
  */
-export const BackToManageMen = ({ title = "Back to Manage Men", ...props }) => {
+export const BackToManageMen = ({ title = "Back to Manage Men" }) => {
     const router = useRouter();
     return (
         <Button
@@ -380,7 +365,6 @@ export const BackToManageMen = ({ title = "Back to Manage Men", ...props }) => {
                 px: 2,
             }}
             onClick={() => router.push("/manage-men")}
-            {...props}
         >
             {title}
         </Button>

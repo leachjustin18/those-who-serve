@@ -36,10 +36,6 @@ export type TScheduleEntry = {
 export type TSchedulePrintExtras = {
     cardBoys: string;
     communionFamily: string;
-    deaconInCharge1Name: string;
-    deaconInCharge1Phone: string;
-    deaconInCharge2Name: string;
-    deaconInCharge2Phone: string;
     monthlyDeacons: string[];
 };
 
