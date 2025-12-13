@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-12-12
+
+### Changed
+- PWA manifest theme color now matches the in-app header so installed mobile experiences show a consistent status/toolbar tint.
+- Login screen now displays the current app version (from package.json) so mobile installs can quickly confirm the deployed build.
+
 ## [1.0.1] - 2025-12-12
 
 ### Added
@@ -17,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calendar page now fetches data via CacheProvider, validates print extras pre-finalize, toggles edit/print modes, and surfaces immediate finalize feedback.
 - Printable schedule rendering moved into a reusable component powering the in-app print view; README refreshed with badges/stack overview.
 - Service worker/middleware adjustments ensure protected routes bypass caches and server fetchers consistently use `SERVER_HOST`.
+- PWA manifest theme color now matches the in-app header so installed mobile experiences show a consistent status/toolbar tint.
 
 ### Fixed
 - Printable schedules collapse full-day worship entries properly and highlight role-level worship markings.
