@@ -124,6 +124,7 @@ Notes:
 - Do not commit secrets (OAuth, Firebase private key, refresh tokens). Use env vars in Vercel/CI and keep `those-who-serve-firebase-adminsdk.json` out of source control.
 - Gmail sending relies on a refresh token stored in Firestore; restrict access to that collection.
 - Service worker caches `/logo.png`, `/manifest.webmanifest`, and the root. API calls are network-first with cache fallback—adjust if you handle sensitive responses that should not be cached.
+- Server-side API helpers validate IDs (alphanumeric, `_`, `-`, max 64 chars) before composing URLs to mitigate SSRF; reuse `assertSafeId` (`lib/helpers/validateId.ts`) for any new endpoints.
 - Run `pnpm audit` periodically and before releases to catch dependency issues.
 
 ## Contributing

@@ -1,5 +1,6 @@
 "use server";
 
+import { assertSafeId } from "@/lib/helpers/validateId";
 import type { TSchedule } from "@/types";
 
 const host = process.env.SERVER_HOST;
@@ -98,9 +99,10 @@ export async function updateMenLastServed(
   }
 
   const updatePromises = updates.map((update) => {
-    if (!update.id || typeof update.id !== "string") {
+    if (!update.id) {
       throw new Error("Invalid man ID in update");
     }
+    assertSafeId(update.id);
     if (!update.lastServed || typeof update.lastServed !== "object") {
       throw new Error("Invalid lastServed data in update");
     }
@@ -129,4 +131,3 @@ export async function updateMenLastServed(
     }
   }
 }
-

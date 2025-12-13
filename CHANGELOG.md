@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Service worker now skips caching auth/protected routes to avoid serving stale user-specific content.
+- API helpers validate ID path segments via a shared `assertSafeId` utility to prevent SSRF via crafted IDs.
 
 ## [1.0.0] - 2025-12-06
 ### Added

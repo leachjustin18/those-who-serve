@@ -1,5 +1,6 @@
 "use server";
 
+import { assertSafeId } from "@/lib/helpers/validateId";
 import type { TMan } from "@/types";
 
 const host = process.env.SERVER_HOST;
@@ -60,6 +61,7 @@ export async function updateMan(
   if (!host || !id) {
     throw new Error("Required value is not defined; unable to PATCH");
   }
+  assertSafeId(id);
 
   const updates: Partial<Omit<TMan, "id">> & { updatedAt: number } = {
     ...data,
@@ -98,6 +100,7 @@ export async function deleteMan(
   if (!host || !id) {
     throw new Error("Required value is not defined; unable to DELETE");
   }
+  assertSafeId(id);
 
   const res = await fetch(`${host}/api/men/${id}`, {
     method: "DELETE",
