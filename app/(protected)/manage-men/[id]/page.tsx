@@ -45,7 +45,6 @@ import {
 } from "@/lib/helpers/dates";
 import { fileToBase64 } from "@/lib/helpers/fileToBase64";
 import {
-  ROLE_OPTIONS,
   ALLOWED_PHOTO_TYPES,
   MAX_PHOTO_SIZE_BYTES,
   EMAIL_REGEX,
@@ -55,9 +54,10 @@ import { updateMan } from "@/lib/api/men";
 import { type TDateValue } from "@/types";
 import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
 import { buildIdentityFieldValidations } from "@/lib/helpers/validateFields";
+import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
+import { getServantRoleOptions } from "@/lib/helpers/roleOptions";
 
-const getRoleLabel = (roleValue: string) =>
-  ROLE_OPTIONS.find((role) => role.value === roleValue)?.label || roleValue;
+const SERVANT_ROLE_OPTIONS = getServantRoleOptions();
 
 type TFormInputs = {
   firstName: string;
@@ -597,7 +597,7 @@ export default function EditMan() {
                     },
                   }}
                 >
-                  {ROLE_OPTIONS.map((role, index) => (
+                  {SERVANT_ROLE_OPTIONS.map((role, index) => (
                     <ToggleButton
                       key={`${index}-${role.value}`}
                       value={role.value}

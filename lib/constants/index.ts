@@ -69,6 +69,7 @@ export const ROLE_OPTIONS = [
   {
     label: "Worship In Song",
     value: "worship_in_song",
+    hiddenFromServantSelection: true,
   },
 ];
 

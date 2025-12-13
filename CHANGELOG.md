@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - PWA manifest theme color now matches the in-app header so installed mobile experiences show a consistent status/toolbar tint.
 - Login screen now displays the current app version (from package.json) so mobile installs can quickly confirm the deployed build.
+- iOS viewport/meta tags now set the same light theme color and status-bar style for consistent appearance on Apple devices.
+- Calendar header keeps navigation controls left/right on desktop, stacks cleanly on mobile, and Back to Today now behaves correctly.
+- Worship In Song role is hidden from servant role selectors while remaining available for schedule marking.
+- App header no longer clips the avatar/logo on narrow screens by hiding the brand icon on mobile and allowing overflow.
 
 ## [1.0.1] - 2025-12-12
 

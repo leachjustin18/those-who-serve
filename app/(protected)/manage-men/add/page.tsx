@@ -67,11 +67,11 @@ import { AlertSnackbar, BackToManageMen, SectionTitle } from "@/components/ui";
 import { useFilePreview } from "@/lib/hooks/useFilePreview";
 import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
 import {
-  ROLE_OPTIONS,
   ALLOWED_PHOTO_TYPES,
   MAX_PHOTO_SIZE_BYTES,
   EMAIL_REGEX,
 } from "@/lib/constants";
+import { getServantRoleOptions, getServantRoleValues } from "@/lib/helpers/roleOptions";
 import {
   shouldDisableDate,
   isSameDay,
@@ -192,6 +192,9 @@ const StepStatusIcon = (props: StepIconProps) => {
     </StepIconRoot>
   );
 };
+
+const SERVANT_ROLE_OPTIONS = getServantRoleOptions();
+const SERVANT_ROLE_VALUES = getServantRoleValues();
 
 export default function AddMan() {
   const theme = useTheme();
@@ -447,10 +450,7 @@ export default function AddMan() {
   }
 
   const shouldDisableBtnsFields = isSubmitting || isSubmitSuccessful;
-  const allRoleValues = useMemo(
-    () => ROLE_OPTIONS.map((role) => role.value),
-    [],
-  );
+  const allRoleValues = SERVANT_ROLE_VALUES;
 
   const stepSections = useMemo(() => [
     (
@@ -733,7 +733,7 @@ export default function AddMan() {
                     },
                   }}
                 >
-                  {ROLE_OPTIONS.map((role) => (
+                  {SERVANT_ROLE_OPTIONS.map((role) => (
                     <ToggleButton
                       key={role.value}
                       value={role.value}

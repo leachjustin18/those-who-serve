@@ -3,6 +3,15 @@ import ThemeRegistry from "@/components/theme/ThemeRegistry";
 import { roboto } from "@/lib/theme/fonts";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#f4e8d6",
+};
+
 export const metadata: Metadata = {
   title: "Those Who Serve - 39th St Church of Christ",
   description: "Track and plan out men to serve in the congergation",
@@ -10,15 +19,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.png",
   },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  viewportFit: "cover",
-  themeColor: "#cff1d6",
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+  },
 };
 
 export default function RootLayout({
