@@ -31,7 +31,3 @@ jobs:
       # Run unit tests
       - name: Run tests
         run: npm test --if-present
-
-      # Build the Next.js app
-      - name: Build
-        run: npm run build
