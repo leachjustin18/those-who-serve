@@ -14,30 +14,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Node with caching for pnpm
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
 
       # Install dependencies
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install --frozen-lockfile
 
       # TypeScript type check — only if tsconfig.json exists
       - name: TypeScript type check
         if: ${{ hashFiles('tsconfig.json') != '' }}
-        run: pnpm exec tsc --noEmit
+        run: npm exec tsc --noEmit
 
       # Lint step
       - name: Lint
-        run: pnpm run lint --if-present
+        run: npm run lint --if-present
 
       # Run unit tests
       - name: Run tests
-        run: pnpm test --if-present
+        run: npm test --if-present
 
       # Build the Next.js app
       - name: Build
-        run: pnpm run build
+        run: npm run build
