@@ -7,7 +7,7 @@ import type { AdapterUser } from "next-auth/adapters";
 import Google from "next-auth/providers/google";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import type { JWT } from "next-auth/jwt";
-import { firestore } from "@/lib/firebase/init";
+import { firestore } from "@/lib/firebase/admin";
 
 const authHost = process.env.SERVER_HOST;
 
@@ -69,19 +69,19 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async session({
-      session,
-      token,
-      user,
-    }: {
-      session: Session;
-      token: JWT;
-      user: User;
-    }): Promise<Session> {
-      const id = (user as AdapterUser)?.id ?? token?.sub ?? null;
-      if (session.user && id) {
-        (session.user as typeof session.user & { id: string }).id = id;
+    async jwt({ token, account, user }) {
+      if (account?.refresh_token) {
+        // Store in Firestore when user first signs in
+        const { setStoredRefreshToken } = await import('@/lib/helpers/googleGmail');
+        await setStoredRefreshToken(account.refresh_token);
+
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
       }
+      return token;
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken as string;
       return session;
     },
 

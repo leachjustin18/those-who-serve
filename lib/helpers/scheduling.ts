@@ -53,14 +53,15 @@ export function hasRoleConflict(
 export function getWednesdaysAndSundaysInMonth(monthStr: string): string[] {
   const dates: string[] = [];
   const [year, month] = monthStr.split("-").map(Number);
-  const daysInMonth = getDaysInMonth(new Date(year, month - 1));
+  const daysInMonth = getDaysInMonth(parse(`${monthStr}-01`, "yyyy-MM-dd", new Date()));
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month - 1, day);
+    const dateStr = `${monthStr}-${String(day).padStart(2, "0")}`;
+    const date = parse(dateStr, "yyyy-MM-dd", new Date());
     const dayOfWeek = date.getDay();
     // 0 = Sunday, 3 = Wednesday
     if (dayOfWeek === 0 || dayOfWeek === 3) {
-      dates.push(format(date, "yyyy-MM-dd"));
+      dates.push(dateStr);
     }
   }
 

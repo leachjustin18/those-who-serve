@@ -665,8 +665,7 @@ export default function EditMan() {
               Save Changes
             </Button>
             {isSubmitSuccessful && (
-              <BackToManageMen fullWidth
-                sx={{ maxWidth: { sm: 220 } }} />
+              <BackToManageMen />
             )}
           </Stack>
         </form>

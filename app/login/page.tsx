@@ -22,8 +22,6 @@ export default function Login() {
       minHeight: "100vh",
       backgroundImage: `${ambientGradient}, ${backgroundGradient}`,
       position: "relative",
-
-
       "&::after": {
         content: '""',
         position: "absolute",
@@ -123,7 +121,7 @@ export default function Login() {
           sx={{
             position: "relative",
           }}
-        > 
+        >
 
 
 

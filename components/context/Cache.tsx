@@ -1,17 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { TMan, TSchedule } from "@/types";
+import type { TMan, TSchedule, TDeacons } from "@/types";
 import { SessionCache } from "@/lib/helpers/Cache";
+import { de } from "date-fns/locale";
 
 const MEN_CACHE_KEY = "men";
 const SCHEDULES_CACHE_KEY = "schedules";
+const DEACONS_CACHE_KEY = "deacons";
 
 /**
  * Singleton client-side cache instance for men.
- *
- * This lives in the browser runtime (per tab) and is separate from any
- * server-side logic.
  */
 const menClientCache = new SessionCache<TMan[]>();
 
@@ -19,6 +18,11 @@ const menClientCache = new SessionCache<TMan[]>();
  * Singleton client-side cache instance for schedules.
  */
 const schedulesClientCache = new SessionCache<TSchedule[]>();
+
+/**
+ * Singleton client-side cache instance for deacons.
+ */
+const deaconsClientCache = new SessionCache<TDeacons[]>();
 
 /**
  * Shape of the cache context exposed to components.
@@ -34,6 +38,8 @@ type CacheContextType = {
   setSchedules: (schedules: TSchedule[]) => void;
   /** Underlying SessionCache instance, if you need lower-level access. */
   cache: SessionCache<TMan[]>;
+  /** Current deacons list, derived from the client SessionCache. */
+  deacons: TDeacons[];
 };
 
 const CacheContext = createContext<CacheContextType | null>(null);
@@ -44,6 +50,10 @@ const CacheContext = createContext<CacheContextType | null>(null);
 type CacheProviderProps = {
   /** Initial men list, typically fetched on the server in a layout. */
   initialMen: TMan[];
+  /** Initial deacons list, typically fetched on the server in a layout. */
+  initialDeacons: TDeacons[];
+  /** Initial schedule list, typically fetched on the server in a layout. */
+  initialSchedules: TSchedule[];
   /** React children rendered within the provider. */
   children: React.ReactNode;
 };
@@ -55,7 +65,7 @@ type CacheProviderProps = {
  *
  * Use this in a shared layout so all pages under it see the same men data.
  */
-export const CacheProvider = ({ initialMen, children }: CacheProviderProps) => {
+export const CacheProvider = ({ initialMen, initialDeacons, initialSchedules, children }: CacheProviderProps) => {
   // Version counter to force re-renders when the SessionCache notifies.
   const [version, setVersion] = useState(0);
 
@@ -85,7 +95,9 @@ export const CacheProvider = ({ initialMen, children }: CacheProviderProps) => {
     const _ = version; // force-reactive dependency
 
     const men = menClientCache.get(MEN_CACHE_KEY) ?? initialMen ?? [];
-    const schedules = schedulesClientCache.get(SCHEDULES_CACHE_KEY) ?? [];
+    const schedules = schedulesClientCache.get(SCHEDULES_CACHE_KEY) ?? initialSchedules ?? [];
+    const deacons = deaconsClientCache.get(DEACONS_CACHE_KEY) ?? initialDeacons ?? [];
+
 
     const setMen = (next: TMan[]) => {
       menClientCache.set(MEN_CACHE_KEY, next);
@@ -100,9 +112,10 @@ export const CacheProvider = ({ initialMen, children }: CacheProviderProps) => {
       setMen,
       schedules,
       setSchedules,
+      deacons,
       cache: menClientCache,
     };
-  }, [version, initialMen]);
+  }, [version, initialMen, initialSchedules, initialDeacons]);
 
 
   return (

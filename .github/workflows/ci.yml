@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install --frozen-lockfile
+
+      # TypeScript type check — only if tsconfig.json exists
+      - name: TypeScript type check
+        if: ${{ hashFiles('tsconfig.json') != '' }}
+        run: npm exec tsc --noEmit
+
+      # Lint step
+      - name: Lint
+        run: npm run lint --if-present
+
+      # Run unit tests
+      - name: Run tests
+        run: npm test --if-present

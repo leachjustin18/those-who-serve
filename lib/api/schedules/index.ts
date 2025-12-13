@@ -1,5 +1,7 @@
 "use server";
 
+import { assertValidMonth } from "@/lib/helpers/scheduleValidation";
+import { assertSafeId } from "@/lib/helpers/validateId";
 import type { TSchedule } from "@/types";
 
 const host = process.env.SERVER_HOST;
@@ -24,6 +26,7 @@ export async function fetchSchedules(): Promise<TSchedule[]> {
  */
 export async function fetchSchedule(month: string): Promise<TSchedule | null> {
   if (!host) throw new Error("SERVER_HOST is not defined");
+  assertValidMonth(month);
 
   const res = await fetch(`${host}/api/schedules/${month}`, {
     cache: "no-store",
@@ -68,6 +71,7 @@ export async function updateSchedule(
   schedule: Partial<TSchedule>,
 ): Promise<TSchedule> {
   if (!host) throw new Error("SERVER_HOST is not defined");
+  assertValidMonth(month);
 
   const res = await fetch(`${host}/api/schedules/${month}`, {
     method: "PUT",
@@ -84,22 +88,50 @@ export async function updateSchedule(
 
 /**
  * Updates a man's lastServed timestamps after finalizing a schedule.
+ * Validates that all updates succeed before completing.
+ * @param updates Array of updates with man ID and lastServed timestamps
+ * @throws If any update fails or returns invalid data
  */
 export async function updateMenLastServed(
   updates: Array<{ id: string; lastServed: Record<string, number> }>,
 ): Promise<void> {
   if (!host) throw new Error("SERVER_HOST is not defined");
 
-  await Promise.all(
-    updates.map((update) =>
-      fetch(`${host}/api/men/${update.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lastServed: update.lastServed,
-          updatedAt: Date.now(),
-        }),
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return; // No updates needed
+  }
+
+  const updatePromises = updates.map((update) => {
+    if (!update.id) {
+      throw new Error("Invalid man ID in update");
+    }
+    assertSafeId(update.id);
+    if (!update.lastServed || typeof update.lastServed !== "object") {
+      throw new Error("Invalid lastServed data in update");
+    }
+
+    const encodedId = encodeURIComponent(update.id);
+    return fetch(`${host}/api/men/${encodedId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lastServed: update.lastServed,
+        updatedAt: Date.now(),
       }),
-    ),
-  );
+    }).then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`Failed to update man ${update.id} (status ${res.status})`);
+      }
+      return res.json();
+    });
+  });
+
+  const results = await Promise.all(updatePromises);
+
+  // Validate all updates succeeded and returned valid data
+  for (const result of results) {
+    if (!result || typeof result !== "object" || !("id" in result)) {
+      throw new Error("One or more man update responses were invalid");
+    }
+  }
 }

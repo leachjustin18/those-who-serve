@@ -1,22 +1,22 @@
 import {
-  cert,
   getApps,
   initializeApp,
+  cert,
   type App,
 } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-const buildCredential = () =>
-  cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  });
-
 const app: App =
   getApps()[0] ??
   initializeApp({
-    credential: buildCredential(),
+    credential: cert({
+      projectId: process.env.AUTH_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.AUTH_FIREBASE_CLIENT_EMAIL,
+      privateKey: (process.env.AUTH_FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+    }),
   });
 
-export const db = getFirestore(app);
+const db = getFirestore(app);
+const firestore = db;
+
+export { db, firestore };

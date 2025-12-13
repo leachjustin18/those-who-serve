@@ -33,6 +33,12 @@ export type TScheduleEntry = {
     servantId: string;
 };
 
+export type TSchedulePrintExtras = {
+    cardBoys: string;
+    communionFamily: string;
+    monthlyDeacons: string[];
+};
+
 /**
  * A monthly schedule document containing all assignments for a given month.
  */
@@ -41,8 +47,14 @@ export type TSchedule = {
     month: string;
     entries: TScheduleEntry[];
     finalized?: boolean;
+    printExtras?: TSchedulePrintExtras | null;
     createdAt?: number;
     updatedAt?: number;
 };
 
-
+export type TDeacons = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+}

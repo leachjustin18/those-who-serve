@@ -5,6 +5,7 @@ import { fetchSchedule } from "@/lib/api/schedules";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { renderScheduleNotificationEmail } from "@/lib/emails/renderScheduleNotification";
 import { sendGmail } from "@/lib/helpers/googleGmail";
+import { isValidMonth } from "@/lib/helpers/scheduleValidation";
 
 type RequestBody = {
   month?: string;
@@ -59,6 +60,14 @@ export async function POST(req: NextRequest) {
 
   if (!body?.month) {
     return NextResponse.json({ error: "month is required" }, { status: 400 });
+  }
+
+  // Validate month format
+  if (!isValidMonth(body.month)) {
+    return NextResponse.json(
+      { error: "Invalid month format. Use YYYY-MM format." },
+      { status: 400 },
+    );
   }
 
   try {

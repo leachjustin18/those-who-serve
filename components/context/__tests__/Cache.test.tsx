@@ -26,7 +26,11 @@ describe("CacheProvider / useCache", () => {
     };
 
     render(
-      <CacheProvider initialMen={stubMen}>
+      <CacheProvider
+        initialMen={stubMen}
+        initialSchedules={[]}
+        initialDeacons={[]}
+      >
         <Consumer />
       </CacheProvider>,
     );

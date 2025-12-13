@@ -56,6 +56,9 @@ export async function PUT(
   const updates = {
     entries: data.entries ?? doc.data()?.entries ?? [],
     finalized: data.finalized ?? doc.data()?.finalized ?? false,
+    printExtras:
+      data.printExtras ??
+      (doc.data()?.printExtras ?? null),
     updatedAt: Date.now(),
   };
 

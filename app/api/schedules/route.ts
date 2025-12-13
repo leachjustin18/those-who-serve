@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
   const scheduleDoc = {
     month: data.month,
     entries: data.entries ?? [],
+    printExtras: data.printExtras ?? null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

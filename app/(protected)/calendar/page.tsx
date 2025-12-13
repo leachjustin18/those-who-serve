@@ -1,113 +1,151 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
-  Button,
+  Typography,
+  Grid,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Card,
   CardContent,
-  CircularProgress,
-  Backdrop,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  Grid,
-  MenuItem,
-  Select,
-  Stack,
-  Typography,
-  Divider,
-  type SelectChangeEvent,
+  Chip,
+  FormHelperText,
+  ToggleButtonGroup,
+  ToggleButton,
+  OutlinedInput,
+  Button,
 } from "@mui/material";
-import {
-  CheckCircle as CheckCircleIcon,
-  Edit as EditIcon,
-  Add as AddIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-} from "@mui/icons-material";
-import { format, parse, addMonths } from "date-fns";
+import { addMonths, format, parse } from "date-fns";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { useReactToPrint } from "react-to-print";
+import PrintIcon from '@mui/icons-material/Print';
+
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { DayCard } from "@/components/calendar/DayCard";
+import { PrintableSchedule } from "@/components/calendar/PrintableSchedule";
+import { EditEntryModal } from "@/components/calendar/EditEntryModal";
+import { FinalizingBackdrop } from "@/components/calendar/FinalizingBackdrop";
+import { MonthlyRolesSection } from "@/components/calendar/MonthlyRolesSection";
 import { useCache } from "@/components/context/Cache";
 import { AlertSnackbar } from "@/components/ui";
-import { ManAvatar } from "@/components/ui";
-import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
+import { ROLE_OPTIONS, EMPTY_PRINT_EXTRAS, WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 import {
-  generateScheduleForMonth,
-  getWednesdaysAndSundaysInMonth,
-  hasRoleConflict,
-} from "@/lib/helpers/scheduling";
-import {
-  fetchSchedule,
-  createSchedule,
-  updateSchedule,
-} from "@/lib/api/schedules";
-import { updateMan } from "@/lib/api/men";
-import type { TScheduleEntry, TSchedule } from "@/types";
-import { ROLE_OPTIONS } from "@/lib/constants";
+  getAvailableServantsForOverride,
+  getDayNameFromDate,
+  getEntriesForDate,
+  getMonthlyEntries,
+  isPastMonth,
+} from "@/lib/helpers/calendarHelpers";
+import { getWednesdaysAndSundaysInMonth } from "@/lib/helpers/scheduling";
+import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
+import { useEditModal } from "@/lib/hooks/useEditModal";
+import { useScheduleActions } from "@/lib/hooks/useScheduleActions";
+import type { TSchedulePrintExtras } from "@/types";
 
-const todayMonthStr = format(new Date(), "yyyy-MM");
+type CalendarViewMode = "edit" | "print";
 
-/**
- * Gets day name from ISO date string.
- */
-function getDayNameFromDate(dateStr: string): "Wednesday" | "Sunday" {
-  const date = parse(dateStr, "yyyy-MM-dd", new Date());
-  const dayOfWeek = date.getDay();
-  return dayOfWeek === 0 ? "Sunday" : "Wednesday";
-}
 
 export default function Calendar() {
-  const { men: allMen, setMen, schedules, setSchedules } = useCache();
+  const { men: allMen, schedules: allSchedules, deacons: allDeacons } = useCache();
+  const [viewedMonth, setViewedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("edit");
 
-  // State
-  const [viewedMonth, setViewedMonth] = useState(todayMonthStr);
-  const [currentSchedule, setCurrentSchedule] = useState<TSchedule | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [generatingSchedule, setGeneratingSchedule] = useState(false);
-  const [finalizingSchedule, setFinalizingSchedule] = useState(false);
-  const [sendingNotifications, setSendingNotifications] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertSeverity, setAlertSeverity] = useState<"success" | "error" | "info" | "warning">("info");
-
-  // Override modal state
-  const [editModal, setEditModal] = useState<{
-    isOpen: boolean;
-    entry: TScheduleEntry | null;
-    selectedServantId: string;
-  }>({
-    isOpen: false,
-    entry: null,
-    selectedServantId: "",
+  const contentRef = useRef(null);
+  const handlePrint = useReactToPrint({
+    contentRef,
+    documentTitle: `Those Who Serve ${viewedMonth}`,
   });
 
+  const snackbar = useSnackbarQueue();
 
-  // Load schedule when viewed month changes
+  const currentSchedule = allSchedules.find(s => s.month === viewedMonth) || null;
+
+  const scheduleActions = useScheduleActions(
+    viewedMonth,
+    currentSchedule,
+    allSchedules,
+    (message, severity) => snackbar.showSnackbar({ message, severity }),
+  );
+
+  const editModal = useEditModal(scheduleActions.updateEntry);
+
+  const {
+    control,
+    reset,
+    trigger,
+    getValues,
+  } = useForm<TSchedulePrintExtras>({
+    defaultValues: EMPTY_PRINT_EXTRAS,
+    mode: "onBlur",
+  });
+  const watchedPrintExtras =
+    useWatch({ control }) ?? EMPTY_PRINT_EXTRAS;
+
   useEffect(() => {
-    const loadSchedule = async () => {
-      try {
-        setLoading(true);
-        const schedule = await fetchSchedule(viewedMonth);
-        if (schedule) {
-          setCurrentSchedule(schedule);
-        } else {
-          setCurrentSchedule(null);
-        }
-      } catch (err) {
-        setAlertMessage("Failed to load schedule");
-        setAlertSeverity("error");
-        setAlertOpen(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (currentSchedule?.printExtras) {
+      reset({
+        ...EMPTY_PRINT_EXTRAS,
+        ...currentSchedule.printExtras,
+        monthlyDeacons: currentSchedule.printExtras.monthlyDeacons ?? [],
+      });
+    } else {
+      reset(EMPTY_PRINT_EXTRAS);
+    }
+  }, [currentSchedule, reset]);
 
-    loadSchedule();
-  }, [viewedMonth]);
+  useEffect(() => {
+    if (!currentSchedule && viewMode !== "edit") {
+      (() => {
+        setViewMode("edit");
+      })();
+    }
+  }, [currentSchedule, viewMode]);
 
-  // Get servant name
+  const handlePreviousMonth = () => {
+    setViewedMonth((prev) =>
+      format(addMonths(parse(prev, "yyyy-MM", new Date()), -1), "yyyy-MM"),
+    );
+  };
+
+  const handleNextMonth = () => {
+    setViewedMonth((prev) =>
+      format(addMonths(parse(prev, "yyyy-MM", new Date()), 1), "yyyy-MM"),
+    );
+  };
+
+  const handleGoToToday = () => {
+    setViewedMonth(viewedMonth);
+  };
+
+  const handleFinalizeSchedule = async () => {
+    const isValid = await trigger([
+      "cardBoys",
+      "communionFamily",
+      "monthlyDeacons",
+    ]);
+
+    if (!isValid) {
+      snackbar.showSnackbar({
+        severity: "warning",
+        message:
+          "Please fill Card Boys, Communion Family, and select two Deacons before finalizing.",
+      });
+      setViewMode("edit");
+      return;
+    }
+
+    const extras = getValues();
+    await scheduleActions.finalizeSchedule({
+      ...EMPTY_PRINT_EXTRAS,
+      ...extras,
+      monthlyDeacons: extras.monthlyDeacons ?? [],
+    });
+  };
+
   const getServant = (servantId: string) => allMen.find((m) => m.id === servantId);
   const getServantName = (servantId: string): string => {
     const servant = getServant(servantId);
@@ -116,603 +154,341 @@ export default function Calendar() {
       : "Unknown";
   };
 
-  // Generate new schedule
-  const handleGenerateSchedule = useCallback(async () => {
-    try {
-      setGeneratingSchedule(true);
-      const entries = generateScheduleForMonth(viewedMonth, allMen);
-      const newSchedule: TSchedule = {
-        id: viewedMonth,
-        month: viewedMonth,
-        entries,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-
-      const created = await createSchedule(newSchedule);
-      setCurrentSchedule(created);
-
-      // Update men's lastServed timestamps based on this schedule
-      // This allows subsequent regenerations to pick different people
-      const timestamp = Date.now();
-      const updatedMen = allMen.map((man) => {
-        let updated = { ...man };
-        // For each role this man is assigned in the schedule, update lastServed
-        entries.forEach((entry) => {
-          if (entry.servantId === man.id) {
-            updated.lastServed = {
-              ...(updated.lastServed ?? {}),
-              [entry.role]: timestamp,
-            };
-          }
-        });
-        return updated;
-      });
-
-      // Update cache with new men data
-      setMen(updatedMen);
-
-      // Update cache schedules
-      const updated = schedules.filter((s) => s.month !== viewedMonth);
-      setSchedules([...updated, created]);
-
-      setAlertMessage("Schedule generated successfully");
-      setAlertSeverity("success");
-      setAlertOpen(true);
-    } catch (err) {
-      setAlertMessage("Failed to generate schedule");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-    } finally {
-      setGeneratingSchedule(false);
-    }
-  }, [allMen, setMen, schedules, setSchedules, viewedMonth]);
-
-  // Update single entry
-  const handleUpdateEntry = useCallback(async (originalEntry: TScheduleEntry, newServantId: string) => {
-    if (!currentSchedule) return;
-
-    try {
-      const newEntries = currentSchedule.entries.map((e) =>
-        e.date === originalEntry.date &&
-          e.role === originalEntry.role &&
-          e.servantId === originalEntry.servantId
-          ? { ...originalEntry, servantId: newServantId }
-          : e,
-      );
-
-      const updated = await updateSchedule(viewedMonth, {
-        entries: newEntries,
-      });
-
-      setCurrentSchedule(updated);
-
-      // Update cache
-      const updatedSchedules = schedules.map((s) =>
-        s.month === viewedMonth ? updated : s,
-      );
-      setSchedules(updatedSchedules);
-
-      setAlertMessage("Assignment updated");
-      setAlertSeverity("success");
-      setAlertOpen(true);
-    } catch (err) {
-      setAlertMessage("Failed to update assignment");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-    }
-  }, [currentSchedule, schedules, setSchedules, viewedMonth]);
-
-  // Add/Override Worship in Song entry
-  const handleAddWorshipInSong = useCallback(
-    async (dateStr: string, servantId: string) => {
-      if (!currentSchedule) return;
-
-      try {
-        // Remove existing worship_in_song for this date if it exists, then add new one
-        const newEntries = currentSchedule.entries
-          .filter((e) => !(e.date === dateStr && e.role === "worship_in_song"))
-          .concat([
-            {
-              date: dateStr,
-              role: "worship_in_song",
-              servantId,
-            },
-          ]);
-
-        const updated = await updateSchedule(viewedMonth, {
-          entries: newEntries,
-        });
-
-        setCurrentSchedule(updated);
-
-        // Update cache
-        const updatedSchedules = schedules.map((s) =>
-          s.month === viewedMonth ? updated : s,
-        );
-        setSchedules(updatedSchedules);
-
-        setAlertMessage("Worship in Song set");
-        setAlertSeverity("success");
-        setAlertOpen(true);
-      } catch (err) {
-        setAlertMessage("Failed to set Worship in Song");
-        setAlertSeverity("error");
-        setAlertOpen(true);
-      }
-    },
-    [currentSchedule, schedules, setSchedules, viewedMonth],
-  );
-
-  // Finalize schedule and update lastServed
-  const handleFinalizeSchedule = useCallback(async () => {
-    if (!currentSchedule) return;
-
-    try {
-      setFinalizingSchedule(true);
-      setSendingNotifications(true);
-
-      // Build lastServed updates
-      const lastServedUpdates: Record<string, Record<string, number>> = {};
-
-      for (const entry of currentSchedule.entries) {
-        if (!lastServedUpdates[entry.servantId]) {
-          lastServedUpdates[entry.servantId] = {};
-        }
-        lastServedUpdates[entry.servantId][entry.role] = Date.now();
-      }
-
-      // Update each man's lastServed in Firebase
-      const updatePromises = Object.entries(lastServedUpdates).map(
-        ([servantId, roles]) =>
-          updateMan(servantId, { lastServed: roles })
-      );
-
-      await Promise.all(updatePromises);
-
-      // Mark schedule as finalized in Firebase
-      const finalizedSchedule = {
-        ...currentSchedule,
-        finalized: true,
-        updatedAt: Date.now(),
-      };
-
-      const updated = await updateSchedule(viewedMonth, finalizedSchedule);
-      setCurrentSchedule(updated);
-
-      // Update cache
-      const updatedSchedules = schedules.map((s) =>
-        s.month === viewedMonth ? updated : s,
-      );
-      setSchedules(updatedSchedules);
-
-      try {
-        const res = await fetch("/api/notifications/schedule-finalized", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ month: viewedMonth }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data.failed) && data.failed.length > 0) {
-            setAlertMessage(
-              `Schedule finalized; notifications sent to ${data.sent?.length ?? 0}. ${data.failed.length} failed.`,
-            );
-            setAlertSeverity("warning");
-          } else {
-            setAlertMessage("Schedule finalized and notifications sent");
-            setAlertSeverity("success");
-          }
-        } else {
-          setAlertMessage("Schedule finalized, but notifications failed to send");
-          setAlertSeverity("warning");
-        }
-        setAlertOpen(true);
-      } catch (notifyErr) {
-        console.error("Failed to send schedule notifications", notifyErr);
-        setAlertMessage("Schedule finalized, but notifications failed to send");
-        setAlertSeverity("warning");
-        setAlertOpen(true);
-      } finally {
-        setSendingNotifications(false);
-      }
-    } catch (err) {
-      setAlertMessage("Failed to finalize schedule");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-    } finally {
-      setFinalizingSchedule(false);
-    }
-  }, [currentSchedule, schedules, setSchedules, viewedMonth]);
-
-  // Navigate to previous month
-  const handlePreviousMonth = () => {
-    setViewedMonth((prev) => format(addMonths(parse(prev, "yyyy-MM", new Date()), -1), "yyyy-MM"));
-  };
-
-  // Navigate to next month
-  const handleNextMonth = () => {
-    setViewedMonth((prev) => format(addMonths(parse(prev, "yyyy-MM", new Date()), 1), "yyyy-MM"));
-  };
-
-  // Go back to today
-  const handleGoToToday = () => {
-    setViewedMonth(todayMonthStr);
-  };
-
-  // Get entries for a specific date
-  const getEntriesForDate = (dateStr: string): TScheduleEntry[] => {
-    if (!currentSchedule) return [];
-    return currentSchedule.entries.filter((e) => e.date === dateStr);
-  };
-
-  // Get servants available for role
-  const getServantsForRole = (roleValue: string): typeof allMen => {
-    return allMen.filter((m) => m.roles?.includes(roleValue));
-  };
-
-  // Get servants with conflict checking
-  const getAvailableServantsForOverride = (
-    roleValue: string,
-    dateStr: string,
-  ): typeof allMen => {
-    return getServantsForRole(roleValue).filter((m) => {
-      if (!hasRoleConflict(m.id, roleValue, dateStr, currentSchedule?.entries ?? [])) {
-        return true;
-      }
-      return false;
-    });
-  };
-
-  // Open edit modal
-  const handleOpenEditModal = (entry: TScheduleEntry) => {
-    setEditModal({
-      isOpen: true,
-      entry,
-      selectedServantId: entry.servantId,
-    });
-  };
-
-  // Save edit modal
-  const handleSaveEditModal = () => {
-    if (editModal.entry && editModal.selectedServantId) {
-      handleUpdateEntry(editModal.entry, editModal.selectedServantId);
-      setEditModal({ isOpen: false, entry: null, selectedServantId: "" });
-    }
-  };
-
-  // Open worship in song modal
-  const handleOpenWorshipInSongModal = (dateStr: string, dayName: "Wednesday" | "Sunday") => {
-    // Directly mark as Worship in Song without needing servant selection
-    handleAddWorshipInSong(dateStr, "worship-in-song-marker");
-  };
-
-  // Filter monthly entries - only those marked as monthly roles
-  const monthlyEntries = useMemo(() => {
-    if (!currentSchedule) return [];
-    return currentSchedule.entries.filter((e) =>
-      ROLE_OPTIONS.find((r) => r.value === e.role && r.isMonthly),
-    );
-  }, [currentSchedule]);
-
-  // Get Wed and Sun dates
+  const monthlyEntries = getMonthlyEntries(currentSchedule);
   const allDates = getWednesdaysAndSundaysInMonth(viewedMonth);
-  const isPastMonth = useMemo(() => {
-    const now = new Date();
-    const viewed = parse(viewedMonth, "yyyy-MM", new Date());
-    const startOfViewed = new Date(viewed.getFullYear(), viewed.getMonth(), 1);
-    const startOfCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
-    return startOfViewed < startOfCurrent;
-  }, [viewedMonth]);
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const pastMonth = isPastMonth(viewedMonth);
+  const monthLabel = format(parse(viewedMonth, "yyyy-MM", new Date()), "MMMM yyyy");
+  const printableExtras: TSchedulePrintExtras = useMemo(() => {
+    const watched = watchedPrintExtras || EMPTY_PRINT_EXTRAS;
+    return {
+      ...EMPTY_PRINT_EXTRAS,
+      ...watched,
+      monthlyDeacons: watched.monthlyDeacons ?? [],
+    };
+  }, [watchedPrintExtras]);
 
   return (
     <Box>
-      {/* Header */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
-        <Stack direction="row" alignItems="center" gap={2}>
-          <Button
-            size="small"
-            onClick={handlePreviousMonth}
-            startIcon={<ChevronLeftIcon />}
-          >
-            Previous
-          </Button>
-          <Stack alignItems="center" sx={{ minWidth: 200 }}>
-            <Typography variant="h5" fontWeight={600}>
-              {format(parse(viewedMonth, "yyyy-MM", new Date()), "MMMM yyyy")}
-            </Typography>
-            {viewedMonth !== todayMonthStr && (
-              <Button
-                size="small"
-                variant="text"
-                onClick={handleGoToToday}
-              >
-                Back to Today
-              </Button>
-            )}
-          </Stack>
-          <Button
-            size="small"
-            onClick={handleNextMonth}
-            endIcon={<ChevronRightIcon />}
-          >
-            Next
-          </Button>
-        </Stack>
-        {!currentSchedule ? (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleGenerateSchedule}
-            disabled={generatingSchedule || isPastMonth}
-          >
-            {generatingSchedule ? "Generating..." : "Generate Schedule"}
-          </Button>
-        ) : currentSchedule.finalized ? (
-          <Typography variant="subtitle2" sx={{ color: "success.main", fontWeight: 600 }}>
-            ✓ Finalized
-          </Typography>
-        ) : (
-          <Stack direction="row" gap={2}>
-            <Button
-              variant="outlined"
-              onClick={handleGenerateSchedule}
-              disabled={generatingSchedule}
-            >
-              Regenerate
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<CheckCircleIcon />}
-              onClick={handleFinalizeSchedule}
-              disabled={finalizingSchedule}
-            >
-              {finalizingSchedule ? "Finalizing..." : "Finalize"}
-            </Button>
-          </Stack>
-        )}
-      </Stack>
+      <CalendarHeader
+        viewedMonth={viewedMonth}
+        currentSchedule={currentSchedule}
+        generatingSchedule={scheduleActions.generatingSchedule}
+        finalizingSchedule={scheduleActions.finalizingSchedule}
+        isPastMonth={pastMonth}
+        onPreviousMonth={handlePreviousMonth}
+        onNextMonth={handleNextMonth}
+        onGoToToday={handleGoToToday}
+        onGenerateSchedule={scheduleActions.generateSchedule}
+        onFinalizeSchedule={handleFinalizeSchedule}
+      />
 
       <AlertSnackbar
-        open={alertOpen}
-        severity={alertSeverity}
-        message={alertMessage}
-        onClose={() => setAlertOpen(false)}
+        open={snackbar.open}
+        severity={snackbar.messageInfo?.severity}
+        title={snackbar.messageInfo?.title}
+        message={snackbar.messageInfo?.message}
+        onClose={snackbar.handleClose}
+        slotProps={{ transition: { onExited: snackbar.handleExited } }}
       />
-      <Backdrop
-        open={sendingNotifications}
-        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1, flexDirection: "column", gap: 2 }}
-      >
 
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          border: '2px solid #000',
-          boxShadow: 24,
-          p: 4
-        }}>
-          <Box textAlign="center" mb={2}>
-            <CircularProgress />
-          </Box>
-          <Typography variant="h6" sx={{ fontWeight: 600 }} gutterBottom>
-            Finializing & Sending Schedule Emails…
+      <FinalizingBackdrop open={scheduleActions.finalizingSchedule} />
+
+      {currentSchedule && (
+        <Box
+          mb={3}
+          display="flex"
+          sx={{ flexDirection: "column" }}
+        >
+          <Typography variant="subtitle1" fontWeight={600}>
+            View Mode
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.85 }}>
-            We&apos;re notifying everyone on this month&apos;s schedule.
-          </Typography>
+          <ToggleButtonGroup
+            exclusive
+            value={viewMode}
+            color="primary"
+            size="small"
+            onChange={(_event, next) => {
+              if (next) {
+                setViewMode(next);
+              }
+            }}
+            sx={{
+              mb: 2,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1,
+              "& .MuiToggleButtonGroup-grouped": {
+                margin: 0,
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                borderLeft: (theme) =>
+                  `1px solid ${theme.palette.divider}`,
+                flex: { xs: "1 1 calc(50% - 8px)", sm: "0 0 auto" },
+              },
+              "& .MuiToggleButtonGroup-grouped:not(:first-of-type)": {
+                borderLeft: (theme) =>
+                  `1px solid ${theme.palette.divider}`,
+              },
+            }}
+
+          >
+            <ToggleButton sx={{
+              justifyContent: "center",
+              "&.Mui-selected": {
+                boxShadow: 3,
+                borderColor: "primary.main",
+              },
+              "&.Mui-selected:hover": {
+                boxShadow: 4,
+              },
+            }} value="edit">Edit Schedule</ToggleButton>
+            <ToggleButton sx={{
+              justifyContent: "center",
+              "&.Mui-selected": {
+                boxShadow: 3,
+                borderColor: "primary.main",
+              },
+              "&.Mui-selected:hover": {
+                boxShadow: 4,
+              },
+            }} value="print">Print View</ToggleButton>
+          </ToggleButtonGroup>
         </Box>
-      </Backdrop>
+      )}
 
       {currentSchedule ? (
-        <>
-          {/* Monthly Roles Section */}
-          {monthlyEntries.length > 0 && (
-            <Box mb={4}>
-              <Typography variant="h6" fontWeight={600} mb={2}>
-                Monthly Roles
-              </Typography>
-              <Grid container spacing={2}>
-                {monthlyEntries.map((entry, idx) => {
-                  // Create unique key using entry position index
-                  const uniqueKey = `monthly-${idx}`;
-                  return (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={uniqueKey}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="subtitle2" color="textSecondary">
-                            {getRoleLabel(entry.role)}
-                          </Typography>
-                          <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            gap={1.5}
-                            sx={{ mt: 0.5 }}
-                          >
-                            <Stack direction="row" alignItems="center" gap={1}>
-                              <ManAvatar
-                                name={getServantName(entry.servantId)}
-                                photo={getServant(entry.servantId)?.photoFile as string | undefined}
-                              />
-                              <Typography variant="h6">
-                                {getServantName(entry.servantId)}
-                              </Typography>
-                            </Stack>
-                            <Button
-                              size="small"
-                              startIcon={<EditIcon />}
-                              onClick={() => handleOpenEditModal(entry)}
-                              disabled={currentSchedule.finalized}
-                            >
-                              Change
-                            </Button>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-              <Divider sx={{ my: 3 }} />
-            </Box>
-          )}
+        viewMode === "edit" ? (
+          <>
+            {monthlyEntries.length > 0 && (
+              <MonthlyRolesSection
+                entries={monthlyEntries}
+                getServantName={getServantName}
+                getServant={getServant}
+                onEdit={editModal.openEditModal}
+                isFinalized={currentSchedule.finalized || false}
+              />
+            )}
 
-          {/* Wed/Sun Schedule */}
-          <Typography variant="h6" fontWeight={600} mb={2}>
-            Schedule
-          </Typography>
-          <Grid container spacing={2} mb={4}>
-            {allDates.map((dateStr) => {
-              const dayName = getDayNameFromDate(dateStr);
-              const entries = getEntriesForDate(dateStr).filter(
-                (e) => !ROLE_OPTIONS.find((r) => r.value === e.role && r.isMonthly),
-              );
-              const worshipInSong = currentSchedule.entries.find(
-                (e) => e.date === dateStr && e.role === "worship_in_song",
-              );
-
-              return (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={dateStr}>
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="subtitle2" color="textSecondary">
-                        {dayName}, {format(new Date(dateStr), "MMM d")}
-                      </Typography>
-
-                      {worshipInSong ? (
-                        // Show "Worship in Song" day
-                        <Stack gap={2} mt={2}>
-                          <Box
-                            p={2}
-                            bgcolor="warning.lighter"
-                            borderRadius={1}
-                            sx={{ textAlign: "center" }}
-                          >
-                            <Typography variant="subtitle2" fontWeight={600} color="warning.main">
-                              Worship in Song
-                            </Typography>
-                            <Typography variant="caption" color="textSecondary" display="block" mt={0.5}>
-                              Full day event
-                            </Typography>
-                          </Box>
-                          <Button
-                            size="small"
-                            startIcon={<EditIcon />}
+            <Card sx={{ mb: 4 }}>
+              <CardContent>
+                <form>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Controller
+                        name="cardBoys"
+                        control={control}
+                        rules={{ required: "Card boys are required" }}
+                        render={({ field, fieldState }) => (
+                          <TextField
+                            label="Card Boys"
+                            {...field}
+                            error={!!fieldState.error}
+                            fullWidth
+                            helperText={fieldState.error?.message}
                             disabled={currentSchedule.finalized}
-                            onClick={async () => {
-                              try {
-                                const updated = {
-                                  ...currentSchedule,
-                                  entries: currentSchedule.entries.filter(
-                                    (e) => !(e.date === dateStr && e.role === "worship_in_song"),
-                                  ),
-                                };
-                                await updateSchedule(viewedMonth, updated);
-                                setCurrentSchedule(updated);
-                                const updatedSchedules = schedules.map((s) =>
-                                  s.month === viewedMonth ? updated : s,
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Controller
+                        name="communionFamily"
+                        control={control}
+                        rules={{ required: "Communion family is required" }}
+                        render={({ field, fieldState }) => (
+                          <TextField
+                            label="Communion family"
+                            {...field}
+                            error={!!fieldState.error}
+                            fullWidth
+                            helperText={fieldState.error?.message}
+                            disabled={currentSchedule.finalized}
+                          />
+                        )}
+                      />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Controller
+                        name="monthlyDeacons"
+                        control={control}
+                        rules={{
+                          validate: (value) =>
+                            value && value.length === 2
+                              ? true
+                              : "Select exactly two deacons",
+                        }}
+                        render={({ field, fieldState }) => (
+                          <FormControl fullWidth error={!!fieldState.error}>
+                            <InputLabel id="monthly-deacons-label">
+                              Deacons in Charge
+                            </InputLabel>
+                            <Select<string[]>
+                              labelId="monthly-deacons-label"
+                              multiple
+                              value={field.value ?? []}
+                              disabled={currentSchedule.finalized}
+                              onChange={(event, _child) => {
+                                const {
+                                  target: { value },
+                                } = event;
+
+                                field.onChange(
+                                  typeof value === "string"
+                                    ? value.split(",")
+                                    : value,
                                 );
-                                setSchedules(updatedSchedules);
-                                setAlertMessage("Worship in Song removed");
-                                setAlertSeverity("info");
-                                setAlertOpen(true);
-                              } catch (err) {
-                                setAlertMessage("Failed to remove Worship in Song");
-                                setAlertSeverity("error");
-                                setAlertOpen(true);
+                              }}
+                              input={
+                                <OutlinedInput label="Deacons for the Month" />
                               }
-                            }}
-                          >
-                            Change
-                          </Button>
-                        </Stack>
-                      ) : (
-                        // Show normal schedule with roles
-                        <Stack gap={1.5} mt={2}>
-                          {entries.map((entry, idx) => (
-                            <Box
-                              key={`${entry.date}-${entry.role}-${idx}`}
-                              p={1.5}
-                              bgcolor="action.hover"
-                              borderRadius={1}
-                              sx={{
-                                border: `1px solid ${currentSchedule.finalized ? "transparent" : "rgba(25, 118, 210, 0.12)"}`,
+                              renderValue={(selected) => {
+                                const selectedIds = Array.isArray(selected)
+                                  ? selected
+                                  : [];
+                                if (selectedIds.length === 0) {
+                                  return "Select two deacons";
+                                }
+
+                                return (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: 0.5,
+                                    }}
+                                  >
+                                    {selectedIds.map((id) => {
+                                      const deacon = allDeacons.find(
+                                        (d) => d.id === id,
+                                      );
+                                      const name = deacon
+                                        ? `${deacon.firstName} ${deacon.lastName}`.trim()
+                                        : "Unknown";
+                                      return (
+                                        <Chip
+                                          key={id}
+                                          label={name}
+                                          disabled={currentSchedule.finalized}
+                                          onMouseDown={(e) => e.stopPropagation()}
+                                          onDelete={() => {
+                                            const updated = selectedIds.filter(
+                                              (selectedId) =>
+                                                selectedId !== id,
+                                            );
+                                            field.onChange(updated);
+
+                                          }}
+                                        />
+                                      );
+                                    })}
+                                  </Box>
+                                );
                               }}
                             >
-                              <Typography variant="subtitle2" color="textSecondary">
-                                {getRoleLabel(entry.role)}
-                              </Typography>
-                              <Stack
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                gap={1}
-                                sx={{ mt: 0.5 }}
-                              >
-                                <Stack direction="row" alignItems="center" gap={1}>
-                                  <ManAvatar
-                                    name={getServantName(entry.servantId)}
-                                    photo={getServant(entry.servantId)?.photoFile as string | undefined}
-                                  />
-                                  <Typography variant="body2" fontWeight={600}>
-                                    {getServantName(entry.servantId)}
-                                  </Typography>
-                                </Stack>
-                                <Button
-                                  size="small"
-                                  startIcon={<EditIcon />}
-                                  onClick={() => handleOpenEditModal(entry)}
-                                  disabled={currentSchedule.finalized}
+                              {allDeacons.map((deacon) => (
+                                <MenuItem
+                                  key={deacon.id}
+                                  value={deacon.id}
+                                  disabled={
+                                    (field.value || []).length >= 2 &&
+                                    !(field.value || []).includes(deacon.id)
+                                  }
                                 >
-                                  Change
-                                </Button>
-                              </Stack>
-                            </Box>
-                          ))}
-                          <Button
-                            size="small"
-                            startIcon={<EditIcon />}
-                            onClick={() =>
-                              handleOpenWorshipInSongModal(dateStr, dayName)
-                            }
-                            disabled={currentSchedule.finalized}
-                            sx={{ mt: 1 }}
-                          >
-                            Mark as Worship in Song
-                          </Button>
-                        </Stack>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </>
+                                  {`${deacon.firstName} ${deacon.lastName}`.trim()}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {!currentSchedule.finalized && (<FormHelperText>
+                              {fieldState.error?.message ||
+                                "Select exactly two deacons"}
+                            </FormHelperText>
+                            )}
+                          </FormControl>
+                        )}
+                      />
+                    </Grid>
+                  </Grid>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Typography variant="h6" fontWeight={600} mb={2}>
+              Schedule
+            </Typography>
+            <Grid container spacing={2} mb={4}>
+              {allDates.map((dateStr) => {
+                const dayName = getDayNameFromDate(dateStr);
+                const entries = getEntriesForDate(
+                  currentSchedule,
+                  dateStr,
+                ).filter(
+                  (e) => !ROLE_OPTIONS.find((r) => r.value === e.role && r.isMonthly),
+                );
+                const worshipInSong = currentSchedule.entries.find(
+                  (e) => e.date === dateStr && e.role === "worship_in_song",
+                );
+
+                return (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={dateStr}>
+                    <DayCard
+                      dateStr={dateStr}
+                      dayName={dayName}
+                      entries={entries}
+                      worshipInSong={worshipInSong}
+                      isFinalized={currentSchedule.finalized || false}
+                      getServantName={getServantName}
+                      getServant={getServant}
+                      onEdit={editModal.openEditModal}
+                      onMarkWorshipInSong={(date) =>
+                        scheduleActions.addWorshipInSong(
+                          date,
+                          WORSHIP_IN_SONG_MARKER,
+                        )
+                      }
+                      onRemoveWorshipInSong={scheduleActions.removeWorshipInSong}
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </>
+        ) : (
+          <>
+            <Box mb={2}>
+              <Button
+                variant="contained"
+                disabled={!currentSchedule.finalized}
+                fullWidth
+                sx={{ maxWidth: { sm: 200 } }}
+                onClick={handlePrint}
+                startIcon={<PrintIcon />}
+              >
+                Print Schedule
+
+              </Button>
+              {!currentSchedule.finalized && (
+                <FormHelperText>
+                  Finilize the schedule to enable printing
+                </FormHelperText>
+              )}
+            </Box>
+
+
+            <Card>
+              <CardContent ref={contentRef}>
+                <PrintableSchedule
+                  schedule={currentSchedule}
+                  men={allMen}
+                  deacons={allDeacons}
+                  extras={printableExtras}
+                  monthLabel={monthLabel}
+                />
+              </CardContent>
+            </Card>
+          </>
+        )
       ) : (
         <Box sx={{ p: 2, textAlign: "center", color: "text.secondary" }}>
           <Typography>
@@ -721,54 +497,26 @@ export default function Calendar() {
         </Box>
       )}
 
-      {/* Edit Modal */}
-      <Dialog
-        open={editModal.isOpen}
-        onClose={() => setEditModal({ isOpen: false, entry: null, selectedServantId: "" })}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Edit {editModal.entry ? getRoleLabel(editModal.entry.role) : ""}
-        </DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" mb={1}>
-              Select Servant
-            </Typography>
-            <Select
-              value={editModal.selectedServantId}
-              onChange={(e: SelectChangeEvent) =>
-                setEditModal({
-                  ...editModal,
-                  selectedServantId: e.target.value,
-                })
-              }
-            >
-              {getAvailableServantsForOverride(
-                editModal.entry?.role || "",
-                editModal.entry?.date || "",
-              ).map((servant) => (
-                <MenuItem key={servant.id} value={servant.id}>
-                  {servant.firstName} {servant.lastName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() =>
-              setEditModal({ isOpen: false, entry: null, selectedServantId: "" })
-            }
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSaveEditModal} variant="contained">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <EditEntryModal
+        isOpen={editModal.editModal.isOpen}
+        entry={editModal.editModal.entry}
+        selectedServantId={editModal.editModal.selectedServantId}
+        availableServants={
+          editModal.editModal.entry
+            ? getAvailableServantsForOverride(
+              allMen,
+              editModal.editModal.entry.role,
+              editModal.editModal.entry.date,
+              currentSchedule?.entries || [],
+            )
+            : []
+        }
+        onClose={editModal.closeEditModal}
+        onSave={editModal.saveEditModal}
+        onServantChange={editModal.updateSelectedServant}
+        onMarkAsWorship={scheduleActions.markRoleAsWorshipInSong}
+        onUnmarkAsWorship={scheduleActions.unmarkRoleAsWorship}
+      />
     </Box>
   );
 }

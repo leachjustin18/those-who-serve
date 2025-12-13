@@ -1,3 +1,5 @@
+import type { TSchedulePrintExtras } from "@/types";
+
 /**
  * Available scheduling roles with metadata for day ordering and display labeling.
  */
@@ -64,6 +66,10 @@ export const ROLE_OPTIONS = [
     number: 3,
     isMonthly: true,
   },
+  {
+    label: "Worship In Song",
+    value: "worship_in_song",
+  },
 ];
 
 /**
@@ -109,3 +115,15 @@ export const NAME_PATTERN_MESSAGE =
  * Max number of characters stored for free-form notes fields.
  */
 export const NOTES_MAX_LENGTH = 500;
+
+/**
+ * Special marker ID used for "Worship in Song" full-day events.
+ * This is not a real man ID and should be filtered out before updating man records.
+ */
+export const WORSHIP_IN_SONG_MARKER = "worship-in-song-marker";
+
+export const EMPTY_PRINT_EXTRAS: TSchedulePrintExtras = {
+  cardBoys: "",
+  communionFamily: "",
+  monthlyDeacons: [],
+};

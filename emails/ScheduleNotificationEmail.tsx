@@ -94,12 +94,12 @@ export const ScheduleNotificationEmail = ({
                 <a href={assignment.calendarLink} style={link}>
                   {assignment.calendarLink}
                 </a>
-                <p>
-                  ICS (Apple/Outlook):{" "}
-                  <a href={assignment.icsLink} style={link}>
-                    {assignment.icsLink}
-                  </a>
-                </p>
+              </Text>
+              <Text style={noteText}>
+                ICS (Apple/Outlook):{" "}
+                <a href={assignment.icsLink} style={link}>
+                  {assignment.icsLink}
+                </a>
               </Text>
             </Section>
           ))}
@@ -107,8 +107,8 @@ export const ScheduleNotificationEmail = ({
 
         <Hr style={hr} />
         <Text style={footer}>
-          Sent by Congregation Schedule · Please let one of the deacons know if you
-          are unable to serve on your assigned dates.
+          Sent by Those Who Service Scheduler.  If you are unable to serve and/or if you get someone to substitue for you.
+          Please let a decon know as soon as possible.
         </Text>
       </Container>
     </Body>
