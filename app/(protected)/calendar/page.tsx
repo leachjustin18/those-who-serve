@@ -118,7 +118,10 @@ export default function Calendar() {
   };
 
   const handleGoToToday = () => {
-    setViewedMonth(viewedMonth);
+    const today = format(new Date(), "yyyy-MM");
+    if (viewedMonth !== today) {
+      setViewedMonth(today);
+    }
   };
 
   const handleFinalizeSchedule = async () => {

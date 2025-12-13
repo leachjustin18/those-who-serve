@@ -47,7 +47,9 @@ import { format, parse } from "date-fns";
 import type { TMan } from "@/types";
 import { useCallback, useMemo, useState } from "react";
 import { deleteMan } from "@/lib/api/men";
-import { ROLE_OPTIONS } from "@/lib/constants";
+import { getServantRoleOptions } from "@/lib/helpers/roleOptions";
+
+const SERVANT_ROLE_OPTIONS = getServantRoleOptions();
 
 const getManDisplayName = (man: TMan) =>
   [man.firstName, man.lastName].filter(Boolean).join(" ").trim() ||
@@ -74,7 +76,7 @@ export default function ManageMen() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const selectedRoleOptions = useMemo(
-    () => ROLE_OPTIONS.filter((role) => selectedRoles.includes(role.value)),
+    () => SERVANT_ROLE_OPTIONS.filter((role) => selectedRoles.includes(role.value)),
     [selectedRoles],
   );
 
@@ -232,7 +234,7 @@ export default function ManageMen() {
           />
           <Autocomplete
             multiple
-            options={ROLE_OPTIONS}
+            options={SERVANT_ROLE_OPTIONS}
             getOptionLabel={(option) => option.label}
             value={selectedRoleOptions}
             onChange={(_, newValue) =>

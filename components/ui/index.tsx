@@ -161,6 +161,7 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                 border: 0,
                 boxShadow: "0 10px 10px rgba(15,28,46,0.15)",
                 backdropFilter: "blur(14px)",
+                overflow: "visible",
             })}
         >
             <Toolbar
@@ -174,10 +175,10 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                 <Stack direction="row" spacing={2} alignItems="center">
                     <Box
                         sx={(theme) => ({
+                            display: { xs: "none", sm: "grid" },
                             width: 48,
                             height: 48,
                             borderRadius: "50%",
-                            display: "grid",
                             placeItems: "center",
                             background: alpha(theme.palette.primary.main, 0.12),
                             border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,

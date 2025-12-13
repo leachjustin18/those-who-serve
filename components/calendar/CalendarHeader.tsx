@@ -6,7 +6,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from "@mui/icons-material";
-import { Button, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import { format, parse } from "date-fns";
 
 import type { TSchedule } from "@/types";
@@ -42,85 +42,140 @@ export function CalendarHeader({
     parse(viewedMonth, "yyyy-MM", new Date()),
     "MMMM yyyy",
   );
+  const isCurrentMonth = viewedMonth === todayMonthStr;
+
+  const renderScheduleActions = () => {
+    if (!currentSchedule) {
+      return (
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onGenerateSchedule}
+          disabled={generatingSchedule || isPastMonth}
+        >
+          {generatingSchedule ? "Generating..." : "Generate Schedule"}
+        </Button>
+      );
+    }
+
+    if (currentSchedule.finalized) {
+      return (
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: "success.main",
+            fontWeight: 600,
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
+          ✓ Finalized
+        </Typography>
+      );
+    }
+
+    return (
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        gap={1.5}
+        width="100%"
+        alignItems={{ xs: "stretch", sm: "center" }}
+      >
+        <Button
+          variant="outlined"
+          onClick={onGenerateSchedule}
+          disabled={generatingSchedule}
+          fullWidth
+        >
+          Regenerate
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<CheckCircleIcon />}
+          onClick={onFinalizeSchedule}
+          disabled={finalizingSchedule}
+          fullWidth
+        >
+          {finalizingSchedule ? "Finalizing..." : "Finalize"}
+        </Button>
+      </Stack>
+    );
+  };
+
+  const navigationControls = (
+    <Stack
+    direction="row"
+    spacing={1}
+    alignItems="center"
+    justifyContent="center"
+    sx={{ width: "100%" }}
+  >
+    <Button
+      size="small"
+      startIcon={<ChevronLeftIcon />}
+      onClick={onPreviousMonth}
+      sx={{ minWidth: 120 }}
+    >
+      Previous
+    </Button>
+    <Button
+      size="small"
+      endIcon={<ChevronRightIcon />}
+      onClick={onNextMonth}
+      sx={{ minWidth: 120 }}
+    >
+      Next
+    </Button>
+  </Stack>
+  );
+
+  const actions = renderScheduleActions();
 
   return (
-    <Stack
-      direction={{ xs: "column", md: "row" }}
-      justifyContent="space-between"
-      alignItems={{ xs: "flex-start", md: "center" }}
-      spacing={2}
-      mb={3}
-      sx={{ width: "100%" }}
-    >
+    <Stack spacing={2} mb={3} sx={{ width: "100%" }}>
+      {/* Desktop layout */}
       <Stack
         direction="row"
         alignItems="center"
+        justifyContent="space-between"
         gap={2}
-        flexWrap="wrap"
-        justifyContent={{ xs: "center", md: "flex-start" }}
-        sx={{ width: "100%" }}
+        sx={{ width: "100%", display: { xs: "none", md: "flex" } }}
       >
-        <Button size="small" onClick={onPreviousMonth} startIcon={<ChevronLeftIcon />}>
-          Previous
-        </Button>
-        <Stack alignItems="center" sx={{ minWidth: 200 }}>
+        <Box flex={1} display="flex" justifyContent="flex-start">
+          {navigationControls}
+        </Box>
+
+        <Stack alignItems="center" spacing={0.5}>
           <Typography variant="h5" fontWeight={600}>
             {monthLabel}
           </Typography>
-          {viewedMonth !== todayMonthStr && (
-            <Button size="small" variant="text" onClick={onGoToToday}>
+          {!isCurrentMonth && (
+            <Button size="small" variant="text" onClick={onGoToToday} sx={{ fontWeight: 600 }}>
               Back to Today
             </Button>
           )}
         </Stack>
-        <Button size="small" onClick={onNextMonth} endIcon={<ChevronRightIcon />}>
-          Next
-        </Button>
+
+        <Box flex={1} display="flex" justifyContent="flex-end">
+          <Box sx={{ width: "100%", maxWidth: 360 }}>{actions}</Box>
+        </Box>
       </Stack>
 
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        gap={2}
-        alignItems={{ xs: "stretch", sm: "center" }}
-        justifyContent={{ xs: "flex-start", md: "flex-end" }}
-        sx={{ width: { xs: "100%", md: "auto" } }}
-      >
-        {!currentSchedule ? (
-          <Button
-            fullWidth
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={onGenerateSchedule}
-            disabled={generatingSchedule || isPastMonth}
-          >
-            {generatingSchedule ? "Generating..." : "Generate Schedule"}
-          </Button>
-        ) : currentSchedule.finalized ? (
-          <Typography
-            variant="subtitle2"
-            sx={{ color: "success.main", fontWeight: 600, textAlign: "center", width: "100%" }}
-          >
-            ✓ Finalized
+      {/* Mobile layout */}
+      <Stack spacing={1.5} sx={{ display: { xs: "flex", md: "none" } }} alignItems="center">
+        <Stack alignItems="center" spacing={0.5}>
+          <Typography variant="h5" fontWeight={600} textAlign="center">
+            {monthLabel}
           </Typography>
-        ) : (
-          <>
-            <Button
-              variant="outlined"
-              onClick={onGenerateSchedule}
-              disabled={generatingSchedule}
-            >
-              Regenerate
+          {!isCurrentMonth && (
+            <Button size="small" variant="text" onClick={onGoToToday} sx={{ fontWeight: 600 }}>
+              Back to Today
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<CheckCircleIcon />}
-              onClick={onFinalizeSchedule}
-              disabled={finalizingSchedule}
-            >
-              {finalizingSchedule ? "Finalizing..." : "Finalize"}
-            </Button>
-          </>
-        )}
+          )}
+        </Stack>
+        <Box sx={{ width: "100%" }}>{actions}</Box>
+        {navigationControls}
       </Stack>
     </Stack>
   );
