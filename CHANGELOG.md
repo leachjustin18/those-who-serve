@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (place new features here)
 
 ### Changed
-- (list updates or improvements)
+- Finalizing backdrop now appears immediately when the schedule finalize action begins, improving feedback in the calendar view.
+- README expanded with badges and detailed stack overview for quicker project onboarding.
 
 ### Fixed
-- (note bug fixes)
+- Printable schedule once again collapses a day into “Worship in Song” when the day-level marker is selected.
 
 ### Security
 - (record security-related changes)
