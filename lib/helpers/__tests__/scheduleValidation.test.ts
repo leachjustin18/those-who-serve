@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidMonth, isValidScheduleResponse } from "@/lib/helpers/scheduleValidation";
+import { assertValidMonth, isValidMonth, isValidScheduleResponse } from "@/lib/helpers/scheduleValidation";
 import type { TSchedule } from "@/types";
 
 describe("scheduleValidation", () => {
@@ -25,6 +25,17 @@ describe("scheduleValidation", () => {
             expect(isValidMonth(undefined as any)).toBe(false);
             expect(isValidMonth(202401 as any)).toBe(false);
             expect(isValidMonth({} as any)).toBe(false);
+        });
+    });
+
+    describe("assertValidMonth", () => {
+        it("does not throw for valid months", () => {
+            expect(() => assertValidMonth("2024-05")).not.toThrow();
+        });
+
+        it("throws for invalid months", () => {
+            expect(() => assertValidMonth("2024-13")).toThrow("Invalid month format. Use YYYY-MM.");
+            expect(() => assertValidMonth("bad")).toThrow();
         });
     });
 

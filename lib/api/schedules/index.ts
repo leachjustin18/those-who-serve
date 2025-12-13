@@ -1,5 +1,6 @@
 "use server";
 
+import { assertValidMonth } from "@/lib/helpers/scheduleValidation";
 import { assertSafeId } from "@/lib/helpers/validateId";
 import type { TSchedule } from "@/types";
 
@@ -25,6 +26,7 @@ export async function fetchSchedules(): Promise<TSchedule[]> {
  */
 export async function fetchSchedule(month: string): Promise<TSchedule | null> {
   if (!host) throw new Error("SERVER_HOST is not defined");
+  assertValidMonth(month);
 
   const res = await fetch(`${host}/api/schedules/${month}`, {
     cache: "no-store",
@@ -69,6 +71,7 @@ export async function updateSchedule(
   schedule: Partial<TSchedule>,
 ): Promise<TSchedule> {
   if (!host) throw new Error("SERVER_HOST is not defined");
+  assertValidMonth(month);
 
   const res = await fetch(`${host}/api/schedules/${month}`, {
     method: "PUT",
@@ -107,7 +110,8 @@ export async function updateMenLastServed(
       throw new Error("Invalid lastServed data in update");
     }
 
-    return fetch(`${host}/api/men/${update.id}`, {
+    const encodedId = encodeURIComponent(update.id);
+    return fetch(`${host}/api/men/${encodedId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

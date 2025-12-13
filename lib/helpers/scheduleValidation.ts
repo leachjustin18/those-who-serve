@@ -19,6 +19,15 @@ export function isValidMonth(month: string): boolean {
 }
 
 /**
+ * Asserts that the month string is valid and throws otherwise.
+ */
+export function assertValidMonth(month: string): void {
+    if (!isValidMonth(month)) {
+        throw new Error("Invalid month format. Use YYYY-MM.");
+    }
+}
+
+/**
  * Validates that schedule data returned from API is complete and well-formed.
  * @param schedule The schedule object to validate
  * @returns true if valid, false otherwise
