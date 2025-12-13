@@ -44,8 +44,22 @@ export function CalendarHeader({
   );
 
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-      <Stack direction="row" alignItems="center" gap={2}>
+    <Stack
+      direction={{ xs: "column", md: "row" }}
+      justifyContent="space-between"
+      alignItems={{ xs: "flex-start", md: "center" }}
+      spacing={2}
+      mb={3}
+      sx={{ width: "100%" }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        gap={2}
+        flexWrap="wrap"
+        justifyContent={{ xs: "center", md: "flex-start" }}
+        sx={{ width: "100%" }}
+      >
         <Button size="small" onClick={onPreviousMonth} startIcon={<ChevronLeftIcon />}>
           Previous
         </Button>
@@ -64,34 +78,50 @@ export function CalendarHeader({
         </Button>
       </Stack>
 
-      {!currentSchedule ? (
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={onGenerateSchedule}
-          disabled={generatingSchedule || isPastMonth}
-        >
-          {generatingSchedule ? "Generating..." : "Generate Schedule"}
-        </Button>
-      ) : currentSchedule.finalized ? (
-        <Typography variant="subtitle2" sx={{ color: "success.main", fontWeight: 600 }}>
-          ✓ Finalized
-        </Typography>
-      ) : (
-        <Stack direction="row" gap={2}>
-          <Button variant="outlined" onClick={onGenerateSchedule} disabled={generatingSchedule}>
-            Regenerate
-          </Button>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        gap={2}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        justifyContent={{ xs: "flex-start", md: "flex-end" }}
+        sx={{ width: { xs: "100%", md: "auto" } }}
+      >
+        {!currentSchedule ? (
           <Button
+            fullWidth
             variant="contained"
-            startIcon={<CheckCircleIcon />}
-            onClick={onFinalizeSchedule}
-            disabled={finalizingSchedule}
+            startIcon={<AddIcon />}
+            onClick={onGenerateSchedule}
+            disabled={generatingSchedule || isPastMonth}
           >
-            {finalizingSchedule ? "Finalizing..." : "Finalize"}
+            {generatingSchedule ? "Generating..." : "Generate Schedule"}
           </Button>
-        </Stack>
-      )}
+        ) : currentSchedule.finalized ? (
+          <Typography
+            variant="subtitle2"
+            sx={{ color: "success.main", fontWeight: 600, textAlign: "center", width: "100%" }}
+          >
+            ✓ Finalized
+          </Typography>
+        ) : (
+          <>
+            <Button
+              variant="outlined"
+              onClick={onGenerateSchedule}
+              disabled={generatingSchedule}
+            >
+              Regenerate
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<CheckCircleIcon />}
+              onClick={onFinalizeSchedule}
+              disabled={finalizingSchedule}
+            >
+              {finalizingSchedule ? "Finalizing..." : "Finalize"}
+            </Button>
+          </>
+        )}
+      </Stack>
     </Stack>
   );
 }

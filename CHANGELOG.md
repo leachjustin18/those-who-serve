@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PWA manifest theme color now matches the in-app header so installed mobile experiences show a consistent status/toolbar tint.
 - Login screen now displays the current app version (from package.json) so mobile installs can quickly confirm the deployed build.
 - iOS viewport/meta tags now set the same light theme color and status-bar style for consistent appearance on Apple devices.
+- Calendar header now wraps navigation/finalize controls on mobile so buttons no longer bleed off-screen.
 
 ## [1.0.1] - 2025-12-12
 
