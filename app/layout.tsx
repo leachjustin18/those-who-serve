@@ -18,7 +18,20 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   viewportFit: "cover",
-  themeColor: "#cff1d6",
+  themeColor: "#f4e8d6",
+};
+
+export const metadata: Metadata = {
+  title: "Those Who Serve - 39th St Church of Christ",
+  description: "Track and plan out men to serve in the congergation",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.png",
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+  },
 };
 
 export default function RootLayout({
