@@ -10,6 +10,7 @@ import {
 import { SignInWithGoogle } from "@/components/auth/SignInWithGoogle";
 import { backgroundGradient, gridOverlay } from "@/lib/theme";
 import Link from "next/link";
+import packageJson from "@/package.json";
 
 export default function Login() {
   const accentGradient =
@@ -144,6 +145,9 @@ export default function Login() {
           >
             Privacy Policy
           </MuiLink>
+          <Typography variant="caption" sx={{ color: "rgba(52,63,92,0.65)" }}>
+            Version {packageJson.version}
+          </Typography>
         </Stack>
       </Stack>
     </Box>

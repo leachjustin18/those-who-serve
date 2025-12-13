@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/manage-men",
     display: "standalone",
     background_color: "#f4e8d6",
-    theme_color: "#0c4a6e",
+    theme_color: "#f4e8d6",
     lang: "en",
     icons: [
       {
