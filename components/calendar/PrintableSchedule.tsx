@@ -1,6 +1,7 @@
 import { format, parse } from "date-fns";
 import { Box, Grid, Stack, Typography } from "@mui/material";
 
+import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 import { getWednesdaysAndSundaysInMonth } from "@/lib/helpers/scheduling";
 import type {
   TSchedule,
@@ -11,6 +12,11 @@ import type {
 
 export type WorshipScope = "full" | "morning" | "evening" | null;
 
+/**
+ * Gets the worship scope for a date. Now checks if there are any worship_in_song entries
+ * for that date and returns "full" if found (since we now mark individual roles as worship).
+ * This maintains backward compatibility while supporting role-specific worship marking.
+ */
 export const worshipScopeForDate = (
   entries: TScheduleEntry[],
   dateStr: string,
@@ -19,9 +25,10 @@ export const worshipScopeForDate = (
     (e) => e.date === dateStr && e.role === "worship_in_song",
   );
   if (!entry) return null;
+
   const token = (entry.servantId || "").toLowerCase();
-  if (token.includes("evening")) return "evening";
   if (token.includes("morning")) return "morning";
+  if (token.includes("evening")) return "evening";
   return "full";
 };
 
@@ -72,6 +79,19 @@ export function PrintableSchedule({
     const servant = men.find((m) => m.id === servantId);
     if (!servant) return "";
     return `${servant.firstName ?? ""} ${servant.lastName ?? ""}`.trim();
+  };
+
+  /**
+   * Check if a specific role is marked as worship in song for a given date.
+   * A role is marked as worship if there's a worship_in_song entry for that date.
+   */
+  const isRoleMarkedAsWorship = (dateStr: string, role: string): boolean => {
+    // Check if this specific role is marked as worship (servantId is WORSHIP_IN_SONG_MARKER)
+    const roleEntry = schedule.entries.find(
+      (e) => e.date === dateStr && e.role === role,
+    );
+    // If the role entry exists and its servant is the worship marker, it's marked as worship
+    return roleEntry?.servantId === WORSHIP_IN_SONG_MARKER;
   };
 
   const monthlyNames = (role: string) =>
@@ -220,13 +240,39 @@ export function PrintableSchedule({
                     ) : (
                       <>
                         <td style={cell}>
-                          {renderNames(roleNamesForDate(dateStr, "morning_singing"))}
+                          {isRoleMarkedAsWorship(dateStr, "morning_singing") ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: "warning.dark",
+                              }}
+                            >
+                              WORSHIP IN SONG
+                            </Typography>
+                          ) : (
+                            renderNames(roleNamesForDate(dateStr, "morning_singing"))
+                          )}
                         </td>
                         <td style={cell}>
-                          {renderNames(roleNamesForDate(dateStr, "lords_table"))}
+                          {isRoleMarkedAsWorship(dateStr, "lords_table") ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: "warning.dark",
+                              }}
+                            >
+                              WORSHIP IN SONG
+                            </Typography>
+                          ) : (
+                            renderNames(roleNamesForDate(dateStr, "lords_table"))
+                          )}
                         </td>
                         <td style={cell}>
-                          {worshipScope === "morning" ? (
+                          {isRoleMarkedAsWorship(dateStr, "morning_prayer") ? (
                             <Typography
                               variant="body2"
                               sx={{
@@ -242,7 +288,7 @@ export function PrintableSchedule({
                           )}
                         </td>
                         <td style={cell}>
-                          {worshipScope === "evening" ? (
+                          {isRoleMarkedAsWorship(dateStr, "evening_singing") ? (
                             <Typography
                               variant="body2"
                               sx={{
@@ -258,7 +304,7 @@ export function PrintableSchedule({
                           )}
                         </td>
                         <td style={cell}>
-                          {worshipScope === "evening" ? (
+                          {isRoleMarkedAsWorship(dateStr, "evening_prayers") ? (
                             <Typography
                               variant="body2"
                               sx={{
@@ -313,13 +359,52 @@ export function PrintableSchedule({
                     ) : (
                       <>
                         <td style={cell}>
-                          {renderNames(roleNamesForDate(dateStr, "lead_singing"))}
+                          {isRoleMarkedAsWorship(dateStr, "lead_singing") ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: "warning.dark",
+                              }}
+                            >
+                              WORSHIP IN SONG
+                            </Typography>
+                          ) : (
+                            renderNames(roleNamesForDate(dateStr, "lead_singing"))
+                          )}
                         </td>
                         <td style={cell}>
-                          {renderNames(roleNamesForDate(dateStr, "devotional"))}
+                          {isRoleMarkedAsWorship(dateStr, "devotional") ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: "warning.dark",
+                              }}
+                            >
+                              WORSHIP IN SONG
+                            </Typography>
+                          ) : (
+                            renderNames(roleNamesForDate(dateStr, "devotional"))
+                          )}
                         </td>
                         <td style={cell}>
-                          {renderNames(roleNamesForDate(dateStr, "closing_prayer"))}
+                          {isRoleMarkedAsWorship(dateStr, "closing_prayer") ? (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 700,
+                                color: "warning.dark",
+                              }}
+                            >
+                              WORSHIP IN SONG
+                            </Typography>
+                          ) : (
+                            renderNames(roleNamesForDate(dateStr, "closing_prayer"))
+                          )}
                         </td>
                       </>
                     )}

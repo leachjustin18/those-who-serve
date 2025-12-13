@@ -32,7 +32,7 @@ import { FinalizingBackdrop } from "@/components/calendar/FinalizingBackdrop";
 import { MonthlyRolesSection } from "@/components/calendar/MonthlyRolesSection";
 import { useCache } from "@/components/context/Cache";
 import { AlertSnackbar } from "@/components/ui";
-import { ROLE_OPTIONS } from "@/lib/constants";
+import { ROLE_OPTIONS, EMPTY_PRINT_EXTRAS, WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 import {
   getAvailableServantsForOverride,
   getDayNameFromDate,
@@ -44,7 +44,6 @@ import { getWednesdaysAndSundaysInMonth } from "@/lib/helpers/scheduling";
 import { useSnackbarQueue } from "@/lib/hooks/useSnackbarQueue";
 import { useEditModal } from "@/lib/hooks/useEditModal";
 import { useScheduleActions } from "@/lib/hooks/useScheduleActions";
-import { EMPTY_PRINT_EXTRAS } from "@/lib/constants";
 import type { TSchedulePrintExtras } from "@/types";
 
 type CalendarViewMode = "edit" | "print";
@@ -192,7 +191,7 @@ export default function Calendar() {
         slotProps={{ transition: { onExited: snackbar.handleExited } }}
       />
 
-      <FinalizingBackdrop open={scheduleActions.sendingNotifications} />
+      <FinalizingBackdrop open={scheduleActions.finalizingSchedule} />
 
       {currentSchedule && (
         <Box
@@ -445,7 +444,7 @@ export default function Calendar() {
                       onMarkWorshipInSong={(date) =>
                         scheduleActions.addWorshipInSong(
                           date,
-                          "worship-in-song-marker",
+                          WORSHIP_IN_SONG_MARKER,
                         )
                       }
                       onRemoveWorshipInSong={scheduleActions.removeWorshipInSong}
@@ -515,6 +514,8 @@ export default function Calendar() {
         onClose={editModal.closeEditModal}
         onSave={editModal.saveEditModal}
         onServantChange={editModal.updateSelectedServant}
+        onMarkAsWorship={scheduleActions.markRoleAsWorshipInSong}
+        onUnmarkAsWorship={scheduleActions.unmarkRoleAsWorship}
       />
     </Box>
   );

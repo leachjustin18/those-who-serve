@@ -367,6 +367,19 @@ export default function ManageMen() {
                           {man.unavailableDates.map((dateStr) => {
                             // Parse as local date to avoid timezone drift between SSR/CSR
                             const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
+                            // Validate the parsed date before formatting
+                            if (isNaN(parsedDate.getTime())) {
+                              console.warn(`Invalid date string: ${dateStr}`);
+                              return (
+                                <Chip
+                                  key={dateStr}
+                                  label={dateStr}
+                                  color="warning"
+                                  icon={<EventBusyIcon />}
+                                  variant="outlined"
+                                />
+                              );
+                            }
                             return (
                               <Chip
                                 key={dateStr}

@@ -158,6 +158,8 @@ describe("useScheduleActions", () => {
   it("finalizes schedule and triggers notifications", async () => {
     const finalized = { ...schedule, finalized: true };
     (updateSchedule as Mock).mockResolvedValue(finalized);
+    // Mock updateMan to return valid response with id
+    (updateMan as Mock).mockResolvedValue({ id: "1", lastServed: {} });
 
     const { result } = renderHook(() => {
       const [currentSchedule, setCurrentSchedule] = useState<TSchedule | null>(schedule);

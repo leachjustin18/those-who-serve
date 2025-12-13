@@ -2,7 +2,7 @@
 
 import { Edit as EditIcon } from "@mui/icons-material";
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 
 import { ManAvatar } from "@/components/ui";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
@@ -37,7 +37,7 @@ export function DayCard({
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography variant="subtitle2" color="textSecondary">
-          {dayName}, {format(new Date(dateStr), "MMM d")}
+          {dayName}, {format(parse(dateStr, "yyyy-MM-dd", new Date()), "MMM d")}
         </Typography>
 
         {worshipInSong ? (
@@ -73,9 +73,8 @@ export function DayCard({
                 bgcolor="action.hover"
                 borderRadius={1}
                 sx={{
-                  border: `1px solid ${
-                    isFinalized ? "transparent" : "rgba(25, 118, 210, 0.12)"
-                  }`,
+                  border: `1px solid ${isFinalized ? "transparent" : "rgba(25, 118, 210, 0.12)"
+                    }`,
                 }}
               >
                 <Typography variant="subtitle2" color="textSecondary">
