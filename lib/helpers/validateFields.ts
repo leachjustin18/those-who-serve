@@ -86,6 +86,12 @@ export const validateEmailField = (value: string, fieldLabel = "Email") => {
   return true;
 };
 
+export const isValidEmail = (value?: string | null) => {
+  const trimmedValue = sanitizeValue(value);
+  if (validator.isEmpty(trimmedValue)) return false;
+  return validator.isEmail(trimmedValue, { allow_utf8_local_part: false });
+};
+
 type IdentityValidationField = Pick<
   TFormInputs,
   "firstName" | "lastName" | "email" | "notes"
