@@ -5,6 +5,7 @@ import {
   CheckCircle as CheckCircleIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  EmailOutlined as EmailOutlinedIcon,
 } from "@mui/icons-material";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { format, parse } from "date-fns";
@@ -18,12 +19,14 @@ interface CalendarHeaderProps {
   currentSchedule: TSchedule | null;
   generatingSchedule: boolean;
   finalizingSchedule: boolean;
+  emailingSchedule: boolean;
   isPastMonth: boolean;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onGoToToday: () => void;
   onGenerateSchedule: () => void;
   onFinalizeSchedule: () => void;
+  onEmailSchedule: () => void;
 }
 
 export function CalendarHeader({
@@ -31,12 +34,14 @@ export function CalendarHeader({
   currentSchedule,
   generatingSchedule,
   finalizingSchedule,
+  emailingSchedule,
   isPastMonth,
   onPreviousMonth,
   onNextMonth,
   onGoToToday,
   onGenerateSchedule,
   onFinalizeSchedule,
+  onEmailSchedule,
 }: CalendarHeaderProps) {
   const monthLabel = format(
     parse(viewedMonth, "yyyy-MM", new Date()),
@@ -61,17 +66,33 @@ export function CalendarHeader({
 
     if (currentSchedule.finalized) {
       return (
-        <Typography
-          variant="subtitle2"
-          sx={{
-            color: "success.main",
-            fontWeight: 600,
-            textAlign: "center",
-            width: "100%",
-          }}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          gap={1.5}
+          width="100%"
+          alignItems="center"
         >
-          ✓ Finalized
-        </Typography>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: "success.main",
+              fontWeight: 600,
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ✓ Finalized
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<EmailOutlinedIcon />}
+            onClick={onEmailSchedule}
+            disabled={emailingSchedule}
+            fullWidth
+          >
+            {emailingSchedule ? "Emailing..." : "Email Those Who Serve"}
+          </Button>
+        </Stack>
       );
     }
 

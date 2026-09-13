@@ -29,6 +29,7 @@ export function useScheduleActions(
   const { men: allMen, setMen, setSchedules } = useCache();
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [finalizeState, setFinalizeState] = useState<FinalizeState>("idle");
+  const [emailingSchedule, setEmailingSchedule] = useState(false);
 
   const notify = useCallback(
     (
@@ -380,6 +381,63 @@ export function useScheduleActions(
     [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
   );
 
+  const emailSchedule = useCallback(async () => {
+    if (!currentSchedule) {
+      notify("No schedule exists for this month", "warning");
+      return;
+    }
+
+    if (!currentSchedule.finalized) {
+      notify("Finalize the schedule before sending emails", "warning");
+      return;
+    }
+
+    if (!isValidMonth(viewedMonth)) {
+      notify("Invalid month format. Use YYYY-MM format.", "error");
+      return;
+    }
+
+    setEmailingSchedule(true);
+
+    try {
+      const res = await fetch("/api/notifications/schedule-finalized", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: viewedMonth }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data || typeof data !== "object") {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : "Failed to send schedule emails",
+        );
+      }
+
+      const sentCount = Array.isArray(data.sent) ? data.sent.length : 0;
+      const failedCount = Array.isArray(data.failed) ? data.failed.length : 0;
+
+      if (failedCount > 0) {
+        notify(
+          `Emails sent to ${sentCount} people; ${failedCount} failed.`,
+          "warning",
+        );
+      } else {
+        notify(
+          `Monthly schedule emailed to ${sentCount} ${sentCount === 1 ? "person" : "people"}.`,
+          "success",
+        );
+      }
+    } catch (err) {
+      console.error("Failed to email schedule", err);
+      notify("Failed to email the monthly schedule", "error");
+    } finally {
+      setEmailingSchedule(false);
+    }
+  }, [currentSchedule, notify, viewedMonth]);
+
   const markRoleAsWorshipInSong = useCallback(
     async (entry: TScheduleEntry) => {
       if (!currentSchedule) return;
@@ -482,8 +540,10 @@ export function useScheduleActions(
     markRoleAsWorshipInSong,
     unmarkRoleAsWorship,
     finalizeSchedule,
+    emailSchedule,
     generatingSchedule,
     finalizingSchedule,
     sendingNotifications,
+    emailingSchedule,
   };
 }

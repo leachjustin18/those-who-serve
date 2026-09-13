@@ -2,6 +2,7 @@
 import { google } from "googleapis";
 import { db } from "@/lib/firebase/admin";
 import { Timestamp } from "firebase-admin/firestore";
+import { isValidEmail } from "@/lib/helpers/validateFields";
 
 const clientId = process.env.AUTH_GOOGLE_ID!;
 const clientSecret = process.env.AUTH_GOOGLE_SECRET!;
@@ -98,16 +99,20 @@ export async function getStoredRefreshToken(): Promise<string | null> {
 }
 
 // Build raw RFC 5322 message and send via Gmail API
-export async function sendGmail({
+export async function sendGmailBatch({
     to,
     subject,
     text,
     html,
+    concurrency = 3,
+    retryTransient = true,
 }: {
     to: string | string[];
     subject: string;
     text?: string;
     html?: string;
+    concurrency?: number;
+    retryTransient?: boolean;
 }) {
     const refreshToken = await getStoredRefreshToken();
     if (!refreshToken) {
@@ -120,45 +125,116 @@ export async function sendGmail({
 
     const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-    const toHeader = Array.isArray(to) ? to.join(", ") : to;
+    // Normalize recipients
+    const toList = ([] as string[]).concat(Array.isArray(to) ? to : [to]);
+    const normalized = Array.from(new Set(
+        toList.map((t) => (t ?? "").toString().trim()).filter((t) => t.length > 0),
+    ));
 
-    // Basic MIME message
-    let message = "";
-    message += `From: "Congregation Schedule" <${gmailSender}>\r\n`;
-    message += `To: ${toHeader}\r\n`;
-    message += `Subject: ${subject}\r\n`;
-    message += `MIME-Version: 1.0\r\n`;
-    if (html) {
-        // multipart alternative (text + html) is nicer, but this is enough
-        message += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
-        message += html;
-    } else {
-        message += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
-        message += text ?? "";
+    const successes: string[] = [];
+    const failures: Array<{ to: string | null; reason: string; details?: string }> = [];
+
+    // Validate and collect immediate failures
+    const validRecipients: string[] = [];
+    for (const addr of normalized) {
+        if (!addr) {
+            failures.push({ to: null, reason: "missing_email" });
+            continue;
+        }
+        if (!isValidEmail(addr)) {
+            failures.push({ to: addr, reason: "invalid_format" });
+            continue;
+        }
+        validRecipients.push(addr);
     }
 
-    const encodedMessage = Buffer.from(message)
-        .toString("base64")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "");
-
-    try {
-        await gmail.users.messages.send({
-            userId: "me",
-            requestBody: {
-                raw: encodedMessage,
-            },
-        });
-    } catch (err: any) {
-        // Surface more detail to aid debugging (e.g., unauthorized_client vs insufficient_scope)
-        const reason =
-            err?.response?.data ||
-            err?.errors ||
-            err?.message ||
-            "Unknown Gmail API error";
-        throw new Error(
-            `Gmail send failed: ${typeof reason === "string" ? reason : JSON.stringify(reason)}`,
-        );
+    // Build raw message for a single recipient
+    function buildRawMessage(toAddr: string) {
+        let message = "";
+        message += `From: "Congregation Schedule" <${gmailSender}>\r\n`;
+        message += `To: ${toAddr}\r\n`;
+        message += `Subject: ${subject}\r\n`;
+        message += `MIME-Version: 1.0\r\n`;
+        if (html) {
+            message += `Content-Type: text/html; charset="UTF-8"\r\n\r\n`;
+            message += html;
+        } else {
+            message += `Content-Type: text/plain; charset="UTF-8"\r\n\r\n`;
+            message += text ?? "";
+        }
+        return message;
     }
+
+    function encodeMessage(message: string) {
+        return Buffer.from(message)
+            .toString("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+    }
+
+    // Helper to send a single message with optional retry for transient errors
+    async function sendSingle(addr: string) {
+        const raw = encodeMessage(buildRawMessage(addr));
+
+        const attemptSend = async () => {
+            try {
+                await gmail.users.messages.send({
+                    userId: "me",
+                    requestBody: { raw },
+                });
+                return { ok: true };
+            } catch (err: any) {
+                return { ok: false, err };
+            }
+        };
+
+        // first attempt
+        let res = await attemptSend();
+
+        // classify error
+        if (res.ok) return { ok: true };
+
+        const classify = (error: any) => {
+            const status = error?.response?.status;
+            const body = error?.response?.data ?? error?.message ?? "";
+            const isTransient = status === 429 || (typeof status === "number" && status >= 500) || !status;
+            const isPermanent = typeof status === "number" && status >= 400 && status < 500 && status !== 429;
+            return { isTransient, isPermanent, status, body };
+        };
+
+        const { isTransient, isPermanent, body } = classify(res.err);
+
+        if (isTransient && retryTransient) {
+            // one retry with small backoff
+            await new Promise((r) => setTimeout(r, 500 + Math.floor(Math.random() * 500)));
+            res = await attemptSend();
+            if (res.ok) return { ok: true };
+            const { body: body2 } = classify(res.err);
+            return { ok: false, permanent: false, details: body2 ?? String(res.err) };
+        }
+
+        // permanent rejection or we are not retrying
+        return { ok: false, permanent: isPermanent, details: body ?? String(res.err) };
+    }
+
+    // Process recipients in batches limited by concurrency
+    for (let i = 0; i < validRecipients.length; i += concurrency) {
+        const batch = validRecipients.slice(i, i + concurrency);
+        const promises = batch.map((addr) => sendSingle(addr));
+        const results = await Promise.all(promises);
+
+        for (let j = 0; j < results.length; j++) {
+            const addr = batch[j];
+            const r = results[j];
+            if (r.ok) {
+                successes.push(addr);
+            } else {
+                const reason = r.permanent ? "rejected" : "transient_error";
+                failures.push({ to: addr, reason, details: r.details ?? "" });
+            }
+        }
+    }
+
+    return { successes, failures };
 }

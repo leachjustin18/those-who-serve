@@ -183,4 +183,35 @@ describe("useScheduleActions", () => {
       expect.any(Object),
     );
   });
+
+  it("emails everyone assigned to a finalized monthly schedule", async () => {
+    const finalized = { ...schedule, finalized: true };
+    const showAlert = vi.fn();
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ sent: ["1"], failed: [] }),
+    } as Response);
+
+    const { result } = renderHook(() =>
+      useScheduleActions("2024-01", finalized, [finalized], showAlert),
+    );
+
+    await act(async () => {
+      await result.current.emailSchedule();
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/notifications/schedule-finalized",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ month: "2024-01" }),
+      }),
+    );
+    expect(showAlert).toHaveBeenCalledWith(
+      "Monthly schedule emailed to 1 person.",
+      "success",
+    );
+    expect(result.current.emailingSchedule).toBe(false);
+  });
 });

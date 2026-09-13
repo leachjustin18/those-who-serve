@@ -1,9 +1,5 @@
-ignoredBuiltDependencies:
-  - esbuild
-  - rollup
-
-onlyBuiltDependencies:
-  - '@firebase/util'
-  - protobufjs
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@firebase/util': true
+  esbuild: true
+  protobufjs: true
+  unrs-resolver: true

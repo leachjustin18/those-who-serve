@@ -86,6 +86,12 @@ export const validateEmailField = (value: string, fieldLabel = "Email") => {
   return true;
 };
 
+export const isValidEmail = (value?: string | null) => {
+  const trimmedValue = sanitizeValue(value);
+  if (validator.isEmpty(trimmedValue)) return false;
+  return validator.isEmail(trimmedValue, { allow_utf8_local_part: false });
+};
+
 type IdentityValidationField = Pick<
   TFormInputs,
   "firstName" | "lastName" | "email" | "notes"
@@ -100,32 +106,32 @@ export type FieldValidationResult<TField extends keyof IdentityValidationField> 
 export const buildIdentityFieldValidations = (
   values: IdentityValidationField,
 ): FieldValidationResult<keyof IdentityValidationField>[] => [
-  {
-    field: "firstName",
-    result: validateRequiredTextField(values.firstName, "First name", {
-      min: 2,
-      max: 60,
-      allowedPattern: NAME_ALLOWED_PATTERN,
-      patternMessage: NAME_PATTERN_MESSAGE,
-    }),
-  },
-  {
-    field: "lastName",
-    result: validateRequiredTextField(values.lastName, "Last name", {
-      min: 2,
-      max: 60,
-      allowedPattern: NAME_ALLOWED_PATTERN,
-      patternMessage: NAME_PATTERN_MESSAGE,
-    }),
-  },
-  {
-    field: "email",
-    result: validateEmailField(values.email),
-  },
-  {
-    field: "notes",
-    result: validateOptionalTextField(values.notes, "Notes", {
-      max: NOTES_MAX_LENGTH,
-    }),
-  },
-];
+    {
+      field: "firstName",
+      result: validateRequiredTextField(values.firstName, "First name", {
+        min: 2,
+        max: 60,
+        allowedPattern: NAME_ALLOWED_PATTERN,
+        patternMessage: NAME_PATTERN_MESSAGE,
+      }),
+    },
+    {
+      field: "lastName",
+      result: validateRequiredTextField(values.lastName, "Last name", {
+        min: 2,
+        max: 60,
+        allowedPattern: NAME_ALLOWED_PATTERN,
+        patternMessage: NAME_PATTERN_MESSAGE,
+      }),
+    },
+    {
+      field: "email",
+      result: validateEmailField(values.email),
+    },
+    {
+      field: "notes",
+      result: validateOptionalTextField(values.notes, "Notes", {
+        max: NOTES_MAX_LENGTH,
+      }),
+    },
+  ];

@@ -177,12 +177,14 @@ export default function Calendar() {
         currentSchedule={currentSchedule}
         generatingSchedule={scheduleActions.generatingSchedule}
         finalizingSchedule={scheduleActions.finalizingSchedule}
+        emailingSchedule={scheduleActions.emailingSchedule}
         isPastMonth={pastMonth}
         onPreviousMonth={handlePreviousMonth}
         onNextMonth={handleNextMonth}
         onGoToToday={handleGoToToday}
         onGenerateSchedule={scheduleActions.generateSchedule}
         onFinalizeSchedule={handleFinalizeSchedule}
+        onEmailSchedule={scheduleActions.emailSchedule}
       />
 
       <AlertSnackbar

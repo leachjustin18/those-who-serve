@@ -4,8 +4,10 @@ import { fetchMen } from "@/lib/api/men";
 import { fetchSchedule } from "@/lib/api/schedules";
 import { getRoleLabel } from "@/lib/helpers/getRoleLabel";
 import { renderScheduleNotificationEmail } from "@/lib/emails/renderScheduleNotification";
-import { sendGmail } from "@/lib/helpers/googleGmail";
+import { sendGmailBatch } from "@/lib/helpers/googleGmail";
+import { recordErrorLogs } from "@/lib/helpers/emailFailures";
 import { isValidMonth } from "@/lib/helpers/scheduleValidation";
+import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 
 type RequestBody = {
   month?: string;
@@ -99,9 +101,29 @@ export async function POST(req: NextRequest) {
       }>
     >();
 
+    const immediateFailures: Array<{
+      to?: string | null;
+      reason: string;
+      details?: string;
+      subject?: string;
+      context?: Record<string, any>;
+    }> = [];
+
     for (const entry of schedule.entries) {
+      if (entry.servantId === WORSHIP_IN_SONG_MARKER) {
+        continue;
+      }
+
       const man = menById.get(entry.servantId);
-      if (!man || !man.email) continue;
+      if (!man || !man.email) {
+        immediateFailures.push({
+          to: man?.email ?? null,
+          reason: "missing_email",
+          details: man ? "Man has no email" : "Servant not found",
+          context: { servantId: entry.servantId, date: entry.date, month: body.month },
+        });
+        continue;
+      }
 
       const dateObj = parse(entry.date, "yyyy-MM-dd", new Date());
       const roleLabel = getRoleLabel(entry.role);
@@ -132,8 +154,34 @@ export async function POST(req: NextRequest) {
       assignmentsByServant.set(entry.servantId, existing);
     }
 
+
+
     const sent: string[] = [];
     const failed: Array<{ servantId: string; reason: string }> = [];
+
+    // Persist immediate failures (e.g., missing or invalid emails) so operators can review them
+    if (immediateFailures.length > 0) {
+      try {
+        const entries = immediateFailures.map((f) => ({
+          to: f.to ?? null,
+          errorType: "email_failure",
+          reason: f.reason,
+          details: f.details ?? undefined,
+          context: f.context ?? {},
+        }));
+        await recordErrorLogs(entries as any);
+
+        // Also report these as failed so the API response reflects them
+        for (const f of immediateFailures) {
+          const servantId = f.context?.servantId;
+          if (servantId) {
+            failed.push({ servantId, reason: f.reason });
+          }
+        }
+      } catch (recErr) {
+        console.error("Failed to record immediate email failures", recErr);
+      }
+    }
 
     for (const [servantId, assignments] of assignmentsByServant.entries()) {
       const man = menById.get(servantId);
@@ -149,17 +197,35 @@ export async function POST(req: NextRequest) {
 
       const subject = `Your serving schedule for ${monthLabel}`;
 
-      try {
-        await sendGmail({
-          to: man.email,
+      const result = await sendGmailBatch({
+        to: man.email,
+        subject,
+        html,
+        text,
+        concurrency: 3,
+        retryTransient: true,
+      });
+
+      if (result.successes.length > 0) sent.push(servantId);
+
+      if (result.failures.length > 0) {
+        // record failures to Firestore for operator review
+        const entries = result.failures.map((f) => ({
+          to: f.to,
+          reason: f.reason,
+          details: f.details,
           subject,
-          html,
-          text,
-        });
-        sent.push(servantId);
-      } catch (err) {
-        console.error(`Failed to send schedule email to ${man.email}`, err);
-        failed.push({ servantId, reason: String(err) });
+          context: { servantId, month: body.month, notificationType: "schedule_finalized" },
+        }));
+        try {
+          await recordErrorLogs(entries);
+        } catch (recErr) {
+          console.error("Failed to record email failures", recErr);
+        }
+
+        for (const f of result.failures) {
+          failed.push({ servantId, reason: f.reason });
+        }
       }
     }
 
