@@ -61,7 +61,7 @@ vi.mock("googleapis", () => {
 
   return {
     google: {
-      auth: { OAuth2: function () { return { setCredentials: () => {}, setCredentialsSync: () => {} }; } },
+      auth: { OAuth2: function () { return { setCredentials: () => { }, setCredentialsSync: () => { } }; } },
       gmail: ({ version, auth }: any) => ({
         users: { messages: { send: sendMock } },
       }),

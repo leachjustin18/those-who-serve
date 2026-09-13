@@ -31,7 +31,7 @@ vi.mock("googleapis", () => {
 
   return {
     google: {
-      auth: { OAuth2: function () { return { setCredentials: () => {} }; } },
+      auth: { OAuth2: function () { return { setCredentials: () => { } }; } },
       gmail: () => ({ users: { messages: { send: sendMock } } }),
       __testHelpers: { getMaxSeen: () => _maxSeen },
     },

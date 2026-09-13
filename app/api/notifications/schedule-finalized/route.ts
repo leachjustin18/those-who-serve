@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       assignmentsByServant.set(entry.servantId, existing);
     }
 
-    
+
 
     const sent: string[] = [];
     const failed: Array<{ servantId: string; reason: string }> = [];
