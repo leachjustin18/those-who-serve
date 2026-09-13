@@ -13,6 +13,7 @@ vi.mock("@/lib/api/schedules", () => ({
     entries: [
       { servantId: "m1", date: "2026-10-01", role: "usher" },
       { servantId: "m2", date: "2026-10-02", role: "usher" },
+      { servantId: "worship-in-song-marker", date: "2026-10-04", role: "worship_in_song" },
     ],
   }),
 }));
@@ -51,5 +52,8 @@ describe("schedule-finalized route", () => {
 
     // m2 should be in failed due to missing email
     expect(data.failed.some((f: any) => f.servantId === "m2")).toBe(true);
+    expect(
+      data.failed.some((f: any) => f.servantId === "worship-in-song-marker"),
+    ).toBe(false);
   });
 });

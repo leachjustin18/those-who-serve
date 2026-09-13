@@ -7,6 +7,7 @@ import { renderScheduleNotificationEmail } from "@/lib/emails/renderScheduleNoti
 import { sendGmailBatch } from "@/lib/helpers/googleGmail";
 import { recordErrorLogs } from "@/lib/helpers/emailFailures";
 import { isValidMonth } from "@/lib/helpers/scheduleValidation";
+import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 
 type RequestBody = {
   month?: string;
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest) {
     }> = [];
 
     for (const entry of schedule.entries) {
+      if (entry.servantId === WORSHIP_IN_SONG_MARKER) {
+        continue;
+      }
+
       const man = menById.get(entry.servantId);
       if (!man || !man.email) {
         immediateFailures.push({
