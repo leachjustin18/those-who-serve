@@ -3,11 +3,13 @@ import { Box, Grid, Stack, Typography } from "@mui/material";
 
 import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
 import { getWednesdaysAndSundaysInMonth } from "@/lib/helpers/scheduling";
+import { getCommunionFamilyName } from "@/lib/helpers/communionFamilies";
 import type {
   TSchedule,
   TScheduleEntry,
   TSchedulePrintExtras,
   TDeacons,
+  TCommunionFamily,
 } from "@/types";
 
 export type WorshipScope = "full" | "morning" | "evening" | null;
@@ -64,6 +66,7 @@ type PrintableScheduleProps = {
   schedule: TSchedule;
   men: Array<{ id: string; firstName: string; lastName: string; photoFile?: string | File }>;
   deacons: TDeacons[];
+  communionFamilies: TCommunionFamily[];
   extras: TSchedulePrintExtras;
   monthLabel: string;
 };
@@ -72,6 +75,7 @@ export function PrintableSchedule({
   schedule,
   men,
   deacons,
+  communionFamilies,
   extras,
   monthLabel,
 }: PrintableScheduleProps) {
@@ -187,7 +191,7 @@ export function PrintableSchedule({
         <Grid size={{ xs: 12, sm: 6 }}>
           <Stack spacing={0.5}>
             {[
-              { label: "Communion", value: extras.communionFamily || "—" },
+              { label: "Communion", value: getCommunionFamilyName(extras.communionFamily, communionFamilies) || "—" },
               { label: "Card Boys", value: extras.cardBoys || "—" }
             ].map((item) => (
               <Stack

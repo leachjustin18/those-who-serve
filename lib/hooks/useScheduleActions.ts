@@ -7,10 +7,12 @@ import {
 
 import { useCache } from "@/components/context/Cache";
 import { updateMan } from "@/lib/api/men";
+import { updateCommunionFamily } from "@/lib/api/communionFamilies";
 import { createSchedule, updateSchedule } from "@/lib/api/schedules";
 import { generateScheduleForMonth } from "@/lib/helpers/scheduling";
 import { isValidMonth, isValidScheduleResponse } from "@/lib/helpers/scheduleValidation";
 import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
+import { selectNextCommunionFamily } from "@/lib/helpers/communionFamilies";
 import type { TSchedule, TScheduleEntry, TSchedulePrintExtras } from "@/types";
 
 type AlertFn = (
@@ -26,7 +28,13 @@ export function useScheduleActions(
   allSchedules: TSchedule[],
   showAlert?: AlertFn,
 ) {
-  const { men: allMen, setMen, setSchedules } = useCache();
+  const {
+    men: allMen,
+    communionFamilies = [],
+    setMen,
+    setSchedules,
+    setCommunionFamilies = () => undefined,
+  } = useCache();
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   const [finalizeState, setFinalizeState] = useState<FinalizeState>("idle");
   const [emailingSchedule, setEmailingSchedule] = useState(false);
@@ -67,6 +75,11 @@ export function useScheduleActions(
         id: viewedMonth,
         month: viewedMonth,
         entries,
+        printExtras: {
+          cardBoys: "",
+          communionFamily: selectNextCommunionFamily(communionFamilies)?.id ?? "",
+          monthlyDeacons: [],
+        },
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -108,7 +121,7 @@ export function useScheduleActions(
     } finally {
       setGeneratingSchedule(false);
     }
-  }, [allMen, notify, allSchedules, setMen, setSchedules, viewedMonth]);
+  }, [allMen, communionFamilies, notify, allSchedules, setMen, setSchedules, viewedMonth]);
 
   const updateEntry = useCallback(
     async (originalEntry: TScheduleEntry, newServantId: string) => {
@@ -331,6 +344,20 @@ export function useScheduleActions(
           throw new Error("One or more man updates failed to return valid data");
         }
 
+        const selectedFamily = communionFamilies.find(
+          (family) => family.id === updated.printExtras?.communionFamily,
+        );
+        if (selectedFamily) {
+          const updatedFamily = await updateCommunionFamily(selectedFamily.id, {
+            lastServed: timestamp,
+          });
+          setCommunionFamilies(
+            communionFamilies.map((family) =>
+              family.id === updatedFamily.id ? updatedFamily : family,
+            ),
+          );
+        }
+
         // Step 3: Send notifications (non-blocking)
         setFinalizeState("notifying");
 
@@ -378,7 +405,7 @@ export function useScheduleActions(
         setFinalizeState("error");
       }
     },
-    [currentSchedule, notify, allSchedules, setSchedules, viewedMonth],
+    [currentSchedule, communionFamilies, notify, allSchedules, setCommunionFamilies, setSchedules, viewedMonth],
   );
 
   const emailSchedule = useCallback(async () => {

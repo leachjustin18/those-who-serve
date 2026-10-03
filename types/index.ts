@@ -58,3 +58,11 @@ export type TDeacons = {
     lastName: string;
     phoneNumber: string;
 }
+
+export type TCommunionFamily = {
+    id: string;
+    familyName: string;
+    lastServed?: number;
+    createdAt?: number;
+    updatedAt?: number;
+};
