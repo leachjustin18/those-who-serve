@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-08
+
+### Changed
+
+- Updated application dependencies and development tooling to current compatible releases.
+- Added pnpm overrides for vulnerable transitive dependency ranges.
+
+### Security
+
+- Refreshed the dependency lockfile and applied audit fixes.
+- One low-severity `deepmerge` advisory remains through React Email because no patched version is available.
+
 ## [1.1.0] - 2026-11-08
 
 ### Added
