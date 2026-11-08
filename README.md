@@ -140,7 +140,7 @@ Notes:
 
 ## Releases (Semantic Versioning)
 
-- Current version: **1.0.3**
+- Current version: **1.1.0**
 - Follow SemVer: `MAJOR.MINOR.PATCH`.
 - Maintain `CHANGELOG.md`: update `[Unreleased]`, then move entries into a new version block on release.
 - Bump `package.json` version, tag the commit `vX.Y.Z`, and create a GitHub Release using `.github/release-template.md` with notes (features, fixes, breaking changes, deployment notes).
