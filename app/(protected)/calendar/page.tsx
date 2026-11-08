@@ -50,7 +50,7 @@ type CalendarViewMode = "edit" | "print";
 
 
 export default function Calendar() {
-  const { men: allMen, schedules: allSchedules, deacons: allDeacons } = useCache();
+  const { men: allMen, schedules: allSchedules, deacons: allDeacons, communionFamilies } = useCache();
   const [viewedMonth, setViewedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [viewMode, setViewMode] = useState<CalendarViewMode>("edit");
 
@@ -302,14 +302,27 @@ export default function Calendar() {
                         control={control}
                         rules={{ required: "Communion family is required" }}
                         render={({ field, fieldState }) => (
-                          <TextField
-                            label="Communion family"
-                            {...field}
-                            error={!!fieldState.error}
-                            fullWidth
-                            helperText={fieldState.error?.message}
-                            disabled={currentSchedule.finalized}
-                          />
+                          <FormControl fullWidth error={!!fieldState.error}>
+                            <InputLabel id="communion-family-label">Communion Family</InputLabel>
+                            <Select
+                              {...field}
+                              labelId="communion-family-label"
+                              label="Communion Family"
+                              disabled={currentSchedule.finalized}
+                            >
+                              {field.value && !communionFamilies.some((family) => family.id === field.value) && (
+                                <MenuItem value={field.value}>{field.value}</MenuItem>
+                              )}
+                              {communionFamilies.map((family) => (
+                                <MenuItem key={family.id} value={family.id}>
+                                  {family.familyName}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            <FormHelperText>
+                              {fieldState.error?.message || "Select the family serving this month"}
+                            </FormHelperText>
+                          </FormControl>
                         )}
                       />
                     </Grid>
@@ -487,6 +500,7 @@ export default function Calendar() {
                   schedule={currentSchedule}
                   men={allMen}
                   deacons={allDeacons}
+                  communionFamilies={communionFamilies}
                   extras={printableExtras}
                   monthLabel={monthLabel}
                 />

@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-08
+
+### Changed
+
+- Updated application dependencies and development tooling to current compatible releases.
+- Added pnpm overrides for vulnerable transitive dependency ranges.
+
+### Security
+
+- Refreshed the dependency lockfile and applied audit fixes.
+- One low-severity `deepmerge` advisory remains through React Email because no patched version is available.
+
+## [1.1.0] - 2026-11-08
+
+### Added
+
+- Communion families can be added, renamed, and deleted from a dedicated management page, with records stored in Firestore's `communion_families` collection.
+- Schedule generation selects the least recently served communion family, prioritizes families that have never served, and breaks ties alphabetically. Planners can change the selection before finalizing.
+- Finalizing a schedule records the selected family's last-served timestamp for future rotation.
+- Tests cover family rotation and resolving family IDs while preserving legacy schedule text.
+
+### Changed
+
+- Communion families are available through shared page caching and app navigation.
+- Printable schedules resolve family IDs to names and continue to display legacy free-text family values.
+
+### Fixed
+
+- Adding a family clears the name field while keeping the saved name in the success alert, allowing another family to be added immediately.
+- Removed the duplicate back button that disappeared when the success alert closed. The permanent top back button is disabled while saving.
+
+### Deployment Notes
+
+- No new environment variables or data migration are required. The existing Firebase Admin configuration is used, and Firestore creates `communion_families` when the first family is added.
+- Existing schedules retain their saved communion-family values. Add families through the management page to make them available for future scheduling.
+
 ## [1.0.3] - 2026-09-12
 
 ### Added

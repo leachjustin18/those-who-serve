@@ -253,6 +253,8 @@ export const BottomNavigation = () => {
     // Derive navigation value from current pathname
     const getNavigationValue = () => {
         if (pathname?.includes("/calendar")) {
+            return 2;
+        } else if (pathname?.includes("/manage-communion-families")) {
             return 1;
         } else if (pathname?.includes("/manage-men")) {
             return 0;
@@ -268,9 +270,12 @@ export const BottomNavigation = () => {
                 router.push("/manage-men");
                 break;
             case 1:
-                router.push("/calendar");
+                router.push("/manage-communion-families");
                 break;
             case 2:
+                router.push("/calendar");
+                break;
+            case 3:
                 handleLogout();
                 break;
         }
@@ -341,6 +346,7 @@ export const BottomNavigation = () => {
                 })}
             >
                 <BottomNavigationAction label="Men" icon={<PeopleIcon />} />
+                <BottomNavigationAction label="Families" icon={<GroupsIcon />} />
                 <BottomNavigationAction label="Calendar" icon={<CalendarIcon />} />
                 <BottomNavigationAction label="Logout" icon={<LogoutIcon />} />
             </MuiBottomNavigation>

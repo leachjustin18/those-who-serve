@@ -1,13 +1,13 @@
 # Those Who Serve
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.3.5-black)](#)
-[![React](https://img.shields.io/badge/React-19.3.0-61dafb)](#)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.5-black)](#)
+[![React](https://img.shields.io/badge/React-19.3.1-61dafb)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6)](#)
-[![ESLint](https://img.shields.io/badge/ESLint-9.39.5-4b32c3)](#)
-[![Vitest](https://img.shields.io/badge/Vitest-5.0.0-6e9f18)](#)
+[![ESLint](https://img.shields.io/badge/ESLint-10.14.0-4b32c3)](#)
+[![Vitest](https://img.shields.io/badge/Vitest-5.1.0-6e9f18)](#)
 [![Node](https://img.shields.io/badge/Node-%E2%89%A518.x-43853d)](#)
 [![pnpm](https://img.shields.io/badge/pnpm-12.4.1-orange)](#)
-[![Firebase Admin](https://img.shields.io/badge/Firebase_Admin-13.10.0-ffca28)](#)
+[![Firebase Admin](https://img.shields.io/badge/Firebase_Admin-14.5.0-ffca28)](#)
 [![NextAuth](https://img.shields.io/badge/NextAuth-4.24.15-000?logo=nextdotjs)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Lint](https://img.shields.io/badge/Lint-Passing-brightgreen)](#)
@@ -31,7 +31,7 @@ Web application to assign and view those serving different roles within the 39th
 ## Tech Stack
 
 - Next.js 16 (App Router) + React 19 UI
-- TypeScript 5.9, ESLint 9.39, Prettier 3.9 for developer ergonomics
+- TypeScript 5.9, ESLint 10.14, Prettier 3.9 for developer ergonomics
 - Vitest 5 + Testing Library for unit/component coverage
 - MUI 7 + Emotion for styling, custom icon/components library
 - Firebase Admin/Firestore for persistence, Google OAuth via NextAuth
@@ -51,15 +51,15 @@ Web application to assign and view those serving different roles within the 39th
 
 ## Key Packages
 
-- **Next.js 16.3.5** – App Router, server actions, API routes
-- **React 19.3.0** – Concurrent-ready UI layer with hooks
+- **Next.js 16.4.5** – App Router, server actions, API routes
+- **React 19.3.1** – Concurrent-ready UI layer with hooks
 - **NextAuth 4.24.15** – Google OAuth + session management
-- **Firebase Admin 13.10.0** – Firestore access and credential management
+- **Firebase Admin 14.5.0** – Firestore access and credential management
 - **MUI 7.3.11** – Component library (X Date Pickers for schedule editing)
-- **React Hook Form 7.88** – Form state and validation in calendar + men management
-- **React Email 6.9 / @react-email/components 1.0** – Email templates for notifications
-- **Vitest 5.0 + Testing Library** – Fast unit/component tests with jsdom
-- **ESLint 9.39 + eslint-config-next 16.3** – Linting rules tuned for Next.js + TS
+- **React Hook Form 7.91** – Form state and validation in calendar + men management
+- **React Email 6.11 / @react-email/components 1.0** – Email templates for notifications
+- **Vitest 5.1 + Testing Library** – Fast unit/component tests with jsdom
+- **ESLint 10.14 + eslint-config-next 16.4** – Linting rules tuned for Next.js + TS
 - **TypeScript 5.9.3** – Strict typing across components, hooks, and APIs
 
 ## Requirements
@@ -140,7 +140,7 @@ Notes:
 
 ## Releases (Semantic Versioning)
 
-- Current version: **1.0.3**
+- Current version: **1.1.1**
 - Follow SemVer: `MAJOR.MINOR.PATCH`.
 - Maintain `CHANGELOG.md`: update `[Unreleased]`, then move entries into a new version block on release.
 - Bump `package.json` version, tag the commit `vX.Y.Z`, and create a GitHub Release using `.github/release-template.md` with notes (features, fixes, breaking changes, deployment notes).
