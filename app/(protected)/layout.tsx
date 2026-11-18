@@ -42,10 +42,21 @@ export default async function SecureLayout({ children }: LayoutProps) {
   }
 
   return (
-    <CacheProvider initialMen={menCache} initialDeacons={deaconsCache} initialSchedules={scheduleCache} initialCommunionFamilies={communionFamiliesCache}>
+    <CacheProvider
+      initialMen={menCache}
+      initialDeacons={deaconsCache}
+      initialSchedules={scheduleCache}
+      initialCommunionFamilies={communionFamiliesCache}
+    >
       <AppHeader
         userName={session.user?.name}
         userImage={session.user?.image}
+        canAuthorizeGmail={
+          session.user.email?.toLowerCase() ===
+          (
+            process.env.GMAIL_AUTHORIZED_EMAIL ?? process.env.GMAIL_SENDER
+          )?.toLowerCase()
+        }
       />
       <Container
         style={{ paddingTop: "120px", paddingBottom: "120px" }}

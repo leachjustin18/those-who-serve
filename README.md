@@ -57,7 +57,7 @@ Web application to assign and view those serving different roles within the 39th
 - **Firebase Admin 13.10.0** – Firestore access and credential management
 - **MUI 7.3.11** – Component library (X Date Pickers for schedule editing)
 - **React Hook Form 7.88** – Form state and validation in calendar + men management
-- **React Email 6.9 / @react-email/components 1.0** – Email templates for notifications
+- **React Email 6.9 / @react-email/render** – Email templates for notifications
 - **Vitest 5.0 + Testing Library** – Fast unit/component tests with jsdom
 - **ESLint 9.39 + eslint-config-next 16.3** – Linting rules tuned for Next.js + TS
 - **TypeScript 5.9.3** – Strict typing across components, hooks, and APIs
@@ -89,6 +89,7 @@ NEXTAUTH_URL=http://localhost:3000
 SERVER_HOST=http://localhost:3000
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 GMAIL_SENDER=you@example.com
+GMAIL_AUTHORIZED_EMAIL=you@example.com
 GMAIL_REFRESH_TOKEN_ID=gmail
 
 # Firebase Admin (prefer env-based, not JSON in repo)
@@ -101,7 +102,8 @@ Notes:
 
 - `SERVER_HOST` is used by server actions to call API routes; set to the deployed origin in production.
 - If you keep using an Admin SDK JSON file, ensure it is excluded from commits (see `.gitignore`), but prefer env vars above for Vercel.
-- `GMAIL_REFRESH_TOKEN_ID` is optional if you read from the `accounts` collection.
+- `GMAIL_AUTHORIZED_EMAIL` identifies the signed-in account allowed to connect the shared Gmail sender; it defaults to `GMAIL_SENDER`.
+- `GMAIL_REFRESH_TOKEN_ID` is optional and defaults to `gmail`.
 
 ### Scripts
 
@@ -123,6 +125,7 @@ Notes:
 - Recipient addresses are deduplicated and validated before sending. Gmail requests run with bounded concurrency and retry transient errors once.
 - Worship In Song marker entries are never treated as email recipients.
 - Missing or invalid addresses and Gmail delivery failures are returned to the calendar and written server-side to an `error_logs` collection for review. Firestore creates the collection automatically when the first failure is logged.
+- Gmail delivery uses a dedicated OAuth consent flow. Sign in as `GMAIL_AUTHORIZED_EMAIL`, then choose **Reauthorize Gmail Sender** from the account menu to grant `gmail.send` access.
 
 ## PWA
 
@@ -140,7 +143,6 @@ Notes:
 
 ## Releases (Semantic Versioning)
 
-- Current version: **1.1.0**
 - Follow SemVer: `MAJOR.MINOR.PATCH`.
 - Maintain `CHANGELOG.md`: update `[Unreleased]`, then move entries into a new version block on release.
 - Bump `package.json` version, tag the commit `vX.Y.Z`, and create a GitHub Release using `.github/release-template.md` with notes (features, fixes, breaking changes, deployment notes).

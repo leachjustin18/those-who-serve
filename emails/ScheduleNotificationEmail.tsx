@@ -1,17 +1,5 @@
+/* eslint-disable @next/next/no-head-element, @next/next/no-img-element -- This component renders standalone email HTML, not a Next.js page. */
 import * as React from "react";
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Preview,
-  Section,
-  Text,
-} from "@react-email/components";
 
 type AssignmentItem = {
   id: string;
@@ -29,95 +17,103 @@ type Props = {
 };
 
 const primary = "#5A3B2A"; // warm brown from logo
-const accent = "#D8C8B5";  // light beige accent
-const text = "#3D2A1F";    // dark brown for body text
-const muted = "#6B5A4C";   // muted brown/gray
+const accent = "#D8C8B5"; // light beige accent
+const text = "#3D2A1F"; // dark brown for body text
+const muted = "#6B5A4C"; // muted brown/gray
 
 export const ScheduleNotificationEmail = ({
   recipientName,
   monthLabel,
   assignments,
 }: Props) => (
-  <Html>
-    <Head />
-    <Preview>Your serving schedule for {monthLabel}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Serving schedule for {monthLabel}</Heading>
-        <Section style={{ textAlign: "center", marginBottom: 16 }}>
-          <Img
+  <html lang="en">
+    <head />
+    <body style={main}>
+      <div style={preview}>Your serving schedule for {monthLabel}</div>
+      <div style={container}>
+        <h1 style={h1}>Serving schedule for {monthLabel}</h1>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <img
             src="https://files.39thstreetchurchofchrist.org/images/emailThoseWhoServe.png"
             alt="Those Who Serve - 39th St Church of Christ"
             width="220"
             height="240"
             style={{ display: "inline-block", width: "220px", height: "auto" }}
           />
-          <Text style={tagline}>Those Who Serve - 39th St Church of Christ</Text>
-        </Section>
-        <Text style={paragraph}>
-          Hi {recipientName},
-        </Text>
-        <Text style={paragraph}>
+          <p style={tagline}>Those Who Serve - 39th St Church of Christ</p>
+        </div>
+        <p style={paragraph}>Hi {recipientName},</p>
+        <p style={paragraph}>
           Thank you for serving this month. Below are your assignments. Use the
           “Add to calendar” buttons to place each role on your calendar.
-        </Text>
+        </p>
 
-        <Section style={cardGrid}>
+        <div style={cardGrid}>
           {assignments.map((assignment) => (
-            <Section style={card} key={assignment.id}>
-              <Text style={dateText}>
+            <div style={card} key={assignment.id}>
+              <p style={dateText}>
                 {assignment.dayName} · {assignment.displayDate}
-              </Text>
-              <Heading as="h3" style={roleHeading}>
-                {assignment.roleLabel}
-              </Heading>
-              <Section style={buttonRow}>
-                <Button
+              </p>
+              <h3 style={roleHeading}>{assignment.roleLabel}</h3>
+              <div style={buttonRow}>
+                <a
                   style={button}
                   href={assignment.calendarLink}
                   target="_blank"
+                  rel="noreferrer"
                 >
                   Add to Google
-                </Button>
-                <Button
+                </a>
+                <a
                   style={buttonSecondary}
                   href={assignment.icsLink}
                   target="_blank"
+                  rel="noreferrer"
                 >
                   Add to Apple / Outlook
-                </Button>
-              </Section>
-              <Text style={noteText}>
+                </a>
+              </div>
+              <p style={noteText}>
                 If the links don&apos;t open, copy and paste one of these URLs:
                 <br />
                 Google:{" "}
                 <a href={assignment.calendarLink} style={link}>
                   {assignment.calendarLink}
                 </a>
-              </Text>
-              <Text style={noteText}>
+              </p>
+              <p style={noteText}>
                 ICS (Apple/Outlook):{" "}
                 <a href={assignment.icsLink} style={link}>
                   {assignment.icsLink}
                 </a>
-              </Text>
-            </Section>
+              </p>
+            </div>
           ))}
-        </Section>
+        </div>
 
-        <Hr style={hr} />
-        <Text style={footer}>
-          Sent by Those Who Service Scheduler.  If you are unable to serve and/or if you get someone to substitue for you.
-          Please let a decon know as soon as possible.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+        <hr style={hr} />
+        <p style={footer}>
+          Sent by Those Who Service Scheduler. If you are unable to serve and/or
+          if you get someone to substitue for you. Please let a decon know as
+          soon as possible.
+        </p>
+      </div>
+    </body>
+  </html>
 );
+
+const preview: React.CSSProperties = {
+  display: "none",
+  maxHeight: 0,
+  maxWidth: 0,
+  opacity: 0,
+  overflow: "hidden",
+};
 
 const main: React.CSSProperties = {
   backgroundColor: "#F5EDE1",
-  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  fontFamily:
+    '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   padding: "24px 0",
 };
 

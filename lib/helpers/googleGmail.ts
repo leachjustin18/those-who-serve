@@ -9,8 +9,8 @@ const clientSecret = process.env.AUTH_GOOGLE_SECRET!;
 const redirectUri = process.env.GOOGLE_REDIRECT_URI!;
 const gmailSender = process.env.GMAIL_SENDER!;
 
-// Scope: send email
-export const GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"];
+export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
+export const GMAIL_SCOPES = ["openid", "email", GMAIL_SEND_SCOPE];
 
 export function createOAuth2Client() {
     return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
@@ -23,50 +23,36 @@ const GMAIL_DOC_ID = process.env.GMAIL_REFRESH_TOKEN_ID ?? "gmail";
 type RefreshTokenDoc = {
     refresh_token: string;
     provider: string;
+    scope?: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
 };
 
-type AccountDoc = {
-    provider?: string;
-    refresh_token?: string;
-    expires_at?: number;
-};
-
-export async function setStoredRefreshToken(token: string) {
-    const now = Timestamp.now();
-    await db
-        .collection(REFRESH_TOKENS_COLLECTION)
-        .doc(GMAIL_DOC_ID)
-        .set(
-            {
-                refresh_token: token,
-                provider: "google",
-                updatedAt: now,
-                createdAt: now,
-            },
-            { merge: true },
-        );
+export function hasGmailSendScope(scope: string | null | undefined) {
+    return (scope ?? "").split(/\s+/).includes(GMAIL_SEND_SCOPE);
 }
 
-async function getRefreshTokenFromAccounts(): Promise<string | null> {
-    const snapshot = await db
-        .collection("accounts")
-        .where("provider", "==", "google")
-        .get();
-
-    for (const doc of snapshot.docs) {
-        const data = doc.data() as AccountDoc;
-        if (data.refresh_token) {
-            return data.refresh_token;
-        }
+export async function setStoredRefreshToken(token: string, scope: string) {
+    if (!hasGmailSendScope(scope)) {
+        throw new Error("Google did not grant the required gmail.send scope");
     }
 
-    return null;
+    const now = Timestamp.now();
+    await db.collection(REFRESH_TOKENS_COLLECTION).doc(GMAIL_DOC_ID).set(
+        {
+            refresh_token: token,
+            provider: "google",
+            scope,
+            updatedAt: now,
+            createdAt: now,
+        },
+        { merge: true },
+    );
 }
 
 export async function getStoredRefreshToken(): Promise<string | null> {
-    // Prefer the dedicated refresh_tokens/{id} doc created via the Gmail consent flow.
+    // Only use the dedicated token created by the Gmail consent flow. Normal
+    // Google sign-in tokens may not include gmail.send and must never be used.
     const doc = await db
         .collection(REFRESH_TOKENS_COLLECTION)
         .doc(GMAIL_DOC_ID)
@@ -74,25 +60,9 @@ export async function getStoredRefreshToken(): Promise<string | null> {
 
     if (doc.exists) {
         const data = doc.data() as RefreshTokenDoc | undefined;
-        if (data?.refresh_token) return data.refresh_token;
-    }
-
-    // NextAuth account refresh tokens might lack the gmail.send scope if they were
-    // issued before we requested it, so treat them as a fallback only.
-    const accountToken = await getRefreshTokenFromAccounts();
-    if (accountToken) return accountToken;
-
-    // Last resort: grab the newest doc in refresh_tokens collection
-    const fallbackSnapshot = await db
-        .collection(REFRESH_TOKENS_COLLECTION)
-        .orderBy("updatedAt", "desc")
-        .limit(1)
-        .get();
-
-    const fallbackDoc = fallbackSnapshot.docs[0];
-    if (fallbackDoc) {
-        const data = fallbackDoc.data() as RefreshTokenDoc | undefined;
-        if (data?.refresh_token) return data.refresh_token;
+        if (data?.refresh_token && hasGmailSendScope(data.scope)) {
+            return data.refresh_token;
+        }
     }
 
     return null;
@@ -116,7 +86,7 @@ export async function sendGmailBatch({
 }) {
     const refreshToken = await getStoredRefreshToken();
     if (!refreshToken) {
-        console.error("Gmail send failed: no refresh token found. Checked accounts and refresh_tokens collection.");
+        console.error("Gmail send failed: no dedicated refresh token found in refresh_tokens collection.");
         throw new Error("No stored refresh token for Gmail");
     }
 

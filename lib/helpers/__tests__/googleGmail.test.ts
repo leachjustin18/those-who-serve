@@ -7,7 +7,7 @@ vi.mock("@/lib/firebase/admin", () => {
       collection() {
         return {
           doc() {
-            return { get: async () => ({ exists: true, data: () => ({ refresh_token: "token-abc" }) }) };
+            return { get: async () => ({ exists: true, data: () => ({ refresh_token: "token-abc", scope: "https://www.googleapis.com/auth/gmail.send" }) }) };
           },
           where() {
             return { get: async () => ({ docs: [] }) };
@@ -114,5 +114,17 @@ describe("sendGmailBatch", () => {
 
     expect(res.successes).toContain("retry-success@domain.test");
     expect(res.failures.length).toBe(0);
+  });
+});
+
+describe("hasGmailSendScope", () => {
+  it("requires the Gmail send scope", () => {
+    expect(
+      gmailModule.hasGmailSendScope(
+        "openid email https://www.googleapis.com/auth/gmail.send",
+      ),
+    ).toBe(true);
+    expect(gmailModule.hasGmailSendScope("openid email profile")).toBe(false);
+    expect(gmailModule.hasGmailSendScope(undefined)).toBe(false);
   });
 });
