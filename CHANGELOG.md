@@ -5,7 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-17
+
+[Compare 1.2.0...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.2.0...v1.1.0)
+
+
+### Added
+
+- Authenticated operators can open **Error Logs** from the account menu and review the 100 most recent notification failures from Firestore.
+- The Error Logs console groups notification and failure details, displays error types as status chips, and provides expandable structured context with responsive and empty states.
+- The configured sender account can use **Reauthorize Gmail Sender** from the account menu to securely replace an expired, revoked, or incorrectly scoped Gmail credential.
+- Regression tests cover the account-menu link, structured error values, and HTML/plain-text schedule email rendering.
+
+### Changed
+
+- Schedule notification templates now use native React email markup while retaining `@react-email/render` for HTML and plain-text output.
+- Removed the deprecated `@react-email/components` package and its obsolete component dependencies.
+- Normal Google application sign-in now requests identity access only; Gmail delivery authorization uses a separate, protected OAuth consent flow.
+
+### Fixed
+
+- Error Logs safely formats legacy and structured Firestore fields instead of passing objects directly to React children.
+- Error Logs uses serializable MUI styles across the server/client component boundary, preventing the page from returning a 500 response.
+- Gmail sender authorization is isolated from normal Google sign-in so unrelated account tokens cannot overwrite or replace the credential used for delivery.
+- Gmail credentials are accepted only when Google confirms the `gmail.send` scope and the authorizing account matches the configured sender account.
+
+
+### Security
+- Several CWE-918: The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination. 
+- Other dependencies and fixes. 
+
 ## [1.1.0] - 2026-11-08
+
+[Compare 1.0.3...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.0.3...v1.1.0)
+
 
 ### Added
 
@@ -31,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.3] - 2026-09-12
 
+[Compare 1.0.2...1.0.3](https://github.com/leachjustin18/those-who-serve/compare/v1.0.2...v1.0.3)
+
 ### Added
 
 - Finalized schedules can be emailed again from the calendar with the new **Email Those Who Serve** action and in-progress/result feedback.
@@ -49,6 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing, invalid, rejected, and exhausted transient email deliveries are surfaced in the API response and persisted for troubleshooting.
 
 ## [1.0.2] - 2025-12-12
+
+[Compare 1.0.1...1.0.2](https://github.com/leachjustin18/those-who-serve/compare/v1.0.1...v1.0.2)
 
 ### Changed
 
