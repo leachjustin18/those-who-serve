@@ -27,8 +27,9 @@ export async function fetchSchedules(): Promise<TSchedule[]> {
 export async function fetchSchedule(month: string): Promise<TSchedule | null> {
   if (!host) throw new Error("SERVER_HOST is not defined");
   assertValidMonth(month);
+  const safeMonth = encodeURIComponent(month);
 
-  const res = await fetch(`${host}/api/schedules/${month}`, {
+  const res = await fetch(`${host}/api/schedules/${safeMonth}`, {
     cache: "no-store",
   });
 
@@ -72,8 +73,9 @@ export async function updateSchedule(
 ): Promise<TSchedule> {
   if (!host) throw new Error("SERVER_HOST is not defined");
   assertValidMonth(month);
+  const safeMonth = encodeURIComponent(month);
 
-  const res = await fetch(`${host}/api/schedules/${month}`, {
+  const res = await fetch(`${host}/api/schedules/${safeMonth}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(schedule),
