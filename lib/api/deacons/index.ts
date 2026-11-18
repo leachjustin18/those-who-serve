@@ -1,6 +1,7 @@
 "use server";
 
 import type { TDeacons } from "@/types";
+import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 
 const host = process.env.SERVER_HOST;
 
@@ -14,11 +15,10 @@ const host = process.env.SERVER_HOST;
 export async function fetchDeacons(): Promise<TDeacons[]> {
     if (!host) throw new Error("SERVER_HOST is not defined");
 
-    const res = await fetch(`${host}/api/deacons`, { cache: "no-store" });
+    const res = await authenticatedFetch(`${host}/api/deacons`, { cache: "no-store" });
     if (!res.ok) {
         throw new Error(`Failed to fetch deacons (status ${res.status})`);
     }
 
     return res.json() as Promise<TDeacons[]>;
 }
-

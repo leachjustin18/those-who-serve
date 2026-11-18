@@ -1,11 +1,11 @@
 // app/api/auth/gmail/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createOAuth2Client, GMAIL_SCOPES } from "@/lib/helpers/googleGmail";
-import { getUserSession } from "@/lib/nextAuth/session";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
-export async function GET() {
-  const session = await getUserSession();
+export async function GET(req: NextRequest) {
+  const session = await getAuthorizedSession();
   if (!session?.user?.email) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
@@ -25,7 +25,8 @@ export async function GET() {
     );
   }
 
-  const oAuth2Client = createOAuth2Client();
+  const redirectUri = new URL("/api/auth/gmail/callback", req.url).toString();
+  const oAuth2Client = createOAuth2Client(redirectUri);
   const state = randomBytes(32).toString("hex");
 
   const authUrl = oAuth2Client.generateAuthUrl({

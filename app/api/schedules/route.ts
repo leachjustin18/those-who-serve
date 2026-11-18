@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/firebase/admin";
 import type { TSchedule } from "@/types";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 const schedulesCollection = db.collection("schedules");
 
@@ -9,6 +10,9 @@ const schedulesCollection = db.collection("schedules");
  * Retrieves all schedules from the database.
  */
 export async function GET() {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const snapshot = await schedulesCollection.get();
   const schedules = snapshot.docs.map((doc) => ({
     id: doc.id,
@@ -30,6 +34,9 @@ export async function GET() {
  * Creates a new schedule for a month with initial entries.
  */
 export async function POST(req: NextRequest) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const data: Partial<TSchedule> = await req.json();
 
   if (!data.month) {

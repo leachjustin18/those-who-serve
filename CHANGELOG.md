@@ -5,10 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-11-18
+
+[Compare 1.2.0...1.3.0](https://github.com/leachjustin18/those-who-serve/compare/v1.2.0...v1.3.0)
+
+### Changed
+
+- Re-architected application authorization so protected pages, API handlers, server-side requests, Gmail administration, and allowlist revocation share server-enforced access controls.
+- Reworked service-worker caching around an explicit public-asset allowlist instead of attempting to exclude individual protected routes.
+
+### Fixed
+
+- Gmail sender authorization now derives its callback from the current application origin, preventing production configuration from accidentally routing it into NextAuth's sign-in callback.
+- Deployment documentation now distinguishes the NextAuth sign-in callback from the dedicated Gmail sender callback.
+- Server-side API requests now forward the signed-in user's session so protected data operations continue to work after API authorization is enforced.
+
+### Security
+
+- All men, deacon, communion-family, and schedule API operations now require both an authenticated session and a currently authorized email address.
+- Schedule-notification delivery now rejects unauthenticated and removed users, preventing anonymous callers from sending production email.
+- Sign-in authorization now checks Firestore directly on the server; the public endpoint no longer exposes or allows enumeration of authorized email addresses.
+- Protected pages and Gmail sender reauthorization recheck the current allowlist, so removing an email revokes access without waiting for its existing session to expire.
+- The service worker now caches only explicitly public install assets and removes older caches that could contain API responses or authenticated pages.
+
+### Deployment Notes
+
+- No new environment variables or data migrations are required.
+- Existing browser service workers will activate the new cache policy and remove obsolete application caches after deployment.
+
 ## [1.2.0] - 2026-11-17
 
 [Compare 1.2.0...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.2.0...v1.1.0)
-
 
 ### Added
 
@@ -30,15 +57,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gmail sender authorization is isolated from normal Google sign-in so unrelated account tokens cannot overwrite or replace the credential used for delivery.
 - Gmail credentials are accepted only when Google confirms the `gmail.send` scope and the authorizing account matches the configured sender account.
 
-
 ### Security
-- Several CWE-918: The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination. 
-- Other dependencies and fixes. 
+
+- Several CWE-918: The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination.
+- Other dependencies and fixes.
 
 ## [1.1.0] - 2026-11-08
 
 [Compare 1.0.3...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.0.3...v1.1.0)
-
 
 ### Added
 

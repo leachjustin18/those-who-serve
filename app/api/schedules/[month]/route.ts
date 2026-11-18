@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/firebase/admin";
 import type { TSchedule, TScheduleEntry } from "@/types";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 const schedulesCollection = db.collection("schedules");
 
@@ -12,6 +13,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ month: string }> },
 ) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { month } = await params;
 
   const doc = await schedulesCollection.doc(month).get();
@@ -40,6 +44,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ month: string }> },
 ) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { month } = await params;
   const data = await req.json();
 
@@ -83,6 +90,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ month: string }> },
 ) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { month } = await params;
 
   await schedulesCollection.doc(month).delete();

@@ -1,5 +1,11 @@
 import { POST } from "../schedule-finalized/route";
 
+vi.mock("@/lib/auth/authorizedSession", () => ({
+  getAuthorizedSession: vi.fn(async () => ({
+    user: { email: "authorized@example.com" },
+  })),
+}));
+
 // Mock dependencies used by the route
 vi.mock("@/lib/api/men", () => ({
   fetchMen: async () => [
