@@ -9,6 +9,17 @@ vi.mock("next-auth/react", () => ({
 }));
 
 describe("AppHeader", () => {
+  it("links to error logs from the account menu", async () => {
+    const user = userEvent.setup();
+    render(<AppHeader userName="Jane Doe" userImage="/avatar.png" />);
+
+    await user.click(screen.getByRole("button", { name: /open menu/i }));
+
+    expect(
+      await screen.findByRole("menuitem", { name: /error logs/i }),
+    ).toHaveAttribute("href", "/error-logs");
+  });
+
   it("opens the menu and logs out through next-auth", async () => {
     const user = userEvent.setup();
     render(<AppHeader userName="Jane Doe" userImage="/avatar.png" />);

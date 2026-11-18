@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type MouseEvent } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
@@ -235,6 +236,9 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                     >
                         <MenuItem disabled>
                             <Typography textAlign="center"> Hello, {displayName}</Typography>
+                        </MenuItem>
+                        <MenuItem component={Link} href="/error-logs" onClick={handleCloseUserMenu}>
+                            <Typography textAlign="center">Error Logs</Typography>
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <Typography textAlign="center">Log out</Typography>

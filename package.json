@@ -21,7 +21,6 @@
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@mui/x-date-pickers": "^8.29.3",
-    "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
     "date-fns": "^4.4.0",
     "firebase-admin": "^13.10.0",

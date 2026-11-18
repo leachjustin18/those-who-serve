@@ -57,7 +57,7 @@ Web application to assign and view those serving different roles within the 39th
 - **Firebase Admin 13.10.0** – Firestore access and credential management
 - **MUI 7.3.11** – Component library (X Date Pickers for schedule editing)
 - **React Hook Form 7.88** – Form state and validation in calendar + men management
-- **React Email 6.9 / @react-email/components 1.0** – Email templates for notifications
+- **React Email 6.9 / @react-email/render** – Email templates for notifications
 - **Vitest 5.0 + Testing Library** – Fast unit/component tests with jsdom
 - **ESLint 9.39 + eslint-config-next 16.3** – Linting rules tuned for Next.js + TS
 - **TypeScript 5.9.3** – Strict typing across components, hooks, and APIs
