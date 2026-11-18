@@ -62,13 +62,14 @@ export async function updateMan(
     throw new Error("Required value is not defined; unable to PATCH");
   }
   assertSafeId(id);
+  const encodedId = encodeURIComponent(id);
 
   const updates: Partial<Omit<TMan, "id">> & { updatedAt: number } = {
     ...data,
     updatedAt: Date.now(),
   };
 
-  const res = await fetch(`${host}/api/men/${id}`, {
+  const res = await fetch(`${host}/api/men/${encodedId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -101,8 +102,9 @@ export async function deleteMan(
     throw new Error("Required value is not defined; unable to DELETE");
   }
   assertSafeId(id);
+  const encodedId = encodeURIComponent(id);
 
-  const res = await fetch(`${host}/api/men/${id}`, {
+  const res = await fetch(`${host}/api/men/${encodedId}`, {
     method: "DELETE",
   });
 
