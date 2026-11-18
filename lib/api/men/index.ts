@@ -68,7 +68,8 @@ export async function updateMan(
     updatedAt: Date.now(),
   };
 
-  const res = await fetch(`${host}/api/men/${id}`, {
+  const manUrl = new URL(`/api/men/${encodeURIComponent(id)}`, host);
+  const res = await fetch(manUrl.toString(), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -102,7 +103,8 @@ export async function deleteMan(
   }
   assertSafeId(id);
 
-  const res = await fetch(`${host}/api/men/${id}`, {
+  const manUrl = new URL(`/api/men/${encodeURIComponent(id)}`, host);
+  const res = await fetch(manUrl.toString(), {
     method: "DELETE",
   });
 
