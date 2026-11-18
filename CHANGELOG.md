@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-11-17
 
+[Compare 1.2.0...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.2.0...v1.1.0)
+
+
 ### Added
 
 - Authenticated operators can open **Error Logs** from the account menu and review the 100 most recent notification failures from Firestore.
@@ -27,13 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gmail sender authorization is isolated from normal Google sign-in so unrelated account tokens cannot overwrite or replace the credential used for delivery.
 - Gmail credentials are accepted only when Google confirms the `gmail.send` scope and the authorizing account matches the configured sender account.
 
-### Deployment Notes
 
-- No data migration is required. The console reads the existing `error_logs` collection and is protected by the authenticated application layout.
-- Existing notification records remain compatible, including records whose details or context are stored as structured objects.
-- `GMAIL_AUTHORIZED_EMAIL` is optional and defaults to `GMAIL_SENDER`. The OAuth client must allow `/api/auth/gmail/callback`, and the sender must complete **Reauthorize Gmail Sender** once after deployment.
+### Security
+- Several CWE-918: The web server receives a URL or similar request from an upstream component and retrieves the contents of this URL, but it does not sufficiently ensure that the request is being sent to the expected destination. 
+- Other dependencies and fixes. 
 
 ## [1.1.0] - 2026-11-08
+
+[Compare 1.0.3...1.1.0](https://github.com/leachjustin18/those-who-serve/compare/v1.0.3...v1.1.0)
+
 
 ### Added
 
@@ -59,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.3] - 2026-09-12
 
+[Compare 1.0.2...1.0.3](https://github.com/leachjustin18/those-who-serve/compare/v1.0.2...v1.0.3)
+
 ### Added
 
 - Finalized schedules can be emailed again from the calendar with the new **Email Those Who Serve** action and in-progress/result feedback.
@@ -77,6 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing, invalid, rejected, and exhausted transient email deliveries are surfaced in the API response and persisted for troubleshooting.
 
 ## [1.0.2] - 2025-12-12
+
+[Compare 1.0.1...1.0.2](https://github.com/leachjustin18/those-who-serve/compare/v1.0.1...v1.0.2)
 
 ### Changed
 
