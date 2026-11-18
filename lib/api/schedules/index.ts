@@ -29,6 +29,11 @@ export async function fetchSchedule(month: string): Promise<TSchedule | null> {
   assertValidMonth(month);
   const safeMonth = encodeURIComponent(month);
 
+  const safeMonth = month.trim();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(safeMonth)) {
+    throw new Error("Invalid month format. Expected YYYY-MM.");
+  }
+
   const res = await fetch(`${host}/api/schedules/${safeMonth}`, {
     cache: "no-store",
   });
