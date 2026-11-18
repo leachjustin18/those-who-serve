@@ -6,13 +6,12 @@ import { isValidEmail } from "@/lib/helpers/validateFields";
 
 const clientId = process.env.AUTH_GOOGLE_ID!;
 const clientSecret = process.env.AUTH_GOOGLE_SECRET!;
-const redirectUri = process.env.GOOGLE_REDIRECT_URI!;
 const gmailSender = process.env.GMAIL_SENDER!;
 
 export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 export const GMAIL_SCOPES = ["openid", "email", GMAIL_SEND_SCOPE];
 
-export function createOAuth2Client() {
+export function createOAuth2Client(redirectUri?: string) {
     return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 

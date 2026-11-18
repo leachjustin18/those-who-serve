@@ -87,7 +87,6 @@ AUTH_GOOGLE_ID=
 AUTH_GOOGLE_SECRET=
 NEXTAUTH_URL=http://localhost:3000
 SERVER_HOST=http://localhost:3000
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 GMAIL_SENDER=you@example.com
 GMAIL_AUTHORIZED_EMAIL=you@example.com
 GMAIL_REFRESH_TOKEN_ID=gmail
@@ -137,7 +136,7 @@ Notes:
 ## Deployment (Vercel)
 
 1. Set env vars in the Vercel project (see list above; production `NEXTAUTH_URL` must match your domain).
-2. Add OAuth redirect URIs in Google console: `https://your-domain/api/auth/callback/google`.
+2. Add both OAuth redirect URIs in Google console: `https://your-domain/api/auth/callback/google` for application sign-in and `https://your-domain/api/auth/gmail/callback` for Gmail sender authorization.
 3. Deploy via GitHub integration; Vercel will run `pnpm install`, `pnpm build`.
 4. Optional: add `SERVER_HOST=https://your-domain` so server actions hit the correct origin.
 

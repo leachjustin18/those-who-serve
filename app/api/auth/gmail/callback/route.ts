@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const oAuth2Client = createOAuth2Client();
+  const redirectUri = new URL("/api/auth/gmail/callback", req.url).toString();
+  const oAuth2Client = createOAuth2Client(redirectUri);
 
   try {
     const { tokens } = await oAuth2Client.getToken(code);
