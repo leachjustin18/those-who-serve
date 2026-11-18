@@ -89,6 +89,7 @@ NEXTAUTH_URL=http://localhost:3000
 SERVER_HOST=http://localhost:3000
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 GMAIL_SENDER=you@example.com
+GMAIL_AUTHORIZED_EMAIL=you@example.com
 GMAIL_REFRESH_TOKEN_ID=gmail
 
 # Firebase Admin (prefer env-based, not JSON in repo)
@@ -101,7 +102,8 @@ Notes:
 
 - `SERVER_HOST` is used by server actions to call API routes; set to the deployed origin in production.
 - If you keep using an Admin SDK JSON file, ensure it is excluded from commits (see `.gitignore`), but prefer env vars above for Vercel.
-- `GMAIL_REFRESH_TOKEN_ID` is optional if you read from the `accounts` collection.
+- `GMAIL_AUTHORIZED_EMAIL` identifies the signed-in account allowed to connect the shared Gmail sender; it defaults to `GMAIL_SENDER`.
+- `GMAIL_REFRESH_TOKEN_ID` is optional and defaults to `gmail`.
 
 ### Scripts
 
@@ -123,6 +125,7 @@ Notes:
 - Recipient addresses are deduplicated and validated before sending. Gmail requests run with bounded concurrency and retry transient errors once.
 - Worship In Song marker entries are never treated as email recipients.
 - Missing or invalid addresses and Gmail delivery failures are returned to the calendar and written server-side to an `error_logs` collection for review. Firestore creates the collection automatically when the first failure is logged.
+- Gmail delivery uses a dedicated OAuth consent flow. Sign in as `GMAIL_AUTHORIZED_EMAIL`, then choose **Reauthorize Gmail Sender** from the account menu to grant `gmail.send` access.
 
 ## PWA
 

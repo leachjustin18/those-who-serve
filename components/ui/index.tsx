@@ -118,6 +118,7 @@ export const AlertSnackbar = ({
 type AppHeaderProps = {
     userName?: string | null;
     userImage?: string | null;
+    canAuthorizeGmail?: boolean;
 };
 
 /**
@@ -126,7 +127,7 @@ type AppHeaderProps = {
  * @param {string|null} [userImage] - Avatar source for the signed-in user.
  * @returns {JSX.Element} Fixed AppBar with account avatar and logout menu.
  */
-export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
+export const AppHeader = ({ userName, userImage, canAuthorizeGmail = false }: AppHeaderProps) => {
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
     const hasDisplayName = Boolean(userName?.trim().length);
@@ -240,6 +241,15 @@ export const AppHeader = ({ userName, userImage }: AppHeaderProps) => {
                         <MenuItem component={Link} href="/error-logs" onClick={handleCloseUserMenu}>
                             <Typography textAlign="center">Error Logs</Typography>
                         </MenuItem>
+                        {canAuthorizeGmail && (
+                            <MenuItem
+                                component="a"
+                                href="/api/auth/gmail"
+                                onClick={handleCloseUserMenu}
+                            >
+                                <Typography textAlign="center">Reauthorize Gmail Sender</Typography>
+                            </MenuItem>
+                        )}
                         <MenuItem onClick={handleLogout}>
                             <Typography textAlign="center">Log out</Typography>
                         </MenuItem>

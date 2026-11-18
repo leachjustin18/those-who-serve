@@ -4,7 +4,7 @@ vi.mock("@/lib/firebase/admin", () => ({
     collection() {
       return {
         doc() {
-          return { get: async () => ({ exists: true, data: () => ({ refresh_token: "token-abc" }) }) };
+          return { get: async () => ({ exists: true, data: () => ({ refresh_token: "token-abc", scope: "https://www.googleapis.com/auth/gmail.send" }) }) };
         },
         where() {
           return { get: async () => ({ docs: [] }) };

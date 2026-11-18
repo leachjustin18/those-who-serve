@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-17
+
+### Added
+
+- Authenticated operators can open **Error Logs** from the account menu and review the 100 most recent notification failures from Firestore.
+- The Error Logs console groups notification and failure details, displays error types as status chips, and provides expandable structured context with responsive and empty states.
+- The configured sender account can use **Reauthorize Gmail Sender** from the account menu to securely replace an expired, revoked, or incorrectly scoped Gmail credential.
+- Regression tests cover the account-menu link, structured error values, and HTML/plain-text schedule email rendering.
+
+### Changed
+
+- Schedule notification templates now use native React email markup while retaining `@react-email/render` for HTML and plain-text output.
+- Removed the deprecated `@react-email/components` package and its obsolete component dependencies.
+- Normal Google application sign-in now requests identity access only; Gmail delivery authorization uses a separate, protected OAuth consent flow.
+
+### Fixed
+
+- Error Logs safely formats legacy and structured Firestore fields instead of passing objects directly to React children.
+- Error Logs uses serializable MUI styles across the server/client component boundary, preventing the page from returning a 500 response.
+- Gmail sender authorization is isolated from normal Google sign-in so unrelated account tokens cannot overwrite or replace the credential used for delivery.
+- Gmail credentials are accepted only when Google confirms the `gmail.send` scope and the authorizing account matches the configured sender account.
+
+### Deployment Notes
+
+- No data migration is required. The console reads the existing `error_logs` collection and is protected by the authenticated application layout.
+- Existing notification records remain compatible, including records whose details or context are stored as structured objects.
+- `GMAIL_AUTHORIZED_EMAIL` is optional and defaults to `GMAIL_SENDER`. The OAuth client must allow `/api/auth/gmail/callback`, and the sender must complete **Reauthorize Gmail Sender** once after deployment.
+
 ## [1.1.0] - 2026-11-08
 
 ### Added

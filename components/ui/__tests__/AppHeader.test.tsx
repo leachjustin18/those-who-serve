@@ -20,6 +20,23 @@ describe("AppHeader", () => {
     ).toHaveAttribute("href", "/error-logs");
   });
 
+  it("shows Gmail authorization only to the configured sender", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppHeader
+        userName="Jane Doe"
+        userImage="/avatar.png"
+        canAuthorizeGmail
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /open menu/i }));
+
+    expect(
+      await screen.findByRole("menuitem", { name: /reauthorize gmail sender/i }),
+    ).toHaveAttribute("href", "/api/auth/gmail");
+  });
+
   it("opens the menu and logs out through next-auth", async () => {
     const user = userEvent.setup();
     render(<AppHeader userName="Jane Doe" userImage="/avatar.png" />);
