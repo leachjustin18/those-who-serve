@@ -1,11 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/firebase/admin";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function PUT(req: NextRequest, context: RouteContext) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { id } = await context.params;
   const data = await req.json();
 
@@ -15,6 +19,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, context: RouteContext) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const { id } = await context.params;
   const ref = db.collection("men").doc(id);
   await ref.delete();

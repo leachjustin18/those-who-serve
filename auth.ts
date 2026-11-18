@@ -2,35 +2,7 @@ import NextAuth, { type NextAuthOptions, type User } from "next-auth";
 import Google from "next-auth/providers/google";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import { firestore } from "@/lib/firebase/admin";
-
-const authHost = process.env.SERVER_HOST;
-
-async function isEmailAuthorized(email: string): Promise<boolean> {
-  if (!authHost) {
-    console.error(
-      "Authorization check failed: SERVER_HOST or NEXTAUTH_URL not set",
-    );
-    return false;
-  }
-
-  try {
-    const res = await fetch(
-      `${authHost}/api/authorized?email=${encodeURIComponent(email)}`,
-      { cache: "no-store" },
-    );
-
-    if (!res.ok) {
-      console.error(`Authorization API responded with ${res.status}`);
-      return false;
-    }
-
-    const data = (await res.json()) as { authorized?: boolean };
-    return !!data.authorized;
-  } catch (err) {
-    console.error("Authorization API call failed", err);
-    return false;
-  }
-}
+import { isEmailAuthorized } from "@/lib/auth/authorization";
 
 export const authOptions: NextAuthOptions = {
   providers: [

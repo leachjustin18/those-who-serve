@@ -1,33 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase/admin";
+import { NextResponse } from "next/server";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 /**
  * GET /api/authorized
- * Optional query param: ?email=foo@bar.com
- *
- * Aggregates emails from all documents in the "authorized" collection.
- * If an email is provided, returns { authorized: boolean }.
- * Otherwise returns the full normalized email list.
+ * Confirms that the current authenticated user is still on the allowlist.
+ * The allowlist itself is never returned by this endpoint.
  */
-export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const emailQuery = searchParams.get("email")?.toLowerCase();
-
-  const snapshot = await db.collection("authorized").get();
-
-  const authorizedUsers = snapshot.docs.map((doc) => ({ ...doc.data() }));
-
-  const allowed = new Set<string>();
-  authorizedUsers.forEach((data) => {
-    const email = data?.email;
-    if (typeof email === "string" && email.trim()) {
-      allowed.add(email.toLowerCase());
-    }
-  });
-
-  if (emailQuery) {
-    return NextResponse.json({ authorized: allowed.has(emailQuery) });
+export async function GET() {
+  const session = await getAuthorizedSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json({ emails: Array.from(allowed) });
+  return NextResponse.json({ authorized: true });
 }

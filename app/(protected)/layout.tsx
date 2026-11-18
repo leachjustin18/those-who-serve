@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { redirect } from "next/navigation";
 import { addMonths, format, parse } from "date-fns";
-import { getUserSession } from "@/lib/nextAuth/session";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 import { CacheProvider } from "@/components/context/Cache";
 import { fetchMen } from "@/lib/api/men";
 import { fetchDeacons } from "@/lib/api/deacons";
@@ -19,7 +19,7 @@ type LayoutProps = {
 };
 
 export default async function SecureLayout({ children }: LayoutProps) {
-  const session = await getUserSession();
+  const session = await getAuthorizedSession();
 
   if (!session?.user) {
     redirect("/login");

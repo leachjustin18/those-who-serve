@@ -2,6 +2,7 @@
 
 import { assertValidMonth } from "@/lib/helpers/scheduleValidation";
 import { assertSafeId } from "@/lib/helpers/validateId";
+import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import type { TSchedule } from "@/types";
 
 const host = process.env.SERVER_HOST;
@@ -12,7 +13,7 @@ const host = process.env.SERVER_HOST;
 export async function fetchSchedules(): Promise<TSchedule[]> {
   if (!host) throw new Error("SERVER_HOST is not defined");
 
-  const res = await fetch(`${host}/api/schedules`, { cache: "no-store" });
+  const res = await authenticatedFetch(`${host}/api/schedules`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch schedules (status ${res.status})`);
   }
@@ -33,7 +34,7 @@ export async function fetchSchedule(month: string): Promise<TSchedule | null> {
     throw new Error("Invalid month format. Expected YYYY-MM.");
   }
 
-  const res = await fetch(`${host}/api/schedules/${safeMonth}`, {
+  const res = await authenticatedFetch(`${host}/api/schedules/${safeMonth}`, {
     cache: "no-store",
   });
 
@@ -54,7 +55,7 @@ export async function fetchSchedule(month: string): Promise<TSchedule | null> {
 export async function createSchedule(schedule: Partial<TSchedule>): Promise<TSchedule> {
   if (!host) throw new Error("SERVER_HOST is not defined");
 
-  const res = await fetch(`${host}/api/schedules`, {
+  const res = await authenticatedFetch(`${host}/api/schedules`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(schedule),
@@ -83,7 +84,7 @@ export async function updateSchedule(
     throw new Error("Invalid month format. Expected YYYY-MM.");
   }
 
-  const res = await fetch(`${host}/api/schedules/${safeMonth}`, {
+  const res = await authenticatedFetch(`${host}/api/schedules/${safeMonth}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(schedule),
@@ -121,7 +122,7 @@ export async function updateMenLastServed(
     }
 
     const encodedId = encodeURIComponent(update.id);
-    return fetch(`${host}/api/men/${encodedId}`, {
+    return authenticatedFetch(`${host}/api/men/${encodedId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

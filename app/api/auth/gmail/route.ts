@@ -2,10 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createOAuth2Client, GMAIL_SCOPES } from "@/lib/helpers/googleGmail";
-import { getUserSession } from "@/lib/nextAuth/session";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 export async function GET(req: NextRequest) {
-  const session = await getUserSession();
+  const session = await getAuthorizedSession();
   if (!session?.user?.email) {
     return new NextResponse("Unauthorized", { status: 401 });
   }

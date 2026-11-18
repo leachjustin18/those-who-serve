@@ -8,6 +8,7 @@ import { sendGmailBatch } from "@/lib/helpers/googleGmail";
 import { recordErrorLogs } from "@/lib/helpers/emailFailures";
 import { isValidMonth } from "@/lib/helpers/scheduleValidation";
 import { WORSHIP_IN_SONG_MARKER } from "@/lib/constants";
+import { getAuthorizedSession } from "@/lib/auth/authorizedSession";
 
 type RequestBody = {
   month?: string;
@@ -58,6 +59,9 @@ function buildIcsLink({
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await getAuthorizedSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const body = (await req.json().catch(() => null)) as RequestBody | null;
 
   if (!body?.month) {

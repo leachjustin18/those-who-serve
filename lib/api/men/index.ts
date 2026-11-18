@@ -1,6 +1,7 @@
 "use server";
 
 import { assertSafeId } from "@/lib/helpers/validateId";
+import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import type { TMan } from "@/types";
 
 const host = process.env.SERVER_HOST;
@@ -14,7 +15,7 @@ const host = process.env.SERVER_HOST;
 async function requestMen(): Promise<TMan[]> {
   if (!host) throw new Error("SERVER_HOST is not defined");
 
-  const res = await fetch(`${host}/api/men`, { cache: "no-store" });
+  const res = await authenticatedFetch(`${host}/api/men`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch men (status ${res.status})`);
   }
@@ -70,7 +71,7 @@ export async function updateMan(
   };
 
   const manUrl = new URL(`/api/men/${encodeURIComponent(id)}`, host);
-  const res = await fetch(manUrl.toString(), {
+  const res = await authenticatedFetch(manUrl.toString(), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
@@ -106,7 +107,7 @@ export async function deleteMan(
   const encodedId = encodeURIComponent(id);
 
   const manUrl = new URL(`/api/men/${encodeURIComponent(id)}`, host);
-  const res = await fetch(manUrl.toString(), {
+  const res = await authenticatedFetch(manUrl.toString(), {
     method: "DELETE",
   });
 
@@ -118,7 +119,7 @@ export async function deleteMan(
 }
 
 export async function addMan(data: Omit<TMan, "id">) {
-  const res = await fetch(`${host}/api/men`, {
+  const res = await authenticatedFetch(`${host}/api/men`, {
     method: "POST",
     body: JSON.stringify({ ...data, createdAt: Date.now(), updatedAt: Date.now() }),
     headers: { "Content-Type": "application/json" },

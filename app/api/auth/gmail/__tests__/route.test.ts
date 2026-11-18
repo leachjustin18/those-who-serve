@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const generateAuthUrl = vi.fn(() => "https://accounts.google.com/o/oauth2/v2/auth");
 const createOAuth2Client = vi.fn(() => ({ generateAuthUrl }));
 
-vi.mock("@/lib/nextAuth/session", () => ({
-  getUserSession: vi.fn(async () => ({
+vi.mock("@/lib/auth/authorizedSession", () => ({
+  getAuthorizedSession: vi.fn(async () => ({
     user: { email: "39cofc@gmail.com" },
   })),
 }));

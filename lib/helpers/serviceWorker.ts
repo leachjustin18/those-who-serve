@@ -19,17 +19,11 @@ export const clearServiceWorkersAndCache = async () => {
 export const clearAuthCache = async () => {
   try {
     if (typeof caches !== "undefined") {
-      const cache = await caches.open("those-who-serve-v1");
-      const requests = await cache.keys();
-
+      const cacheNames = await caches.keys();
       await Promise.all(
-        requests
-          .filter(req =>
-            req.url.includes("/manage-men") ||
-            req.url.includes("/auth/") ||
-            req.url.includes("/api/")
-          )
-          .map(req => cache.delete(req))
+        cacheNames
+          .filter((name) => name.startsWith("those-who-serve-"))
+          .map((name) => caches.delete(name)),
       );
     }
   } catch (err) {
